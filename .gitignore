@@ -1,0 +1,37 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# build output
+dist/
+build/
+.next/
+out/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# logs
+npm-debug.log*
+*.log
+
+# prisma
+apps/api/prisma/migrations/dev.db
+
+# editor / os
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# testing
+coverage/
+
+# misc
+.dist/
+
+# uploaded files (local disk storage backing SharedFile — see apps/api/src/shared-files)
+apps/api/uploads/
