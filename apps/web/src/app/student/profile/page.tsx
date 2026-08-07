@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usersService } from "@/services/users.service";
+import { learningService } from "@/services/learning.service";
 import { useAuthStore } from "@/stores/auth-store";
 import { formatDate } from "@/lib/format";
 import { ApiError } from "@/lib/api-client";
@@ -27,6 +28,10 @@ export default function StudentProfilePage() {
   const setUser = useAuthStore((s) => s.setUser);
 
   const { data: user, isLoading } = useQuery({ queryKey: ["me"], queryFn: usersService.getMe });
+  const { data: cohorts, isLoading: cohortsLoading } = useQuery({
+    queryKey: ["my-cohorts"],
+    queryFn: learningService.listMyCohorts,
+  });
 
   const {
     register,
@@ -51,37 +56,59 @@ export default function StudentProfilePage() {
 
   return (
     <>
-      <PageHeading title="Profile" description="Backed by the real Career Rise API — GET/PATCH /users/me." />
+      <PageHeading title="Profile" />
 
       {isLoading ? (
         <Skeleton className="h-64 rounded-xl" />
       ) : (
-        <Card className="max-w-xl">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <Avatar size="lg">
-                <AvatarFallback>{user?.email.slice(0, 2).toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <div>
-                <CardTitle className="text-base">{user?.email}</CardTitle>
-                <CardDescription>
-                  {user?.role} · Joined {user && formatDate(user.createdAt)}
-                </CardDescription>
+        <div className="flex max-w-xl flex-col gap-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Card>
+              <CardContent className="flex flex-col gap-1">
+                <p className="text-xs text-muted-foreground">Courses enrolled</p>
+                {cohortsLoading ? (
+                  <Skeleton className="h-8 w-10" />
+                ) : (
+                  <p className="font-heading text-2xl font-medium text-foreground">{cohorts?.length ?? 0}</p>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="flex flex-col gap-1">
+                <p className="text-xs text-muted-foreground">Attendance</p>
+                <p className="font-heading text-2xl font-medium text-foreground">0%</p>
+                <p className="text-[11px] text-muted-foreground">Not tracked yet</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <Avatar size="lg">
+                  <AvatarFallback>{user?.email.slice(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <CardTitle className="text-base">{user?.email}</CardTitle>
+                  <CardDescription>
+                    {user?.role} · Joined {user && formatDate(user.createdAt)}
+                  </CardDescription>
+                </div>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <form className="flex flex-col gap-4" onSubmit={handleSubmit((v) => mutation.mutate(v))} noValidate>
-              <FormField label="Email" htmlFor="email" error={errors.email?.message}>
-                <Input id="email" type="email" {...register("email")} />
-              </FormField>
-              <Button type="submit" className="w-fit" disabled={!isDirty || mutation.isPending}>
-                {mutation.isPending && <Loader2 className="size-4 animate-spin" />}
-                Save changes
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent>
+              <form className="flex flex-col gap-4" onSubmit={handleSubmit((v) => mutation.mutate(v))} noValidate>
+                <FormField label="Email" htmlFor="email" error={errors.email?.message}>
+                  <Input id="email" type="email" {...register("email")} />
+                </FormField>
+                <Button type="submit" className="w-fit" disabled={!isDirty || mutation.isPending}>
+                  {mutation.isPending && <Loader2 className="size-4 animate-spin" />}
+                  Save changes
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       )}
     </>
   );
