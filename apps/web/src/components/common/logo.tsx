@@ -15,7 +15,7 @@ export function Logo({ className }: { className?: string }) {
       <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
         <Sparkle className="size-4" strokeWidth={2.25} />
       </span>
-      <span className="text-base">{siteConfig.name}</span>
+      <span className="font-heading text-base font-medium">{siteConfig.name}</span>
     </Link>
   );
 }

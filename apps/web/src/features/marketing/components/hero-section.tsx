@@ -11,7 +11,7 @@ export function HeroSection() {
         <div className="mx-auto max-w-3xl text-center">
           <Badge variant="secondary">Now open — Agentic AI cohort</Badge>
 
-          <h1 className="mt-6 text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+          <h1 className="font-heading mt-6 text-4xl font-medium tracking-tight text-balance sm:text-5xl lg:text-6xl">
             Learn in cohorts.
             <br />
             Prove it with evidence.

@@ -26,7 +26,7 @@ export function HowItWorksSection() {
     <section id="how-it-works" className="border-t border-border/60">
       <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h2 className="font-heading text-3xl font-medium tracking-tight sm:text-4xl">
             How it works
           </h2>
           <p className="mt-4 text-lg text-muted-foreground text-balance">

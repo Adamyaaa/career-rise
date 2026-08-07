@@ -8,7 +8,7 @@ export function CtaSection() {
     <section className="border-t border-border/60">
       <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
         <Reveal className="mx-auto flex max-w-2xl flex-col items-center gap-6 rounded-2xl border border-border/60 bg-card px-6 py-16 text-center shadow-sm">
-          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h2 className="font-heading text-3xl font-medium tracking-tight sm:text-4xl">
             Ready to start your cohort?
           </h2>
           <p className="max-w-md text-muted-foreground text-balance">
