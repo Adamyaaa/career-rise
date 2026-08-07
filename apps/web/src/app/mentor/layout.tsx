@@ -1,9 +1,9 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import { useRequireAuth } from "@/hooks/use-require-auth";
-import { AppShell } from "@/features/app-shell/components/app-shell";
+import { Topbar } from "@/features/app-shell/components/topbar";
 import { mentorNav } from "@/features/app-shell/nav-config";
+import { Loader2 } from "lucide-react";
 
 export default function MentorLayout({ children }: { children: React.ReactNode }) {
   const { ready } = useRequireAuth(["MENTOR"]);
@@ -17,8 +17,9 @@ export default function MentorLayout({ children }: { children: React.ReactNode }
   }
 
   return (
-    <AppShell navItems={mentorNav} notificationsHref="/mentor/announcements">
-      {children}
-    </AppShell>
+    <div className="flex min-h-full flex-col">
+      <Topbar navItems={mentorNav} />
+      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+    </div>
   );
 }

@@ -1,8 +1,6 @@
 import { apiClient } from "@/lib/api-client";
 
-// Real API — kept separate from courses.service.ts (which is still fully mocked)
-// so this doesn't disturb the mocked course-browsing pages elsewhere. Read-only,
-// just enough for the mentor material-upload lesson picker.
+// Real API, read-only — just enough for the mentor material-upload lesson picker.
 export interface CohortSummary {
   id: string;
   name: string;

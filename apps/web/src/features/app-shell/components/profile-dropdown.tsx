@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -53,12 +53,6 @@ export function ProfileDropdown() {
           <DropdownMenuItem render={<Link href="/student/profile" />}>
             <User />
             Profile
-          </DropdownMenuItem>
-        )}
-        {user.role === "SUPER_ADMIN" && (
-          <DropdownMenuItem render={<Link href="/admin/settings" />}>
-            <Settings />
-            Settings
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />

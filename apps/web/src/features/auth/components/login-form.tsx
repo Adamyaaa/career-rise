@@ -154,11 +154,6 @@ export function LoginForm() {
                   placeholder="••••••••"
                 />
               </FormField>
-              <div className="flex justify-end">
-                <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-foreground">
-                  Forgot password?
-                </Link>
-              </div>
             </>
           )}
 
