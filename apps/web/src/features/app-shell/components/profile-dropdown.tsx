@@ -36,7 +36,7 @@ export function ProfileDropdown() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="rounded-full" />}>
+      <DropdownMenuTrigger nativeButton render={<Button variant="ghost" size="icon" className="rounded-full" />}>
         <Avatar>
           <AvatarFallback>{initialsFor(user.email)}</AvatarFallback>
         </Avatar>

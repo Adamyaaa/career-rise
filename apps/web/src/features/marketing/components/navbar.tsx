@@ -63,7 +63,7 @@ export function Navbar() {
 
         <div className="flex items-center gap-1 md:hidden">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger render={<Button variant="ghost" size="icon" aria-label="Open menu" />}>
+            <SheetTrigger nativeButton render={<Button variant="ghost" size="icon" aria-label="Open menu" />}>
               <Menu className="size-5" />
             </SheetTrigger>
             <SheetContent side="right" className="w-72">
