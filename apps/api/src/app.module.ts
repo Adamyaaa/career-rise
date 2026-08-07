@@ -8,7 +8,6 @@ import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
 import { SharedFilesModule } from "./shared-files/shared-files.module";
 import { CoursesModule } from "./courses/courses.module";
-import { EvidenceModule } from "./evidence/evidence.module";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { RolesGuard } from "./common/guards/roles.guard";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
@@ -28,7 +27,6 @@ import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
     UsersModule,
     SharedFilesModule,
     CoursesModule,
-    EvidenceModule,
   ],
   providers: [
     // Order matters: JwtAuthGuard populates req.user before RolesGuard reads it.
