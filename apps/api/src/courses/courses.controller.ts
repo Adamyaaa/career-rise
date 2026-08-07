@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from "@nestjs/common";
+import { Controller, Delete, Get, Param, Post } from "@nestjs/common";
 import { Role } from "@prisma/client";
 import { Roles } from "../common/decorators/roles.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
@@ -23,5 +23,17 @@ export class CoursesController {
   @Get("cohorts/:id/modules")
   listModules(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.coursesService.listModulesWithLessons(id, user);
+  }
+
+  @Post("lessons/:id/complete")
+  @Roles(Role.STUDENT)
+  markComplete(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.coursesService.setLessonComplete(user, id, true);
+  }
+
+  @Delete("lessons/:id/complete")
+  @Roles(Role.STUDENT)
+  markIncomplete(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.coursesService.setLessonComplete(user, id, false);
   }
 }

@@ -32,6 +32,8 @@ export default function StudentProfilePage() {
     queryKey: ["my-cohorts"],
     queryFn: learningService.listMyCohorts,
   });
+  const completedLessons = cohorts?.reduce((sum, c) => sum + (c.progress?.completedLessons ?? 0), 0) ?? 0;
+  const totalLessons = cohorts?.reduce((sum, c) => sum + (c.progress?.totalLessons ?? 0), 0) ?? 0;
 
   const {
     register,
@@ -62,7 +64,7 @@ export default function StudentProfilePage() {
         <Skeleton className="h-64 rounded-xl" />
       ) : (
         <div className="flex max-w-xl flex-col gap-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <Card>
               <CardContent className="flex flex-col gap-1">
                 <p className="text-xs text-muted-foreground">Courses enrolled</p>
@@ -70,6 +72,18 @@ export default function StudentProfilePage() {
                   <Skeleton className="h-8 w-10" />
                 ) : (
                   <p className="font-heading text-2xl font-medium text-foreground">{cohorts?.length ?? 0}</p>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="flex flex-col gap-1">
+                <p className="text-xs text-muted-foreground">Lessons completed</p>
+                {cohortsLoading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : (
+                  <p className="font-heading text-2xl font-medium text-foreground">
+                    {completedLessons}/{totalLessons}
+                  </p>
                 )}
               </CardContent>
             </Card>

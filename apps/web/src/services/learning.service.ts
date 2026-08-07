@@ -34,4 +34,6 @@ export interface ModuleProgress extends Progress {
 export const learningService = {
   listMyCohorts: () => apiClient.get<MyCohortSummary[]>("/cohorts/my"),
   getCohortModules: (cohortId: string) => apiClient.get<ModuleProgress[]>(`/cohorts/${cohortId}/modules`),
+  markLessonComplete: (lessonId: string) => apiClient.post<{ lessonId: string; completed: boolean }>(`/lessons/${lessonId}/complete`),
+  markLessonIncomplete: (lessonId: string) => apiClient.delete<{ lessonId: string; completed: boolean }>(`/lessons/${lessonId}/complete`),
 };

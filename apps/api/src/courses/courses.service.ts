@@ -128,16 +128,49 @@ export class CoursesService {
     });
   }
 
-  // Lessons a student has submitted Evidence for, grouped by cohort — one query for any
-  // number of cohorts (listMyCohorts scans several at once; the modules endpoint just one).
+  async setLessonComplete(user: AuthenticatedUser, lessonId: string, completed: boolean) {
+    const lesson = await this.prisma.lesson.findUnique({
+      where: { id: lessonId },
+      include: { module: true },
+    });
+    if (!lesson) {
+      throw new NotFoundException("Lesson not found");
+    }
+    const cohortId = lesson.module.cohortId;
+
+    const enrolled = await this.prisma.cohortEnrollment.findFirst({
+      where: { studentId: user.id, cohortId, status: "active" },
+      select: { id: true },
+    });
+    if (!enrolled) {
+      throw new ForbiddenException("You are not enrolled in this cohort");
+    }
+
+    if (completed) {
+      await this.prisma.lessonCompletion.upsert({
+        where: { studentId_lessonId: { studentId: user.id, lessonId } },
+        update: {},
+        create: { studentId: user.id, lessonId, cohortId },
+      });
+    } else {
+      await this.prisma.lessonCompletion.deleteMany({
+        where: { studentId: user.id, lessonId },
+      });
+    }
+
+    return { lessonId, completed };
+  }
+
+  // Lessons a student has marked done, grouped by cohort — one query for any number
+  // of cohorts (listMyCohorts scans several at once; the modules endpoint just one).
   private async completedLessonIdsByCohort(studentId: string, cohortIds: string[]) {
-    const evidence = await this.prisma.evidence.findMany({
+    const completions = await this.prisma.lessonCompletion.findMany({
       where: { studentId, cohortId: { in: cohortIds } },
       select: { cohortId: true, lessonId: true },
     });
 
     const byCohort = new Map<string, Set<string>>();
-    for (const { cohortId, lessonId } of evidence) {
+    for (const { cohortId, lessonId } of completions) {
       if (!byCohort.has(cohortId)) byCohort.set(cohortId, new Set());
       byCohort.get(cohortId)!.add(lessonId);
     }

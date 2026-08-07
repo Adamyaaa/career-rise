@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Lock, FileText, Download, Library, Calendar, User, FileArchive, FileCode, FileImage, CheckCircle2, Circle } from "lucide-react";
 import { PageHeading } from "@/components/common/page-heading";
 import { EmptyState } from "@/components/common/empty-state";
@@ -30,6 +30,17 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
   const { cohortId } = use(params);
   const [expanded, setExpanded] = useState<string | null>(null);
   const token = useAuthStore((s) => s.accessToken);
+  const queryClient = useQueryClient();
+
+  const toggleLesson = useMutation({
+    mutationFn: ({ lessonId, completed }: { lessonId: string; completed: boolean }) =>
+      completed ? learningService.markLessonComplete(lessonId) : learningService.markLessonIncomplete(lessonId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cohort-modules", cohortId] });
+      queryClient.invalidateQueries({ queryKey: ["my-cohorts"] });
+    },
+    onError: () => toast.error("Couldn't update — try again"),
+  });
 
   const handleDownload = async (fileId: string, fileName: string) => {
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001/api/v1";
@@ -113,16 +124,21 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
                   </CardContent>
 
                   {isExpanded && !module.locked && (
-                    <div className="flex flex-col gap-2 border-t border-border/60 px-4 py-3">
+                    <div className="flex flex-col gap-1 border-t border-border/60 px-4 py-3">
                       {module.lessons.map((lesson) => (
-                        <div key={lesson.id} className="flex items-center gap-2.5 text-sm">
+                        <button
+                          key={lesson.id}
+                          onClick={() => toggleLesson.mutate({ lessonId: lesson.id, completed: !lesson.completed })}
+                          disabled={toggleLesson.isPending}
+                          className="flex items-center gap-2.5 rounded-md py-1.5 text-left text-sm hover:bg-muted/60 disabled:opacity-60"
+                        >
                           {lesson.completed ? (
                             <CheckCircle2 className="size-4 shrink-0 text-primary" />
                           ) : (
                             <Circle className="size-4 shrink-0 text-muted-foreground" />
                           )}
                           <span className={cn("text-foreground", lesson.completed && "text-muted-foreground")}>{lesson.title}</span>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   )}
