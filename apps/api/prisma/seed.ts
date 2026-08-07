@@ -36,6 +36,19 @@ async function main() {
     },
   });
 
+  // SUPER_ADMIN has no profile model — self-registration only ever creates
+  // STUDENT (see auth.service.ts), and POST /admin/users to provision
+  // mentor/admin accounts isn't built yet, so this seed is the only way in.
+  await prisma.user.upsert({
+    where: { email: "admin@careerrise.dev" },
+    update: {},
+    create: {
+      email: "admin@careerrise.dev",
+      passwordHash,
+      role: Role.SUPER_ADMIN,
+    },
+  });
+
   let course = await prisma.course.findFirst({ where: { title: "Agentic AI" } });
   if (!course) {
     course = await prisma.course.create({
@@ -47,16 +60,18 @@ async function main() {
     });
   }
 
-  let cohort = await prisma.cohort.findFirst({ where: { courseId: course.id, name: "Cohort 3" } });
+  let cohort = await prisma.cohort.findFirst({ where: { courseId: course.id } });
   if (!cohort) {
     cohort = await prisma.cohort.create({
       data: {
         courseId: course.id,
-        name: "Cohort 3",
+        name: "Cohort 1",
         startDate: new Date("2026-07-14"),
         endDate: new Date("2026-10-06"),
       },
     });
+  } else if (cohort.name !== "Cohort 1") {
+    cohort = await prisma.cohort.update({ where: { id: cohort.id }, data: { name: "Cohort 1" } });
   }
 
   await prisma.cohortMentorAssignment.upsert({
@@ -110,6 +125,7 @@ async function main() {
   console.log("Seed complete.");
   console.log(`  Mentor login:  mentor@careerrise.dev / ${SEED_PASSWORD}`);
   console.log(`  Student login: student@careerrise.dev / ${SEED_PASSWORD}`);
+  console.log(`  Admin login:   admin@careerrise.dev / ${SEED_PASSWORD}`);
   console.log(`  Cohort: ${cohort.name} (${cohort.id})`);
 }
 

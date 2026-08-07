@@ -14,5 +14,6 @@ export const studentNav: NavItem[] = [
 ];
 
 export const mentorNav: NavItem[] = [
+  { label: "My Cohorts", href: "/mentor/cohorts", icon: GraduationCap },
   { label: "Resources", href: "/mentor/resources", icon: Library },
 ];

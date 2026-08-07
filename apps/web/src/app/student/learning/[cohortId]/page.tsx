@@ -2,7 +2,7 @@
 
 import { use, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, Lock, FileText, Download, Library, Calendar, User, FileArchive, FileCode, FileImage, CheckCircle2, Circle } from "lucide-react";
+import { ChevronDown, Lock, FileText, Download, Library, Calendar, User, FileArchive, FileCode, FileImage, CheckCircle2, Circle, ExternalLink, LinkIcon } from "lucide-react";
 import { PageHeading } from "@/components/common/page-heading";
 import { EmptyState } from "@/components/common/empty-state";
 import { CircularProgress } from "@/components/common/circular-progress";
@@ -11,10 +11,12 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { SubmitEvidenceDialog } from "@/features/student/components/submit-evidence-dialog";
 import { cn } from "@/lib/utils";
 import { formatBytes } from "@/lib/format";
 import { learningService } from "@/services/learning.service";
 import { sharedFilesService } from "@/services/shared-files.service";
+import { evidenceService } from "@/services/evidence.service";
 import { useAuthStore } from "@/stores/auth-store";
 import { toast } from "sonner";
 
@@ -29,6 +31,7 @@ const getFileIcon = (mime: string) => {
 export default function CohortDetailPage({ params }: { params: Promise<{ cohortId: string }> }) {
   const { cohortId } = use(params);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [submittingLesson, setSubmittingLesson] = useState<{ id: string; title: string } | null>(null);
   const token = useAuthStore((s) => s.accessToken);
 
   const handleDownload = async (fileId: string, fileName: string) => {
@@ -62,6 +65,13 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
     queryKey: ["shared-files", cohortId],
     queryFn: () => sharedFilesService.list({ cohortId }),
   });
+
+  const { data: evidence } = useQuery({
+    queryKey: ["my-evidence", cohortId],
+    queryFn: () => evidenceService.listMine(cohortId),
+  });
+  // Sorted newest-first by the API — first match per lesson is the latest submission.
+  const evidenceByLesson = new Map(evidence?.map((e) => [e.lessonId, e]).reverse());
 
   const totalLessons = modules?.reduce((sum, m) => sum + m.totalLessons, 0) ?? 0;
   const completedLessons = modules?.reduce((sum, m) => sum + m.completedLessons, 0) ?? 0;
@@ -114,18 +124,39 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
 
                   {isExpanded && !module.locked && (
                     <div className="flex flex-col gap-2 border-t border-border/60 px-4 py-3">
-                      {module.lessons.map((lesson) => (
-                        <div key={lesson.id} className="flex items-center gap-2.5 text-sm">
-                          {lesson.completed ? (
-                            <CheckCircle2 className="size-4 shrink-0 text-primary" />
-                          ) : (
-                            <Circle className="size-4 shrink-0 text-muted-foreground" />
-                          )}
-                          <span className={cn("text-foreground", lesson.completed && "text-muted-foreground line-through")}>
-                            {lesson.title}
-                          </span>
-                        </div>
-                      ))}
+                      {module.lessons.map((lesson) => {
+                        const submission = evidenceByLesson.get(lesson.id);
+                        return (
+                          <div key={lesson.id} className="flex items-center gap-2.5 text-sm">
+                            {lesson.completed ? (
+                              <CheckCircle2 className="size-4 shrink-0 text-primary" />
+                            ) : (
+                              <Circle className="size-4 shrink-0 text-muted-foreground" />
+                            )}
+                            <span className={cn("flex-1 text-foreground", lesson.completed && "text-muted-foreground")}>
+                              {lesson.title}
+                            </span>
+                            {submission ? (
+                              <a
+                                href={submission.externalUrl ?? undefined}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex shrink-0 items-center gap-1 text-xs font-medium text-primary hover:underline"
+                              >
+                                View submission <ExternalLink className="size-3" />
+                              </a>
+                            ) : (
+                              <button
+                                onClick={() => setSubmittingLesson({ id: lesson.id, title: lesson.title })}
+                                className="flex shrink-0 items-center gap-1 text-xs font-medium text-primary hover:underline"
+                              >
+                                <LinkIcon className="size-3" />
+                                Submit proof
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </Card>
@@ -218,6 +249,16 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
             </div>
           </TabsContent>
         </Tabs>
+      )}
+
+      {submittingLesson && (
+        <SubmitEvidenceDialog
+          open={!!submittingLesson}
+          onOpenChange={(open) => !open && setSubmittingLesson(null)}
+          cohortId={cohortId}
+          lessonId={submittingLesson.id}
+          lessonTitle={submittingLesson.title}
+        />
       )}
     </>
   );

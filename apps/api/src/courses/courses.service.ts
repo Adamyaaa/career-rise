@@ -24,9 +24,30 @@ export class CoursesService {
     });
   }
 
-  async listMyCohorts(studentId: string) {
+  async listMyCohorts(user: AuthenticatedUser) {
+    if (user.role === Role.MENTOR) {
+      const assignments = await this.prisma.cohortMentorAssignment.findMany({
+        where: { mentorProfile: { userId: user.id } },
+        select: {
+          cohort: {
+            select: {
+              id: true,
+              name: true,
+              startDate: true,
+              endDate: true,
+              course: { select: { id: true, title: true } },
+            },
+          },
+        },
+        orderBy: { cohort: { startDate: "desc" } },
+      });
+      // A mentor has no personal lesson completion, so no `progress` field here —
+      // the frontend CohortCard renders without a progress bar when it's absent.
+      return assignments.map((a) => a.cohort);
+    }
+
     const enrollments = await this.prisma.cohortEnrollment.findMany({
-      where: { studentId, status: "active" },
+      where: { studentId: user.id, status: "active" },
       select: {
         cohort: {
           select: {
@@ -43,7 +64,7 @@ export class CoursesService {
     });
 
     const cohortIds = enrollments.map((e) => e.cohort.id);
-    const completedByCohort = await this.completedLessonIdsByCohort(studentId, cohortIds);
+    const completedByCohort = await this.completedLessonIdsByCohort(user.id, cohortIds);
 
     return enrollments.map(({ cohort }) => {
       const lessonIds = cohort.modules.flatMap((m) => m.lessons.map((l) => l.id));

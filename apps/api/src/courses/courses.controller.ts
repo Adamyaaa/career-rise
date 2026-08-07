@@ -15,9 +15,9 @@ export class CoursesController {
   }
 
   @Get("cohorts/my")
-  @Roles(Role.STUDENT)
+  @Roles(Role.STUDENT, Role.MENTOR)
   listMyCohorts(@CurrentUser() user: AuthenticatedUser) {
-    return this.coursesService.listMyCohorts(user.id);
+    return this.coursesService.listMyCohorts(user);
   }
 
   @Get("cohorts/:id/modules")

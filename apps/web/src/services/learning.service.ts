@@ -12,7 +12,8 @@ export interface MyCohortSummary {
   startDate: string;
   endDate: string;
   course: { id: string; title: string };
-  progress: Progress;
+  // Present for STUDENT (their own completion); absent for MENTOR, who has none.
+  progress?: Progress;
 }
 
 export interface LessonProgress {
