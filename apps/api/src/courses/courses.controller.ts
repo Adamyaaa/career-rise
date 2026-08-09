@@ -13,6 +13,7 @@ import {
   UpdateModuleDto,
 } from "./dto/module-lesson.dto";
 import { EnrollStudentDto } from "./dto/enroll-student.dto";
+import { PostFeedbackDto } from "./dto/feedback.dto";
 
 @Controller()
 export class CoursesController {
@@ -89,13 +90,26 @@ export class CoursesController {
   @Post("cohorts/:id/modules")
   @Roles(Role.MENTOR, Role.SUPER_ADMIN)
   createModule(@Param("id") id: string, @Body() dto: CreateModuleDto, @CurrentUser() user: AuthenticatedUser) {
-    return this.coursesService.createModule(user, id, dto.title);
+    return this.coursesService.createModule(user, id, dto.title, dto.scheduledFor);
   }
 
   @Patch("modules/:id")
   @Roles(Role.MENTOR, Role.SUPER_ADMIN)
-  renameModule(@Param("id") id: string, @Body() dto: UpdateModuleDto, @CurrentUser() user: AuthenticatedUser) {
-    return this.coursesService.renameModule(user, id, dto.title);
+  updateModule(@Param("id") id: string, @Body() dto: UpdateModuleDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.coursesService.updateModule(user, id, dto.title, dto.scheduledFor);
+  }
+
+  // Read is mentor/admin only — feedback is write-only from the student's side.
+  @Get("cohorts/:id/feedback")
+  @Roles(Role.MENTOR, Role.SUPER_ADMIN)
+  listCohortFeedback(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.coursesService.listCohortFeedback(user, id);
+  }
+
+  @Post("lessons/:id/feedback")
+  @Roles(Role.STUDENT)
+  postFeedback(@Param("id") id: string, @Body() dto: PostFeedbackDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.coursesService.postFeedback(user, id, dto.body);
   }
 
   @Delete("modules/:id")

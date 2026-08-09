@@ -2,8 +2,9 @@
 
 import { use, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, FileText, Download, Library, Calendar, User, FileArchive, FileCode, FileImage, CheckCircle2, Circle, Presentation } from "lucide-react";
+import { ChevronDown, FileText, Download, Library, Calendar, CalendarDays, User, FileArchive, FileCode, FileImage, CheckCircle2, Circle, Presentation } from "lucide-react";
 import { CohortHeader } from "@/features/cohort/components/cohort-header";
+import { LessonFeedbackComposer } from "@/features/cohort/components/lesson-feedback-composer";
 import { EmptyState } from "@/components/common/empty-state";
 import { CircularProgress } from "@/components/common/circular-progress";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { formatBytes, fullName } from "@/lib/format";
+import { formatBytes, formatDate, fullName } from "@/lib/format";
 import { learningService } from "@/services/learning.service";
 import { sharedFilesService } from "@/services/shared-files.service";
 import { useAuthStore } from "@/stores/auth-store";
@@ -112,8 +113,19 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
                     <CircularProgress percent={module.percent} size={40} strokeWidth={4} />
                     <div className="flex min-w-0 flex-1 flex-col">
                       <p className="truncate font-heading text-sm font-medium text-foreground">{module.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {module.completedLessons}/{module.totalLessons} lessons complete
+                      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        {module.scheduledFor && (
+                          <>
+                            <span className="flex items-center gap-1">
+                              <CalendarDays className="size-3.5 shrink-0" />
+                              {formatDate(module.scheduledFor)}
+                            </span>
+                            <span aria-hidden>·</span>
+                          </>
+                        )}
+                        <span>
+                          {module.completedLessons}/{module.totalLessons} lessons complete
+                        </span>
                       </p>
                     </div>
                     <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform", isExpanded && "rotate-180")} />
@@ -122,7 +134,8 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
                   {isExpanded && (
                     <div className="flex flex-col gap-1 border-t border-border/60 px-4 py-3">
                       {module.lessons.map((lesson) => (
-                        <div key={lesson.id} className="flex items-center gap-2 rounded-md hover:bg-muted/60">
+                        <div key={lesson.id} className="flex flex-col gap-2 py-1.5">
+                          <div className="flex items-center gap-2 rounded-md hover:bg-muted/60">
                           <button
                             onClick={() => toggleLesson.mutate({ lessonId: lesson.id, completed: !lesson.completed })}
                             disabled={toggleLesson.isPending}
@@ -159,6 +172,9 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
                               Slides
                             </span>
                           )}
+                          </div>
+
+                          <LessonFeedbackComposer lessonId={lesson.id} />
                         </div>
                       ))}
                     </div>

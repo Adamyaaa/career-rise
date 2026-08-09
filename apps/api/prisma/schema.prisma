@@ -51,6 +51,7 @@ model User {
   markedAttendances Attendance[]       @relation("AttendanceMarkedBy")
   sharedFiles       SharedFile[]       @relation("UploadedFiles")
   lessonCompletions LessonCompletion[]
+  lessonFeedback    LessonFeedback[]   @relation("FeedbackStudent")
 
   @@map("users")
 }
@@ -106,6 +107,7 @@ model Cohort {
   attendances           Attendance[]
   sharedFiles           SharedFile[]
   lessonCompletions     LessonCompletion[]
+  lessonFeedback        LessonFeedback[]
 
   @@index([courseId])
   @@map("cohorts")
@@ -139,10 +141,11 @@ model CohortMentorAssignment {
 }
 
 model Module {
-  id       String @id @default(cuid())
-  cohortId String
-  title    String
-  order    Int
+  id           String    @id @default(cuid())
+  cohortId     String
+  title        String
+  order        Int
+  scheduledFor DateTime? // the day this module runs; mentor-set, optional
 
   cohort  Cohort   @relation(fields: [cohortId], references: [id], onDelete: Cascade)
   lessons Lesson[]
@@ -166,6 +169,7 @@ model Lesson {
   evidence    Evidence[]
   sharedFiles SharedFile[]
   completions LessonCompletion[]
+  feedback    LessonFeedback[]
 
   @@index([moduleId])
   @@map("lessons")
@@ -245,6 +249,26 @@ model LessonCompletion {
   @@unique([studentId, lessonId])
   @@index([studentId, cohortId])
   @@map("lesson_completions")
+}
+
+// One-way feedback from a student to the cohort's mentors about a specific class.
+// Deliberately not a conversation: the student never sees it again after sending, and
+// mentors read it in their own Feedback tab rather than replying.
+model LessonFeedback {
+  id        String   @id @default(cuid())
+  lessonId  String
+  cohortId  String // denormalized from the lesson->module->cohort chain; see header note
+  studentId String
+  body      String
+  createdAt DateTime @default(now())
+
+  lesson  Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  cohort  Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  student User   @relation("FeedbackStudent", fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([cohortId, createdAt])
+  @@index([lessonId])
+  @@map("lesson_feedback")
 }
 
 model ReviewCriterion {

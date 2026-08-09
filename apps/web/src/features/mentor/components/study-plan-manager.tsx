@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ExternalLink, Pencil, Plus, Presentation, Trash2 } from "lucide-react";
+import { CalendarDays, ChevronDown, ExternalLink, Pencil, Plus, Presentation, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,14 +15,19 @@ import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogT
 import { studyPlanService } from "@/services/learning.service";
 import { lessonBrowserService } from "@/services/lesson-browser.service";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/format";
 import { toast } from "sonner";
 
 type Editor =
   | { kind: "slides"; lessonId: string; value: string }
-  | { kind: "module"; moduleId: string; value: string }
+  | { kind: "module"; moduleId: string; value: string; date: string }
   | { kind: "lesson"; lessonId: string; value: string }
-  | { kind: "new-module"; value: string }
+  | { kind: "new-module"; value: string; date: string }
   | { kind: "new-lesson"; moduleId: string; value: string };
+
+// Only module editors carry a schedule date.
+const hasDate = (editor: Editor): editor is Extract<Editor, { date: string }> =>
+  editor.kind === "module" || editor.kind === "new-module";
 
 const EDITOR_COPY: Record<Editor["kind"], { title: string; label: string; placeholder: string }> = {
   slides: { title: "Slides link", label: "Google Drive link", placeholder: "https://drive.google.com/..." },
@@ -73,11 +78,11 @@ export function StudyPlanManager({ cohortId }: { cohortId: string }) {
       case "slides":
         return run(() => studyPlanService.setLessonSlides(editor.lessonId, editor.value));
       case "module":
-        return run(() => studyPlanService.renameModule(editor.moduleId, value));
+        return run(() => studyPlanService.updateModule(editor.moduleId, value, editor.date));
       case "lesson":
         return run(() => studyPlanService.renameLesson(editor.lessonId, value));
       case "new-module":
-        return run(() => studyPlanService.createModule(cohortId, value));
+        return run(() => studyPlanService.createModule(cohortId, value, editor.date));
       case "new-lesson":
         return run(() => studyPlanService.createLesson(editor.moduleId, value));
     }
@@ -129,7 +134,7 @@ export function StudyPlanManager({ cohortId }: { cohortId: string }) {
 
       <Button
         variant="outline"
-        onClick={() => setEditor({ kind: "new-module", value: "" })}
+        onClick={() => setEditor({ kind: "new-module", value: "", date: "" })}
         className="mb-4 h-auto w-full border-dashed py-4"
       >
         <Plus className="size-4" />
@@ -159,6 +164,12 @@ export function StudyPlanManager({ cohortId }: { cohortId: string }) {
                   >
                     <span className="shrink-0 text-xs font-medium text-muted-foreground">Module {index + 1}</span>
                     <span className="truncate font-heading text-sm font-medium text-foreground">{module.title}</span>
+                    {module.scheduledFor && (
+                      <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+                        <CalendarDays className="size-3.5" />
+                        {formatDate(module.scheduledFor)}
+                      </span>
+                    )}
                     <span className="shrink-0 text-xs text-muted-foreground">
                       {moduleTaught}/{module.lessons.length} taught
                     </span>
@@ -167,7 +178,15 @@ export function StudyPlanManager({ cohortId }: { cohortId: string }) {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      onClick={() => setEditor({ kind: "module", moduleId: module.id, value: module.title })}
+                      onClick={() =>
+                        setEditor({
+                          kind: "module",
+                          moduleId: module.id,
+                          value: module.title,
+                          // <input type="date"> wants YYYY-MM-DD, not a full ISO timestamp.
+                          date: module.scheduledFor ? module.scheduledFor.slice(0, 10) : "",
+                        })
+                      }
                       aria-label={`Rename ${module.title}`}
                     >
                       <Pencil className="size-3.5" />
@@ -278,6 +297,17 @@ export function StudyPlanManager({ cohortId }: { cohortId: string }) {
               placeholder={copy?.placeholder}
             />
           </FormField>
+
+          {editor && hasDate(editor) && (
+            <FormField label="Scheduled date (optional)" htmlFor="editorDate">
+              <Input
+                id="editorDate"
+                type="date"
+                value={editor.date}
+                onChange={(e) => setEditor({ ...editor, date: e.target.value })}
+              />
+            </FormField>
+          )}
           <DialogFooter>
             <DialogClose nativeButton render={<Button variant="outline" />}>
               Cancel

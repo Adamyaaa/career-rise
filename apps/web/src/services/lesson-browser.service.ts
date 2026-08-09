@@ -6,6 +6,7 @@ export interface ModuleWithLessons {
   id: string;
   title: string;
   order: number;
+  scheduledFor: string | null;
   lessons: { id: string; title: string; order: number; slidesUrl: string | null; taught: boolean }[];
 }
 

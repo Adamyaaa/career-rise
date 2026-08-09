@@ -46,6 +46,7 @@ export interface ModuleProgress extends Progress {
   id: string;
   title: string;
   order: number;
+  scheduledFor: string | null;
   lessons: LessonProgress[];
 }
 
@@ -64,16 +65,37 @@ export const studyPlanService = {
     apiClient.patch<{ lessonId: string; taught: boolean }>(`/lessons/${lessonId}/taught`, { taught }),
   setLessonSlides: (lessonId: string, slidesUrl: string) =>
     apiClient.patch<{ id: string; slidesUrl: string | null }>(`/lessons/${lessonId}/slides`, { slidesUrl }),
-  createModule: (cohortId: string, title: string) =>
-    apiClient.post<{ id: string; title: string; order: number }>(`/cohorts/${cohortId}/modules`, { title }),
-  renameModule: (moduleId: string, title: string) =>
-    apiClient.patch<{ id: string; title: string; order: number }>(`/modules/${moduleId}`, { title }),
+  createModule: (cohortId: string, title: string, scheduledFor?: string) =>
+    apiClient.post<{ id: string; title: string; order: number }>(`/cohorts/${cohortId}/modules`, {
+      title,
+      ...(scheduledFor ? { scheduledFor } : {}),
+    }),
+  updateModule: (moduleId: string, title: string, scheduledFor: string) =>
+    apiClient.patch<{ id: string; title: string; order: number }>(`/modules/${moduleId}`, { title, scheduledFor }),
   deleteModule: (moduleId: string) => apiClient.delete<{ id: string; deleted: true }>(`/modules/${moduleId}`),
   createLesson: (moduleId: string, title: string) =>
     apiClient.post<{ id: string; title: string; order: number }>(`/modules/${moduleId}/lessons`, { title }),
   renameLesson: (lessonId: string, title: string) =>
     apiClient.patch<{ id: string; title: string; order: number }>(`/lessons/${lessonId}`, { title }),
   deleteLesson: (lessonId: string) => apiClient.delete<{ id: string; deleted: true }>(`/lessons/${lessonId}`),
+};
+
+export interface FeedbackEntry {
+  id: string;
+  body: string;
+  createdAt: string;
+  student: { id: string; email: string; firstName: string | null; lastName: string | null };
+  lessonId: string;
+  lessonTitle: string;
+  moduleTitle: string;
+}
+
+// One-way: students can only `post`. There is no student-facing read endpoint at all —
+// `list` is rejected by role for anyone who isn't a mentor or admin.
+export const feedbackService = {
+  listForCohort: (cohortId: string) => apiClient.get<FeedbackEntry[]>(`/cohorts/${cohortId}/feedback`),
+  post: (lessonId: string, body: string) =>
+    apiClient.post<{ sent: true }>(`/lessons/${lessonId}/feedback`, { body }),
 };
 
 export interface RosterEntry {

@@ -12,6 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ShareFileInCohortForm } from "@/features/mentor/components/share-file-in-cohort-form";
 import { StudyPlanManager } from "@/features/mentor/components/study-plan-manager";
 import { CohortRoster } from "@/features/mentor/components/cohort-roster";
+import { CohortFeedback } from "@/features/mentor/components/cohort-feedback";
 import { CohortHeader } from "@/features/cohort/components/cohort-header";
 import { sharedFilesService } from "@/services/shared-files.service";
 import { toast } from "sonner";
@@ -56,6 +57,7 @@ export default function MentorCohortDetailPage({ params }: { params: Promise<{ c
         <TabsList variant="line">
           <TabsTrigger value="study-plan">Study plan</TabsTrigger>
           <TabsTrigger value="students">Students</TabsTrigger>
+          <TabsTrigger value="feedback">Feedback</TabsTrigger>
           <TabsTrigger value="files">Announcements</TabsTrigger>
         </TabsList>
 
@@ -65,6 +67,10 @@ export default function MentorCohortDetailPage({ params }: { params: Promise<{ c
 
         <TabsContent value="students" className="mt-4">
           <CohortRoster cohortId={cohortId} />
+        </TabsContent>
+
+        <TabsContent value="feedback" className="mt-4">
+          <CohortFeedback cohortId={cohortId} />
         </TabsContent>
 
         <TabsContent value="files" className="mt-4 flex flex-col gap-4">

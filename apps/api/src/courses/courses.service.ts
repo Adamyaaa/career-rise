@@ -155,6 +155,7 @@ export class CoursesService {
         id: true,
         title: true,
         order: true,
+        scheduledFor: true,
         lessons: {
           select: { id: true, title: true, order: true, slidesUrl: true, taughtAt: true },
           orderBy: { order: "asc" },
@@ -347,7 +348,7 @@ export class CoursesService {
     return { studentId, status: "withdrawn" };
   }
 
-  async createModule(user: AuthenticatedUser, cohortId: string, title: string) {
+  async createModule(user: AuthenticatedUser, cohortId: string, title: string, scheduledFor?: string) {
     await this.assertCanManageCohort(user, cohortId);
 
     const last = await this.prisma.module.findFirst({
@@ -357,19 +358,28 @@ export class CoursesService {
     });
 
     return this.prisma.module.create({
-      data: { cohortId, title: title.trim(), order: (last?.order ?? 0) + 1 },
-      select: { id: true, title: true, order: true },
+      data: {
+        cohortId,
+        title: title.trim(),
+        order: (last?.order ?? 0) + 1,
+        scheduledFor: parseScheduledFor(scheduledFor),
+      },
+      select: { id: true, title: true, order: true, scheduledFor: true },
     });
   }
 
-  async renameModule(user: AuthenticatedUser, moduleId: string, title: string) {
+  async updateModule(user: AuthenticatedUser, moduleId: string, title: string, scheduledFor?: string) {
     const module = await this.findModuleOrThrow(moduleId);
     await this.assertCanManageCohort(user, module.cohortId);
 
     return this.prisma.module.update({
       where: { id: moduleId },
-      data: { title: title.trim() },
-      select: { id: true, title: true, order: true },
+      data: {
+        title: title.trim(),
+        // Undefined leaves the existing date alone; an empty string clears it.
+        ...(scheduledFor !== undefined ? { scheduledFor: parseScheduledFor(scheduledFor) } : {}),
+      },
+      select: { id: true, title: true, order: true, scheduledFor: true },
     });
   }
 
@@ -414,6 +424,70 @@ export class CoursesService {
 
     await this.prisma.lesson.delete({ where: { id: lessonId } });
     return { id: lessonId, deleted: true };
+  }
+
+  // Mentor/admin only — students never read feedback back, not even their own, so there
+  // is no student-facing read path at all.
+  async listCohortFeedback(user: AuthenticatedUser, cohortId: string) {
+    await this.assertCanManageCohort(user, cohortId);
+
+    const feedback = await this.prisma.lessonFeedback.findMany({
+      where: { cohortId },
+      select: {
+        id: true,
+        body: true,
+        createdAt: true,
+        student: { select: { id: true, email: true, firstName: true, lastName: true } },
+        lesson: {
+          select: {
+            id: true,
+            title: true,
+            module: { select: { id: true, title: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return feedback.map((entry) => ({
+      id: entry.id,
+      body: entry.body,
+      createdAt: entry.createdAt,
+      student: entry.student,
+      lessonId: entry.lesson.id,
+      lessonTitle: entry.lesson.title,
+      moduleTitle: entry.lesson.module.title,
+    }));
+  }
+
+  async postFeedback(user: AuthenticatedUser, lessonId: string, body: string) {
+    const lesson = await this.prisma.lesson.findUnique({
+      where: { id: lessonId },
+      select: { id: true, module: { select: { cohortId: true } } },
+    });
+    if (!lesson) {
+      throw new NotFoundException("Lesson not found");
+    }
+    const cohortId = lesson.module.cohortId;
+    await this.assertEnrolled(user.id, cohortId);
+
+    await this.prisma.lessonFeedback.create({
+      data: { lessonId, cohortId, studentId: user.id, body: body.trim() },
+    });
+
+    // Nothing about the stored row is returned: the student can't read feedback back,
+    // so the response is just an acknowledgement that it was sent.
+    return { sent: true };
+  }
+
+  private async assertEnrolled(studentId: string, cohortId: string) {
+    const enrolled = await this.prisma.cohortEnrollment.findFirst({
+      where: { studentId, cohortId, status: "active" },
+      select: { id: true },
+    });
+    if (!enrolled) {
+      throw new ForbiddenException("You are not enrolled in this cohort");
+    }
   }
 
   private async findModuleOrThrow(moduleId: string) {
@@ -474,6 +548,21 @@ export class CoursesService {
     }
     return byCohort;
   }
+}
+
+// "" clears the date, a date-only string ("2026-07-14") is anchored to midday UTC so it
+// can't drift to the previous day for users behind UTC.
+function parseScheduledFor(value?: string): Date | null {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return null;
+  }
+  const iso = /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? `${trimmed}T12:00:00.000Z` : trimmed;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    throw new BadRequestException("scheduledFor must be a valid date");
+  }
+  return date;
 }
 
 function progressOf(completedLessons: number, totalLessons: number) {
