@@ -15,9 +15,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuthStore } from "@/stores/auth-store";
 import { authService } from "@/services/auth.service";
+import { fullName } from "@/lib/format";
 
-function initialsFor(email: string) {
-  return email.slice(0, 2).toUpperCase();
+function initialsFor(user: { firstName: string | null; lastName: string | null; email: string }) {
+  const initials = [user.firstName?.[0], user.lastName?.[0]].filter(Boolean).join("");
+  return (initials || user.email.slice(0, 2)).toUpperCase();
 }
 
 export function ProfileDropdown() {
@@ -38,12 +40,13 @@ export function ProfileDropdown() {
     <DropdownMenu>
       <DropdownMenuTrigger nativeButton render={<Button variant="ghost" size="icon" className="rounded-full" />}>
         <Avatar>
-          <AvatarFallback>{initialsFor(user.email)}</AvatarFallback>
+          <AvatarFallback>{initialsFor(user)}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="flex flex-col gap-0.5 px-2 py-1.5">
-          <span className="text-sm font-medium text-foreground">{user.email}</span>
+          <span className="text-sm font-medium text-foreground">{fullName(user)}</span>
+          <span className="truncate text-xs text-muted-foreground">{user.email}</span>
           <span className="text-xs text-muted-foreground capitalize">
             {user.role.toLowerCase().replace("_", " ")}
           </span>

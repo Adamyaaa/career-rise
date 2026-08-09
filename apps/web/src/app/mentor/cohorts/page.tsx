@@ -7,8 +7,12 @@ import { EmptyState } from "@/components/common/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CohortCard } from "@/features/student/components/cohort-card";
 import { learningService } from "@/services/learning.service";
+import { useAuthStore } from "@/stores/auth-store";
+import { displayName } from "@/lib/format";
 
 export default function MyCohortsPage() {
+  const user = useAuthStore((s) => s.user);
+
   const { data: cohorts, isLoading } = useQuery({
     queryKey: ["my-cohorts"],
     queryFn: learningService.listMyCohorts,
@@ -16,7 +20,10 @@ export default function MyCohortsPage() {
 
   return (
     <>
-      <PageHeading title="My Cohorts" description="Cohorts you mentor — share material directly into each one." />
+      <PageHeading
+        title={`Hi, ${user ? displayName(user) : "there"}`}
+        description="Cohorts you mentor — resources, class slides, and lessons."
+      />
 
       {isLoading && (
         <div className="flex flex-col gap-4">

@@ -2,8 +2,8 @@
 
 import { use, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, Lock, FileText, Download, Library, Calendar, User, FileArchive, FileCode, FileImage, CheckCircle2, Circle } from "lucide-react";
-import { PageHeading } from "@/components/common/page-heading";
+import { ChevronDown, FileText, Download, Library, Calendar, User, FileArchive, FileCode, FileImage, CheckCircle2, Circle, Presentation } from "lucide-react";
+import { CohortHeader } from "@/features/cohort/components/cohort-header";
 import { EmptyState } from "@/components/common/empty-state";
 import { CircularProgress } from "@/components/common/circular-progress";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { formatBytes } from "@/lib/format";
+import { formatBytes, fullName } from "@/lib/format";
 import { learningService } from "@/services/learning.service";
 import { sharedFilesService } from "@/services/shared-files.service";
 import { useAuthStore } from "@/stores/auth-store";
@@ -37,6 +37,7 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
       completed ? learningService.markLessonComplete(lessonId) : learningService.markLessonIncomplete(lessonId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cohort-modules", cohortId] });
+      queryClient.invalidateQueries({ queryKey: ["cohort-overview", cohortId] });
       queryClient.invalidateQueries({ queryKey: ["my-cohorts"] });
     },
     onError: () => toast.error("Couldn't update — try again"),
@@ -80,7 +81,7 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
 
   return (
     <>
-      <PageHeading title="Study plan" description="Modules, resources, and your progress for this cohort." />
+      <CohortHeader cohortId={cohortId} />
 
       {isLoading && (
         <div className="flex flex-col gap-3">
@@ -94,7 +95,7 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
         <Tabs defaultValue="study-plan">
           <TabsList variant="line">
             <TabsTrigger value="study-plan">Study plan</TabsTrigger>
-            <TabsTrigger value="resources">Resources</TabsTrigger>
+            <TabsTrigger value="resources">Announcements</TabsTrigger>
             <TabsTrigger value="progress">Progress</TabsTrigger>
           </TabsList>
 
@@ -102,43 +103,63 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
             {modules.map((module) => {
               const isExpanded = expanded === module.id;
               return (
-                <Card key={module.id} className={cn(module.locked && "opacity-60")}>
+                <Card key={module.id}>
                   <CardContent
                     role="button"
-                    onClick={() => !module.locked && setExpanded(isExpanded ? null : module.id)}
-                    className={cn("flex items-center gap-3", !module.locked && "cursor-pointer")}
+                    onClick={() => setExpanded(isExpanded ? null : module.id)}
+                    className="flex cursor-pointer items-center gap-3"
                   >
                     <CircularProgress percent={module.percent} size={40} strokeWidth={4} />
                     <div className="flex min-w-0 flex-1 flex-col">
-                      <div className="flex items-center gap-1.5">
-                        <p className="truncate font-heading text-sm font-medium text-foreground">{module.title}</p>
-                        {module.locked && <Lock className="size-3.5 shrink-0 text-muted-foreground" />}
-                      </div>
+                      <p className="truncate font-heading text-sm font-medium text-foreground">{module.title}</p>
                       <p className="text-xs text-muted-foreground">
                         {module.completedLessons}/{module.totalLessons} lessons complete
                       </p>
                     </div>
-                    {!module.locked && (
-                      <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform", isExpanded && "rotate-180")} />
-                    )}
+                    <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform", isExpanded && "rotate-180")} />
                   </CardContent>
 
-                  {isExpanded && !module.locked && (
+                  {isExpanded && (
                     <div className="flex flex-col gap-1 border-t border-border/60 px-4 py-3">
                       {module.lessons.map((lesson) => (
-                        <button
-                          key={lesson.id}
-                          onClick={() => toggleLesson.mutate({ lessonId: lesson.id, completed: !lesson.completed })}
-                          disabled={toggleLesson.isPending}
-                          className="flex items-center gap-2.5 rounded-md py-1.5 text-left text-sm hover:bg-muted/60 disabled:opacity-60"
-                        >
-                          {lesson.completed ? (
-                            <CheckCircle2 className="size-4 shrink-0 text-primary" />
+                        <div key={lesson.id} className="flex items-center gap-2 rounded-md hover:bg-muted/60">
+                          <button
+                            onClick={() => toggleLesson.mutate({ lessonId: lesson.id, completed: !lesson.completed })}
+                            disabled={toggleLesson.isPending}
+                            className="flex flex-1 items-center gap-2.5 py-1.5 text-left text-sm disabled:opacity-60"
+                          >
+                            {lesson.completed ? (
+                              <CheckCircle2 className="size-4 shrink-0 text-primary" />
+                            ) : (
+                              <Circle className="size-4 shrink-0 text-muted-foreground" />
+                            )}
+                            <span className={cn("text-foreground", lesson.completed && "text-muted-foreground")}>{lesson.title}</span>
+                            {lesson.taught && (
+                              <Badge variant="secondary" className="shrink-0 text-[10px]">
+                                Covered in class
+                              </Badge>
+                            )}
+                          </button>
+                          {lesson.slidesUrl ? (
+                            <a
+                              href={lesson.slidesUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10"
+                            >
+                              <Presentation className="size-3.5" />
+                              Slides
+                            </a>
                           ) : (
-                            <Circle className="size-4 shrink-0 text-muted-foreground" />
+                            <span
+                              className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground/50"
+                              title="No slides link shared yet"
+                            >
+                              <Presentation className="size-3.5" />
+                              Slides
+                            </span>
                           )}
-                          <span className={cn("text-foreground", lesson.completed && "text-muted-foreground")}>{lesson.title}</span>
-                        </button>
+                        </div>
                       ))}
                     </div>
                   )}
@@ -157,7 +178,7 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
             )}
 
             {!filesLoading && (!files || files.length === 0) && (
-              <EmptyState icon={Library} title="No shared resources yet" description="Nothing has been shared for this cohort yet." />
+              <EmptyState icon={Library} title="No announcements yet" description="Nothing has been shared for this cohort yet." />
             )}
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -182,7 +203,7 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
                       <div className="flex flex-col gap-2 border-t border-border/40 pt-3 text-[11px] text-muted-foreground">
                         <div className="flex items-center gap-1.5">
                           <User className="size-3" />
-                          <span>Uploaded by: {file.uploadedBy.email.split("@")[0]}</span>
+                          <span>Uploaded by: {fullName(file.uploadedBy)}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Calendar className="size-3" />

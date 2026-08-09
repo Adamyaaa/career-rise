@@ -18,6 +18,15 @@ import { ApiError } from "@/lib/api-client";
 
 const registerSchema = z
   .object({
+    firstName: z.string().trim().min(1, "First name is required").max(80),
+    lastName: z.string().trim().min(1, "Last name is required").max(80),
+    phone: z
+      .string()
+      .trim()
+      .max(20)
+      .regex(/^[+()\d\s-]{6,20}$/, "Enter a valid phone number")
+      .optional()
+      .or(z.literal("")),
     email: z.string().min(1, "Email is required").email("Enter a valid email"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string().min(1, "Confirm your password"),
@@ -41,7 +50,13 @@ export function RegisterForm() {
 
   async function onSubmit(values: RegisterValues) {
     try {
-      const res = await authService.register({ email: values.email, password: values.password });
+      const res = await authService.register({
+        email: values.email,
+        password: values.password,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        ...(values.phone ? { phone: values.phone } : {}),
+      });
       setSession(res);
       toast.success("Account created");
       router.push(roleHome(res.user.role));
@@ -59,8 +74,22 @@ export function RegisterForm() {
       </CardHeader>
       <CardContent>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormField label="First name" htmlFor="firstName" error={errors.firstName?.message}>
+              <Input id="firstName" autoComplete="given-name" placeholder="John" {...register("firstName")} />
+            </FormField>
+
+            <FormField label="Last name" htmlFor="lastName" error={errors.lastName?.message}>
+              <Input id="lastName" autoComplete="family-name" placeholder="Doe" {...register("lastName")} />
+            </FormField>
+          </div>
+
           <FormField label="Email" htmlFor="email" error={errors.email?.message}>
             <Input id="email" type="email" autoComplete="email" placeholder="you@example.com" {...register("email")} />
+          </FormField>
+
+          <FormField label="Phone (optional)" htmlFor="phone" error={errors.phone?.message}>
+            <Input id="phone" type="tel" autoComplete="tel" placeholder="+91 98765 43210" {...register("phone")} />
           </FormField>
 
           <FormField label="Password" htmlFor="password" error={errors.password?.message}>

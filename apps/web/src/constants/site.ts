@@ -13,7 +13,6 @@ export interface NavLink {
 export const marketingNavLinks: NavLink[] = [
   { label: "Features", href: "/features" },
   { label: "About", href: "/about" },
-  { label: "Pricing", href: "/pricing" },
   { label: "Contact", href: "/contact" },
 ];
 
@@ -22,7 +21,6 @@ export const footerLinkGroups: { title: string; links: NavLink[] }[] = [
     title: "Product",
     links: [
       { label: "Features", href: "/features" },
-      { label: "Pricing", href: "/pricing" },
       { label: "Courses", href: "/#courses" },
     ],
   },

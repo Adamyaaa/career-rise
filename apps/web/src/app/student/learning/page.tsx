@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CohortCard } from "@/features/student/components/cohort-card";
 import { learningService } from "@/services/learning.service";
 import { useAuthStore } from "@/stores/auth-store";
+import { displayName } from "@/lib/format";
 
 export default function MyLearningPage() {
   const user = useAuthStore((s) => s.user);
@@ -20,7 +21,7 @@ export default function MyLearningPage() {
   return (
     <>
       <PageHeading
-        title={`Hi, ${user?.email.split("@")[0] ?? "there"}`}
+        title={`Hi, ${user ? displayName(user) : "there"}`}
         description="Your active cohort — study plan, resources, and progress."
       />
 

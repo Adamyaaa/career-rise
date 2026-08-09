@@ -6,8 +6,6 @@ import {
   TrendingUp,
   Users,
   ClipboardCheck,
-  BarChart3,
-  ShieldCheck,
   Sparkles,
   Wand2,
   FileQuestion,
@@ -32,12 +30,6 @@ const mentorFeatures = [
   { icon: ClipboardCheck, title: "Review queue", description: "A pre-filtered, oldest-first queue of evidence waiting on your feedback." },
   { icon: MessageSquareText, title: "Criterion-based reviews", description: "Score submissions against a rubric your cohort defines, not a single pass/fail toggle." },
   { icon: Users, title: "Attendance & roster", description: "Mark attendance per session and see every student's standing at a glance." },
-];
-
-const platformFeatures = [
-  { icon: BarChart3, title: "Cohort & course admin", description: "Stand up new cohorts, assign mentors by specialization and load, manage rosters." },
-  { icon: ShieldCheck, title: "Role-based access", description: "Student, mentor, and admin areas are strictly separated at the API layer, not just the UI." },
-  { icon: Layers, title: "Any delivery format", description: "Classroom, webinar, workshop, or self-paced — sessions are configured, not hardcoded." },
 ];
 
 const aiPlaceholders = [
@@ -96,7 +88,6 @@ export default function FeaturesPage() {
         <div className="mx-auto max-w-6xl space-y-20 px-4 py-20 sm:px-6 lg:px-8">
           <FeatureGroup eyebrow="For students" title="Learn, submit, get feedback" features={studentFeatures} />
           <FeatureGroup eyebrow="For mentors" title="Review with context, not chaos" features={mentorFeatures} />
-          <FeatureGroup eyebrow="For admins" title="Run the whole program" features={platformFeatures} />
         </div>
       </section>
 

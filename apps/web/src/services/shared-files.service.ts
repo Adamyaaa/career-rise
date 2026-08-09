@@ -13,6 +13,8 @@ export interface SharedFile {
   createdAt: string;
   uploadedBy: {
     email: string;
+    firstName: string | null;
+    lastName: string | null;
   };
 }
 

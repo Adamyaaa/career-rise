@@ -33,6 +33,11 @@ model User {
   email        String   @unique
   passwordHash String
   role         Role
+  // Nullable because accounts predating these fields — and OTP sign-ups, which only
+  // ever supply an email — have no name. The UI falls back to the email prefix.
+  firstName    String?
+  lastName     String?
+  phone        String?
   createdAt    DateTime @default(now())
 
   studentProfile StudentProfile?
@@ -147,11 +152,14 @@ model Module {
 }
 
 model Lesson {
-  id       String @id @default(cuid())
-  moduleId String
-  title    String
-  content  String
-  order    Int
+  id        String    @id @default(cuid())
+  moduleId  String
+  title     String
+  content   String
+  order     Int
+  slidesUrl String? // link to the previous class's slides (e.g. Google Drive) — mentor/admin-set, link only, no file upload
+  taughtAt  DateTime? // set when a mentor marks this class delivered to the whole cohort; null = not taught yet.
+  // Cohort-wide and mentor-owned — distinct from LessonCompletion, which is each student's own "I've done this".
 
   module      Module             @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   sessions    LearningSession[]

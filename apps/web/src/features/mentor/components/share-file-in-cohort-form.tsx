@@ -88,7 +88,7 @@ export function ShareFileInCohortForm({ cohortId, onDone }: { cohortId: string; 
             </div>
           </FormField>
 
-          <FormField label="Resource Title" htmlFor="title">
+          <FormField label="Title" htmlFor="title">
             <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Week 1 Slides" required />
           </FormField>
 

@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { sharedFilesService } from "@/services/shared-files.service";
 import { useAuthStore } from "@/stores/auth-store";
 import { toast } from "sonner";
-import { formatBytes } from "@/lib/format";
+import { formatBytes, fullName } from "@/lib/format";
 
 const getFileIcon = (mime: string) => {
   if (mime.includes("pdf")) return FileText;
@@ -95,7 +95,7 @@ export default function ResourcesPage() {
                 <div className="mt-4 flex flex-col gap-2 pt-3 border-t border-border/40 text-[11px] text-muted-foreground">
                   <div className="flex items-center gap-1.5">
                     <User className="size-3" />
-                    <span>Uploaded by: {file.uploadedBy.email.split("@")[0]}</span>
+                    <span>Uploaded by: {fullName(file.uploadedBy)}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Calendar className="size-3" />

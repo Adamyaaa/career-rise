@@ -79,6 +79,8 @@ export class SharedFilesService {
         uploadedBy: {
           select: {
             email: true,
+            firstName: true,
+            lastName: true,
           },
         },
       },

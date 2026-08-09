@@ -16,23 +16,39 @@ export class UsersService {
   }
 
   async updateMe(id: string, dto: UpdateMeDto) {
-    if (!dto.email) {
+    if (dto.email) {
+      const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+      if (existing && existing.id !== id) {
+        throw new ConflictException({ code: "CONFLICT", message: "Email is already in use" });
+      }
+    }
+
+    // Only fields actually present in the request are touched, so a partial PATCH
+    // can't blank out a name the caller didn't mention.
+    const data = {
+      ...(dto.email ? { email: dto.email } : {}),
+      ...(dto.firstName !== undefined ? { firstName: dto.firstName.trim() } : {}),
+      ...(dto.lastName !== undefined ? { lastName: dto.lastName.trim() } : {}),
+      ...(dto.phone !== undefined ? { phone: dto.phone.trim() || null } : {}),
+    };
+
+    if (Object.keys(data).length === 0) {
       return this.findPublicById(id);
     }
 
-    const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (existing && existing.id !== id) {
-      throw new ConflictException({ code: "CONFLICT", message: "Email is already in use" });
-    }
-
-    const updated = await this.prisma.user.update({
-      where: { id },
-      data: { email: dto.email },
-    });
+    const updated = await this.prisma.user.update({ where: { id }, data });
     return this.toPublicUser(updated);
   }
 
   private toPublicUser(user: User) {
-    return { id: user.id, email: user.email, role: user.role, createdAt: user.createdAt };
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phone,
+      createdAt: user.createdAt,
+    };
   }
 }

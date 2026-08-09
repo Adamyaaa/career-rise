@@ -17,10 +17,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usersService } from "@/services/users.service";
 import { learningService } from "@/services/learning.service";
 import { useAuthStore } from "@/stores/auth-store";
-import { formatDate } from "@/lib/format";
+import { formatDate, fullName } from "@/lib/format";
 import { ApiError } from "@/lib/api-client";
+import type { User } from "@/types/user";
 
-const schema = z.object({ email: z.string().min(1, "Email is required").email("Enter a valid email") });
+function initialsFor(user: User) {
+  const initials = [user.firstName?.[0], user.lastName?.[0]].filter(Boolean).join("");
+  return (initials || user.email.slice(0, 2)).toUpperCase();
+}
+
+const schema = z.object({
+  firstName: z.string().trim().min(1, "First name is required").max(80),
+  lastName: z.string().trim().min(1, "Last name is required").max(80),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^$|^[+()\d\s-]{6,20}$/, "Enter a valid phone number"),
+  email: z.string().min(1, "Email is required").email("Enter a valid email"),
+});
 type Values = z.infer<typeof schema>;
 
 export default function StudentProfilePage() {
@@ -43,7 +57,14 @@ export default function StudentProfilePage() {
   } = useForm<Values>({ resolver: zodResolver(schema) });
 
   useEffect(() => {
-    if (user) reset({ email: user.email });
+    if (user) {
+      reset({
+        email: user.email,
+        firstName: user.firstName ?? "",
+        lastName: user.lastName ?? "",
+        phone: user.phone ?? "",
+      });
+    }
   }, [user, reset]);
 
   const mutation = useMutation({
@@ -100,20 +121,31 @@ export default function StudentProfilePage() {
             <CardHeader>
               <div className="flex items-center gap-3">
                 <Avatar size="lg">
-                  <AvatarFallback>{user?.email.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback>{user && initialsFor(user)}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <CardTitle className="text-base">{user?.email}</CardTitle>
+                  <CardTitle className="text-base">{user && fullName(user)}</CardTitle>
                   <CardDescription>
-                    {user?.role} · Joined {user && formatDate(user.createdAt)}
+                    {user?.email} · Joined {user && formatDate(user.createdAt)}
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <form className="flex flex-col gap-4" onSubmit={handleSubmit((v) => mutation.mutate(v))} noValidate>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <FormField label="First name" htmlFor="firstName" error={errors.firstName?.message}>
+                    <Input id="firstName" autoComplete="given-name" {...register("firstName")} />
+                  </FormField>
+                  <FormField label="Last name" htmlFor="lastName" error={errors.lastName?.message}>
+                    <Input id="lastName" autoComplete="family-name" {...register("lastName")} />
+                  </FormField>
+                </div>
                 <FormField label="Email" htmlFor="email" error={errors.email?.message}>
                   <Input id="email" type="email" {...register("email")} />
+                </FormField>
+                <FormField label="Phone (optional)" htmlFor="phone" error={errors.phone?.message}>
+                  <Input id="phone" type="tel" autoComplete="tel" placeholder="+91 98765 43210" {...register("phone")} />
                 </FormField>
                 <Button type="submit" className="w-fit" disabled={!isDirty || mutation.isPending}>
                   {mutation.isPending && <Loader2 className="size-4 animate-spin" />}

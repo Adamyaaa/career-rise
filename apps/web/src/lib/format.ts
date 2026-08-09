@@ -27,6 +27,23 @@ export function formatPercent(value: number): string {
   return `${Math.round(value * 100)}%`;
 }
 
+interface Nameable {
+  firstName?: string | null;
+  lastName?: string | null;
+  email: string;
+}
+
+// What to call someone in the UI. Falls back to the email prefix for accounts with no
+// name — pre-existing accounts and OTP sign-ups, which only ever supply an email.
+export function displayName(person: Nameable): string {
+  return person.firstName?.trim() || person.email.split("@")[0];
+}
+
+export function fullName(person: Nameable): string {
+  const combined = [person.firstName, person.lastName].filter(Boolean).join(" ").trim();
+  return combined || person.email.split("@")[0];
+}
+
 export function formatBytes(bytes: number, decimals = 2): string {
   if (bytes === 0) return "0 Bytes";
   const k = 1024;

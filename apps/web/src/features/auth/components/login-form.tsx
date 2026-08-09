@@ -43,10 +43,13 @@ export function LoginForm() {
     try {
       const res = await authService.sendOtp(email);
       setOtpSent(true);
-      toast.success("Verification code sent to your email!");
-      // For development speed, auto-populate code and show toast
+      toast.success(
+        res.delivered ? `Verification code sent to ${email}` : "Verification code generated",
+      );
+      // Only ever returned when no mail provider is configured (local dev) — with mail
+      // set up the code is emailed and never comes back over the API.
       if (res.otp) {
-        toast.info(`Dev Mode OTP: ${res.otp}`, { duration: 6000 });
+        toast.info(`Dev mode — no mail provider configured. Code: ${res.otp}`, { duration: 8000 });
         setCode(res.otp);
       }
     } catch (err) {

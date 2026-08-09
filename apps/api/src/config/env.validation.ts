@@ -14,4 +14,9 @@ export const envValidationSchema = Joi.object({
   JWT_REFRESH_SECRET: Joi.string().min(16).required(),
   JWT_ACCESS_TTL: Joi.string().default("15m"),
   JWT_REFRESH_TTL: Joi.string().default("7d"),
+
+  // Optional: without it the API still boots and logs OTP codes to the console
+  // instead of emailing them, so local dev works with no mail account.
+  RESEND_API_KEY: Joi.string().optional(),
+  MAIL_FROM: Joi.string().optional(),
 });

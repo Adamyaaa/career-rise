@@ -7,8 +7,10 @@ export interface User {
   email: string;
   role: Role;
   createdAt: string;
-  name?: string;
-  avatarUrl?: string;
+  // Null on accounts created before names existed, and on OTP sign-ups (email only).
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
 }
 
 export interface MentorProfile {
