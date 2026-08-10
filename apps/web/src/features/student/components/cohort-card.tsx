@@ -13,7 +13,9 @@ export function CohortCard({ cohort, hrefBase }: { cohort: MyCohortSummary; href
           <p className="text-xs font-medium tracking-wide text-primary uppercase">{cohort.name}</p>
           <p className="font-heading text-lg font-medium text-foreground">{cohort.course.title}</p>
           <p className="text-xs text-muted-foreground">
-            {cohort.progress ? `${cohort.progress.totalLessons} lessons · ` : ""}started {formatDate(cohort.startDate)}
+            {cohort.progress ? `${cohort.progress.totalLessons} lessons · ` : ""}
+            {/* First scheduled module when there is one, so this matches the cohort header. */}
+            started {formatDate(cohort.firstClassDate ?? cohort.startDate)}
           </p>
 
           {cohort.progress && (

@@ -2,7 +2,7 @@
 
 import { use, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, FileText, Download, Library, Calendar, CalendarDays, User, FileArchive, FileCode, FileImage, CheckCircle2, Circle, Presentation } from "lucide-react";
+import { ChevronDown, FileText, Download, Library, Calendar, CalendarDays, User, FileArchive, FileCode, FileImage, CheckCircle2, Circle, Presentation, GraduationCap, BookOpen, MessageCircle, MoreVertical } from "lucide-react";
 import { CohortHeader } from "@/features/cohort/components/cohort-header";
 import { LessonFeedbackComposer } from "@/features/cohort/components/lesson-feedback-composer";
 import { EmptyState } from "@/components/common/empty-state";
@@ -169,6 +169,26 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
                             >
                               <Presentation className="size-3.5" />
                               Slides
+                            </span>
+                          )}
+
+                          {lesson.assignmentsUrl ? (
+                            <a
+                              href={lesson.assignmentsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10"
+                            >
+                              <FileText className="size-3.5" />
+                              Assignments
+                            </a>
+                          ) : (
+                            <span
+                              className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground/50"
+                              title="No assignments link shared yet"
+                            >
+                              <FileText className="size-3.5" />
+                              Assignments
                             </span>
                           )}
 

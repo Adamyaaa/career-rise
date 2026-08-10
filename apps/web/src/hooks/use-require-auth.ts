@@ -30,9 +30,8 @@ export function useRequireAuth(allowedRoles?: Role[]) {
   return { user, ready: mounted && !!user };
 }
 
-// Only STUDENT (my learning, profile) and MENTOR (my cohorts) have real,
-// backend-connected pages so far — ADMIN has none yet and falls back to the student home.
 export function roleHome(role: Role): string {
+  if (role === "SUPER_ADMIN") return "/admin/users";
   if (role === "MENTOR") return "/mentor/cohorts";
   return "/student/learning";
 }

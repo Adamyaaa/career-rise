@@ -5,6 +5,7 @@ import { CurrentUser } from "../common/decorators/current-user.decorator";
 import { AuthenticatedUser } from "../auth/strategies/jwt.strategy";
 import { CoursesService } from "./courses.service";
 import { UpdateLessonSlidesDto } from "./dto/update-lesson-slides.dto";
+import { UpdateLessonAssignmentsDto } from "./dto/update-lesson-assignments.dto";
 import {
   CreateLessonDto,
   CreateModuleDto,
@@ -59,6 +60,12 @@ export class CoursesController {
     return this.coursesService.updateLessonSlidesUrl(user, id, dto.slidesUrl);
   }
 
+  @Patch("lessons/:id/assignments")
+  @Roles(Role.MENTOR, Role.SUPER_ADMIN)
+  updateAssignments(@Param("id") id: string, @Body() dto: UpdateLessonAssignmentsDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.coursesService.updateLessonAssignmentsUrl(user, id, dto.assignmentsUrl);
+  }
+
   @Patch("lessons/:id/taught")
   @Roles(Role.MENTOR, Role.SUPER_ADMIN)
   setTaught(@Param("id") id: string, @Body() dto: SetLessonTaughtDto, @CurrentUser() user: AuthenticatedUser) {
@@ -75,6 +82,12 @@ export class CoursesController {
   @Roles(Role.MENTOR, Role.SUPER_ADMIN)
   enrollStudent(@Param("id") id: string, @Body() dto: EnrollStudentDto, @CurrentUser() user: AuthenticatedUser) {
     return this.coursesService.enrollStudent(user, id, dto.email);
+  }
+
+  @Post("cohorts/:id/enroll-me")
+  @Roles(Role.STUDENT)
+  enrollSelf(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.coursesService.enrollSelf(user, id);
   }
 
   @Delete("cohorts/:id/students/:studentId")

@@ -82,6 +82,7 @@ export class AuthService {
         message: "Invalid email or password",
       });
     }
+    this.assertActive(user.isActive);
 
     const tokens = await this.issueTokenPair(user.id, user.role, user.email);
     return { user: this.toPublicUser(user), ...tokens };
@@ -127,7 +128,7 @@ export class AuthService {
     }
 
     // The code is only ever returned when there's no mail provider configured — i.e. a
-    // local dev machine with no RESEND_API_KEY. Returning it once mail works would let
+    // local dev machine with no BREVO_API_KEY. Returning it once mail works would let
     // anyone request a code for someone else's address and read it straight back.
     const isDev = this.config.get<string>("NODE_ENV") !== "production";
     return {
@@ -151,22 +152,18 @@ export class AuthService {
     // Delete OTP after successful verification
     await this.redis.del(redisKey);
 
-    let user = await this.prisma.user.findUnique({ where: { email } });
-
+    // OTP signs in existing accounts only. It used to silently create a STUDENT for any
+    // unknown address, which meant anyone could mint an account — and it would bypass
+    // the name/phone the register form collects. Mentors and admins are provisioned by
+    // an admin, students sign up themselves.
+    const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
-      // Auto-register user as STUDENT if they don't exist
-      const dummyPassword = randomUUID();
-      const passwordHash = await bcrypt.hash(dummyPassword, BCRYPT_ROUNDS);
-
-      user = await this.prisma.$transaction(async (tx) => {
-        const created = await tx.user.create({
-          data: { email, passwordHash, role: Role.STUDENT },
-        });
-        await tx.studentProfile.create({ data: { userId: created.id } });
-        return created;
+      throw new UnauthorizedException({
+        code: "UNAUTHORIZED",
+        message: "No account found for that email — sign up first",
       });
-      this.logger.log(`[OTP] Auto-registered new student user for email ${email}`);
     }
+    this.assertActive(user.isActive);
 
     const tokens = await this.issueTokenPair(user.id, user.role, user.email);
     return { user: this.toPublicUser(user), ...tokens };
@@ -178,6 +175,17 @@ export class AuthService {
       return;
     }
     await this.redis.del(`${REFRESH_KEY_PREFIX}${payload.jti}`);
+  }
+
+  // Deliberately the same wording for both login paths, so it never hints at whether an
+  // address exists — only that this one can't sign in.
+  private assertActive(isActive: boolean) {
+    if (!isActive) {
+      throw new UnauthorizedException({
+        code: "UNAUTHORIZED",
+        message: "This account has been deactivated. Contact your administrator.",
+      });
+    }
   }
 
   private async issueTokenPair(userId: string, role: Role, email: string): Promise<TokenPair> {

@@ -41,6 +41,12 @@ export class CoursesService {
               startDate: true,
               endDate: true,
               course: { select: { id: true, title: true } },
+              modules: {
+                where: { scheduledFor: { not: null } },
+                orderBy: { scheduledFor: "asc" },
+                take: 1,
+                select: { scheduledFor: true },
+              },
             },
           },
         },
@@ -48,7 +54,10 @@ export class CoursesService {
       });
       // A mentor has no personal lesson completion, so no `progress` field here —
       // the frontend CohortCard renders without a progress bar when it's absent.
-      return assignments.map((a) => a.cohort);
+      return assignments.map(({ cohort }) => {
+        const { modules, ...rest } = cohort;
+        return { ...rest, firstClassDate: modules[0]?.scheduledFor ?? null };
+      });
     }
 
     const enrollments = await this.prisma.cohortEnrollment.findMany({
@@ -61,7 +70,7 @@ export class CoursesService {
             startDate: true,
             endDate: true,
             course: { select: { id: true, title: true } },
-            modules: { select: { lessons: { select: { id: true } } } },
+            modules: { select: { scheduledFor: true, lessons: { select: { id: true } } } },
           },
         },
       },
@@ -76,20 +85,25 @@ export class CoursesService {
       const completed = completedByCohort.get(cohort.id) ?? new Set<string>();
       const completedLessons = lessonIds.filter((id) => completed.has(id)).length;
 
+      // Same rule as the cohort header: the first dated module is the real start.
+      const scheduled = cohort.modules
+        .map((m) => m.scheduledFor)
+        .filter((d): d is Date => d !== null)
+        .sort((a, b) => a.getTime() - b.getTime());
+
       return {
         id: cohort.id,
         name: cohort.name,
         startDate: cohort.startDate,
         endDate: cohort.endDate,
+        firstClassDate: scheduled[0] ?? null,
         course: cohort.course,
         progress: progressOf(completedLessons, lessonIds.length),
       };
     });
   }
 
-  // Counts for the cohort header. `cohortAvgPercent` is the mean completion across
-  // active students, which equals total completions / (students * lessons) — no need
-  // to group per student. Withdrawn students are excluded from both sides of that.
+  // Counts for the cohort header.
   async getCohortOverview(cohortId: string, user: AuthenticatedUser) {
     const cohort = await this.prisma.cohort.findUnique({
       where: { id: cohortId },
@@ -116,19 +130,23 @@ export class CoursesService {
       }
     }
 
-    const activeStudentFilter = { enrollments: { some: { cohortId, status: "active" } } };
-
-    const [studentCount, lessonCount, taughtCount, totalCompletions, myCompletions] = await Promise.all([
+    const [studentCount, lessonCount, taughtCount, myCompletions, firstScheduledModule] = await Promise.all([
       this.prisma.cohortEnrollment.count({ where: { cohortId, status: "active" } }),
       this.prisma.lesson.count({ where: { module: { cohortId } } }),
       this.prisma.lesson.count({ where: { module: { cohortId }, taughtAt: { not: null } } }),
-      this.prisma.lessonCompletion.count({ where: { cohortId, student: activeStudentFilter } }),
       user.role === Role.STUDENT
         ? this.prisma.lessonCompletion.count({ where: { cohortId, studentId: user.id } })
         : Promise.resolve(0),
+      // The earliest dated module is when teaching actually begins, which is what the
+      // header should show — the cohort's own startDate is admin-set and drifts out of
+      // step with the schedule once modules are planned.
+      this.prisma.module.findFirst({
+        where: { cohortId, scheduledFor: { not: null } },
+        orderBy: { scheduledFor: "asc" },
+        select: { scheduledFor: true },
+      }),
     ]);
 
-    const denominator = studentCount * lessonCount;
     const { _count, ...cohortFields } = cohort;
 
     return {
@@ -137,7 +155,8 @@ export class CoursesService {
       studentCount,
       lessonCount,
       taughtCount,
-      cohortAvgPercent: denominator === 0 ? 0 : Math.round((totalCompletions / denominator) * 100),
+      // Null when no module has a date yet; the UI falls back to startDate.
+      firstClassDate: firstScheduledModule?.scheduledFor ?? null,
       myProgressPercent:
         user.role === Role.STUDENT && lessonCount > 0 ? Math.round((myCompletions / lessonCount) * 100) : null,
     };
@@ -157,7 +176,7 @@ export class CoursesService {
         order: true,
         scheduledFor: true,
         lessons: {
-          select: { id: true, title: true, order: true, slidesUrl: true, taughtAt: true },
+          select: { id: true, title: true, order: true, slidesUrl: true, assignmentsUrl: true, taughtAt: true },
           orderBy: { order: "asc" },
         },
       },
@@ -232,6 +251,16 @@ export class CoursesService {
       where: { id: lessonId },
       data: { slidesUrl: slidesUrl?.trim() || null },
       select: { id: true, slidesUrl: true },
+    });
+  }
+
+  async updateLessonAssignmentsUrl(user: AuthenticatedUser, lessonId: string, assignmentsUrl?: string) {
+    await this.assertCanManageLesson(user, lessonId);
+
+    return this.prisma.lesson.update({
+      where: { id: lessonId },
+      data: { assignmentsUrl: assignmentsUrl?.trim() || null },
+      select: { id: true, assignmentsUrl: true },
     });
   }
 
@@ -326,6 +355,38 @@ export class CoursesService {
     }
 
     return { studentId: student.id, email: student.email, status: "active" };
+  }
+
+  async enrollSelf(user: AuthenticatedUser, cohortId: string) {
+    if (user.role !== Role.STUDENT) {
+      throw new ForbiddenException("Only students can self-enroll");
+    }
+
+    const cohort = await this.prisma.cohort.findUnique({ where: { id: cohortId } });
+    if (!cohort) {
+      throw new NotFoundException("Cohort not found");
+    }
+
+    const existing = await this.prisma.cohortEnrollment.findFirst({
+      where: { cohortId, studentId: user.id },
+      select: { id: true, status: true },
+    });
+
+    if (existing) {
+      if (existing.status === "active") {
+        throw new ConflictException("You are already in this cohort");
+      }
+      await this.prisma.cohortEnrollment.update({
+        where: { id: existing.id },
+        data: { status: "active" },
+      });
+    } else {
+      await this.prisma.cohortEnrollment.create({
+        data: { cohortId, studentId: user.id, status: "active" },
+      });
+    }
+
+    return { studentId: user.id, email: user.email, status: "active" };
   }
 
   // Withdraw rather than delete: their lesson completions stay intact in case they return.

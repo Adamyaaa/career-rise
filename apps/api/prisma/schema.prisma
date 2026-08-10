@@ -29,10 +29,15 @@ enum Role {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id    String @id @default(cuid())
+  email String @unique
+  // Admin-provisioned accounts (mentors, other admins) never get a usable password —
+  // this holds an unusable placeholder hash and they sign in with an emailed OTP.
   passwordHash String
   role         Role
+  // Soft deactivation. Login and OTP both refuse inactive accounts, so access is
+  // revoked without deleting their cohort history, feedback or progress.
+  isActive     Boolean @default(true)
   // Nullable because accounts predating these fields — and OTP sign-ups, which only
   // ever supply an email — have no name. The UI falls back to the email prefix.
   firstName    String?
@@ -161,6 +166,7 @@ model Lesson {
   content   String
   order     Int
   slidesUrl String? // link to the previous class's slides (e.g. Google Drive) — mentor/admin-set, link only, no file upload
+  assignmentsUrl String? // link to the assignment material
   taughtAt  DateTime? // set when a mentor marks this class delivered to the whole cohort; null = not taught yet.
   // Cohort-wide and mentor-owned — distinct from LessonCompletion, which is each student's own "I've done this".
 

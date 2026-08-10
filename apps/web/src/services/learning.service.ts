@@ -11,6 +11,8 @@ export interface MyCohortSummary {
   name: string;
   startDate: string;
   endDate: string;
+  // Earliest dated module — the real first class; falls back to startDate when null.
+  firstClassDate: string | null;
   course: { id: string; title: string };
   // Present for STUDENT (their own completion); absent for MENTOR, who has none.
   progress?: Progress;
@@ -26,7 +28,9 @@ export interface CohortOverview {
   moduleCount: number;
   lessonCount: number;
   taughtCount: number;
-  cohortAvgPercent: number;
+  // Date of the earliest scheduled module — when classes actually begin. Null until a
+  // module has a date, in which case the UI falls back to startDate.
+  firstClassDate: string | null;
   // The signed-in student's own completion; null for mentors/admins, who have none.
   myProgressPercent: number | null;
 }
@@ -40,6 +44,7 @@ export interface LessonProgress {
   // Cohort-wide: the mentor has delivered this class.
   taught: boolean;
   slidesUrl: string | null;
+  assignmentsUrl: string | null;
 }
 
 export interface ModuleProgress extends Progress {
@@ -51,11 +56,13 @@ export interface ModuleProgress extends Progress {
 }
 
 export const learningService = {
+  listCohorts: () => apiClient.get<MyCohortSummary[]>("/cohorts"),
   listMyCohorts: () => apiClient.get<MyCohortSummary[]>("/cohorts/my"),
   getCohortOverview: (cohortId: string) => apiClient.get<CohortOverview>(`/cohorts/${cohortId}`),
   getCohortModules: (cohortId: string) => apiClient.get<ModuleProgress[]>(`/cohorts/${cohortId}/modules`),
   markLessonComplete: (lessonId: string) => apiClient.post<{ lessonId: string; completed: boolean }>(`/lessons/${lessonId}/complete`),
   markLessonIncomplete: (lessonId: string) => apiClient.delete<{ lessonId: string; completed: boolean }>(`/lessons/${lessonId}/complete`),
+  enrollSelf: (cohortId: string) => apiClient.post<{ studentId: string; email: string; status: string }>(`/cohorts/${cohortId}/enroll-me`),
 };
 
 // Mentor/admin edits to a cohort's study plan. Students never call these — the API
@@ -65,6 +72,9 @@ export const studyPlanService = {
     apiClient.patch<{ lessonId: string; taught: boolean }>(`/lessons/${lessonId}/taught`, { taught }),
   setLessonSlides: (lessonId: string, slidesUrl: string) =>
     apiClient.patch<{ id: string; slidesUrl: string | null }>(`/lessons/${lessonId}/slides`, { slidesUrl }),
+
+  setLessonAssignments: (lessonId: string, assignmentsUrl: string) =>
+    apiClient.patch<{ id: string; assignmentsUrl: string | null }>(`/lessons/${lessonId}/assignments`, { assignmentsUrl }),
   createModule: (cohortId: string, title: string, scheduledFor?: string) =>
     apiClient.post<{ id: string; title: string; order: number }>(`/cohorts/${cohortId}/modules`, {
       title,

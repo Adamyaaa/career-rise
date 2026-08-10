@@ -1,0 +1,56 @@
+# Render Blueprint — provisions the API, Postgres and Redis together.
+# Create via Render dashboard -> New -> Blueprint, pointed at this repo.
+#
+# Monorepo note: dockerContext is the REPO ROOT (`.`) while dockerfilePath points into
+# apps/api. That combination is what makes the workspace build work — the Dockerfile
+# needs package-lock.json, tsconfig.base.json and packages/shared, none of which are
+# visible if the context is apps/api.
+services:
+  - type: web
+    name: career-rise-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/v1/health
+    # Runs once per deploy, before the new instance takes traffic.
+    preDeployCommand: npx prisma migrate deploy --schema apps/api/prisma/schema.prisma
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Render injects PORT itself; main.ts prefers it over API_PORT.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: career-rise-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: career-rise-redis
+          property: connectionString
+      # Set in the dashboard — never commit these.
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      # The deployed frontend's origin, e.g. https://career-rise.vercel.app
+      - key: CORS_ORIGIN
+        sync: false
+
+  - type: keyvalue
+    name: career-rise-redis
+    plan: free
+    # Refresh tokens and OTP codes live here. Everything stored has its own TTL, so
+    # eviction under memory pressure only ever logs someone out early.
+    maxmemoryPolicy: noeviction
+    ipAllowList: []
+
+databases:
+  - name: career-rise-db
+    plan: free
+    databaseName: career_rise
+    user: career_rise

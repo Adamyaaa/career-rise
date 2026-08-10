@@ -26,15 +26,19 @@ export function CohortHeader({ cohortId }: { cohortId: string }) {
     return <Skeleton className="h-32 rounded-xl" />;
   }
 
-  // Students see their own completion; mentors/admins get the cohort-wide average.
+  // Only students have personal progress; mentors and admins see none.
   const isStudent = cohort.myProgressPercent !== null;
-  const percent = isStudent ? cohort.myProgressPercent! : cohort.cohortAvgPercent;
+
+  // Prefer the first scheduled module — that's the real first class. The cohort's own
+  // startDate is a fallback for cohorts whose modules aren't dated yet.
+  const start = cohort.firstClassDate ?? cohort.startDate;
+  const hasStarted = new Date(start).getTime() <= Date.now();
 
   const meta = [
     { icon: GraduationCap, label: `${cohort.studentCount} ${cohort.studentCount === 1 ? "student" : "students"}` },
     { icon: Layers, label: `${cohort.moduleCount} ${cohort.moduleCount === 1 ? "module" : "modules"}` },
     { icon: BookOpen, label: `${cohort.taughtCount}/${cohort.lessonCount} classes taught` },
-    { icon: CalendarDays, label: `Started ${formatDate(cohort.startDate)}` },
+    { icon: CalendarDays, label: `${hasStarted ? "Started" : "Starts"} ${formatDate(start)}` },
   ];
 
   return (
@@ -46,7 +50,7 @@ export function CohortHeader({ cohortId }: { cohortId: string }) {
               {cohort.name}
             </Badge>
             <Badge variant="outline" className="text-[10px]">
-              {scheduleStatus(cohort.startDate, cohort.endDate)}
+              {scheduleStatus(start, cohort.endDate)}
             </Badge>
           </div>
 
@@ -63,10 +67,14 @@ export function CohortHeader({ cohortId }: { cohortId: string }) {
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:gap-1.5">
-          <CircularProgress percent={percent} size={64} strokeWidth={5} />
-          <span className="text-xs text-muted-foreground">{isStudent ? "your progress" : "cohort avg"}</span>
-        </div>
+        {/* Mentors and admins get no ring — a cohort-wide average said little and the
+            counts above already cover teaching progress. */}
+        {isStudent && (
+          <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:gap-1.5">
+            <CircularProgress percent={cohort.myProgressPercent!} size={64} strokeWidth={5} />
+            <span className="text-xs text-muted-foreground">your progress</span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

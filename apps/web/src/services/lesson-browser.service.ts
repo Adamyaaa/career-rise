@@ -7,7 +7,7 @@ export interface ModuleWithLessons {
   title: string;
   order: number;
   scheduledFor: string | null;
-  lessons: { id: string; title: string; order: number; slidesUrl: string | null; taught: boolean }[];
+  lessons: { id: string; title: string; order: number; slidesUrl: string | null; assignmentsUrl: string | null; taught: boolean }[];
 }
 
 export const lessonBrowserService = {

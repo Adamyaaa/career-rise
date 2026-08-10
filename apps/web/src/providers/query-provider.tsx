@@ -8,6 +8,12 @@ function makeQueryClient() {
     defaultOptions: {
       queries: {
         staleTime: 60 * 1000,
+        // Changes made by *another* role — an admin creating a cohort, a mentor
+        // enrolling a student — can't invalidate this browser's cache. Without this,
+        // a cached list would keep showing stale data for up to staleTime after
+        // navigating back to the page. Cached data still renders instantly; the
+        // refetch happens in the background.
+        refetchOnMount: "always",
         retry: 1,
       },
     },

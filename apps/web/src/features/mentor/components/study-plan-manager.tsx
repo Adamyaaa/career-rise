@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, ChevronDown, ExternalLink, Pencil, Plus, Presentation, Trash2 } from "lucide-react";
+import { CalendarDays, ChevronDown, ExternalLink, Pencil, Plus, Presentation, FileText, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ import { toast } from "sonner";
 
 type Editor =
   | { kind: "slides"; lessonId: string; value: string }
+  | { kind: "assignments"; lessonId: string; value: string }
   | { kind: "module"; moduleId: string; value: string; date: string }
   | { kind: "lesson"; lessonId: string; value: string }
   | { kind: "new-module"; value: string; date: string }
@@ -31,6 +32,7 @@ const hasDate = (editor: Editor): editor is Extract<Editor, { date: string }> =>
 
 const EDITOR_COPY: Record<Editor["kind"], { title: string; label: string; placeholder: string }> = {
   slides: { title: "Slides link", label: "Google Drive link", placeholder: "https://drive.google.com/..." },
+  assignments: { title: "Assignments link", label: "Google Drive link", placeholder: "https://drive.google.com/..." },
   module: { title: "Rename module", label: "Module title", placeholder: "e.g. Foundations" },
   lesson: { title: "Rename class", label: "Class title", placeholder: "e.g. What is an agent?" },
   "new-module": { title: "Add a module", label: "Module title", placeholder: "e.g. Multi-Agent Orchestration" },
@@ -77,6 +79,8 @@ export function StudyPlanManager({ cohortId }: { cohortId: string }) {
     switch (editor.kind) {
       case "slides":
         return run(() => studyPlanService.setLessonSlides(editor.lessonId, editor.value));
+      case "assignments":
+        return run(() => studyPlanService.setLessonAssignments(editor.lessonId, editor.value));
       case "module":
         return run(() => studyPlanService.updateModule(editor.moduleId, value, editor.date));
       case "lesson":
@@ -245,6 +249,25 @@ export function StudyPlanManager({ cohortId }: { cohortId: string }) {
                         >
                           <Presentation className="size-3.5" />
                           {lesson.slidesUrl ? "Edit slides" : "Add slides"}
+                        </Button>
+
+                        {lesson.assignmentsUrl && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            render={<a href={lesson.assignmentsUrl} target="_blank" rel="noopener noreferrer" />}
+                          >
+                            <ExternalLink className="size-3.5" />
+                            Open
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditor({ kind: "assignments", lessonId: lesson.id, value: lesson.assignmentsUrl ?? "" })}
+                        >
+                          <FileText className="size-3.5" />
+                          {lesson.assignmentsUrl ? "Edit assignments" : "Add assignments"}
                         </Button>
                         <Button
                           variant="ghost"
