@@ -112,6 +112,12 @@ export class CoursesController {
     return this.coursesService.postFeedback(user, id, dto.body);
   }
 
+  @Delete("feedback/:id")
+  @Roles(Role.MENTOR, Role.SUPER_ADMIN)
+  deleteFeedback(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.coursesService.deleteFeedback(user, id);
+  }
+
   @Delete("modules/:id")
   @Roles(Role.MENTOR, Role.SUPER_ADMIN)
   deleteModule(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {

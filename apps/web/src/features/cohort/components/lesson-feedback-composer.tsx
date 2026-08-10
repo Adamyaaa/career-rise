@@ -2,71 +2,67 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Check, MessageSquare, Send } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { feedbackService } from "@/services/learning.service";
 import { toast } from "sonner";
 
-// Write-only by design: the student sends feedback and never sees it again. There is no
-// read endpoint for them to call, so nothing is listed here.
-export function LessonFeedbackComposer({ lessonId }: { lessonId: string }) {
+// Write-only by design: the student sends feedback and never sees it again, so there's
+// nothing to list here — just a trigger and a compose box.
+export function LessonFeedbackComposer({ lessonId, lessonTitle }: { lessonId: string; lessonTitle: string }) {
+  const [open, setOpen] = useState(false);
   const [body, setBody] = useState("");
-  const [justSent, setJustSent] = useState(false);
 
   const send = useMutation({
     mutationFn: () => feedbackService.post(lessonId, body),
     onSuccess: () => {
       setBody("");
-      setJustSent(true);
-      toast.success("Feedback sent to your mentor");
+      setOpen(false);
+      toast.success("Feedback sent — only your mentor can see it");
     },
     onError: (err: Error) => toast.error(err.message || "Couldn't send that — try again"),
   });
 
-  const submit = () => {
-    if (!body.trim()) return;
-    send.mutate();
-  };
-
-  if (justSent) {
-    return (
-      <div className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
-        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Check className="size-3.5 text-primary" />
-          Feedback sent — only your mentor can see it.
-        </p>
-        <Button variant="ghost" size="sm" onClick={() => setJustSent(false)}>
-          Send another
-        </Button>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-border/60 bg-muted/20 p-3">
-      <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+    <>
+      {/* Sits alongside the Slides link, styled to match it. */}
+      <button
+        onClick={() => setOpen(true)}
+        className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+      >
         <MessageSquare className="size-3.5" />
-        Feedback on this class — goes privately to your mentor
-      </p>
-      <div className="flex items-center gap-2">
-        <Input
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              submit();
-            }
-          }}
-          placeholder="How was this class?"
-          className="h-8 text-sm"
-        />
-        <Button size="sm" onClick={submit} disabled={send.isPending || !body.trim()}>
-          <Send className="size-3.5" />
-          Send
-        </Button>
-      </div>
-    </div>
+        Feedback
+      </button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Feedback on this class</DialogTitle>
+            <DialogDescription>
+              {lessonTitle} — goes privately to your mentor. You won&apos;t see it again once sent.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="How was this class? What worked, what didn't?"
+            rows={4}
+            autoFocus
+          />
+
+          <DialogFooter>
+            <DialogClose nativeButton render={<Button variant="outline" />}>
+              Cancel
+            </DialogClose>
+            <Button onClick={() => send.mutate()} disabled={send.isPending || !body.trim()}>
+              Send feedback
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

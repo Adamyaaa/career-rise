@@ -480,6 +480,22 @@ export class CoursesService {
     return { sent: true };
   }
 
+  // Mentors/admins can clear feedback from their own cohorts. Students have no delete
+  // path — they can't even read it back, let alone remove it after sending.
+  async deleteFeedback(user: AuthenticatedUser, feedbackId: string) {
+    const feedback = await this.prisma.lessonFeedback.findUnique({
+      where: { id: feedbackId },
+      select: { id: true, cohortId: true },
+    });
+    if (!feedback) {
+      throw new NotFoundException("Feedback not found");
+    }
+    await this.assertCanManageCohort(user, feedback.cohortId);
+
+    await this.prisma.lessonFeedback.delete({ where: { id: feedbackId } });
+    return { id: feedbackId, deleted: true };
+  }
+
   private async assertEnrolled(studentId: string, cohortId: string) {
     const enrolled = await this.prisma.cohortEnrollment.findFirst({
       where: { studentId, cohortId, status: "active" },

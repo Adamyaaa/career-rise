@@ -134,8 +134,7 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
                   {isExpanded && (
                     <div className="flex flex-col gap-1 border-t border-border/60 px-4 py-3">
                       {module.lessons.map((lesson) => (
-                        <div key={lesson.id} className="flex flex-col gap-2 py-1.5">
-                          <div className="flex items-center gap-2 rounded-md hover:bg-muted/60">
+                        <div key={lesson.id} className="flex items-center gap-2 rounded-md hover:bg-muted/60">
                           <button
                             onClick={() => toggleLesson.mutate({ lessonId: lesson.id, completed: !lesson.completed })}
                             disabled={toggleLesson.isPending}
@@ -172,9 +171,8 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
                               Slides
                             </span>
                           )}
-                          </div>
 
-                          <LessonFeedbackComposer lessonId={lesson.id} />
+                          <LessonFeedbackComposer lessonId={lesson.id} lessonTitle={lesson.title} />
                         </div>
                       ))}
                     </div>

@@ -96,6 +96,7 @@ export const feedbackService = {
   listForCohort: (cohortId: string) => apiClient.get<FeedbackEntry[]>(`/cohorts/${cohortId}/feedback`),
   post: (lessonId: string, body: string) =>
     apiClient.post<{ sent: true }>(`/lessons/${lessonId}/feedback`, { body }),
+  delete: (feedbackId: string) => apiClient.delete<{ id: string; deleted: true }>(`/feedback/${feedbackId}`),
 };
 
 export interface RosterEntry {
