@@ -7,7 +7,10 @@ import { mentorNav } from "@/features/app-shell/nav-config";
 import { Loader2 } from "lucide-react";
 
 export default function MentorLayout({ children }: { children: React.ReactNode }) {
-  const { ready } = useRequireAuth(["MENTOR"]);
+  // Admins sit above mentors and can manage any cohort — the API already allows it via
+  // assertCanManageCohort, so this guard would otherwise be the only thing stopping
+  // them from posting or deleting announcements, classes and roster entries.
+  const { ready } = useRequireAuth(["MENTOR", "SUPER_ADMIN"]);
 
   if (!ready) {
     return (

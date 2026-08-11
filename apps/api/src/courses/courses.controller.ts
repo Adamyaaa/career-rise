@@ -26,7 +26,7 @@ export class CoursesController {
   }
 
   @Get("cohorts/my")
-  @Roles(Role.STUDENT, Role.MENTOR)
+  @Roles(Role.STUDENT, Role.MENTOR, Role.SUPER_ADMIN)
   listMyCohorts(@CurrentUser() user: AuthenticatedUser) {
     return this.coursesService.listMyCohorts(user);
   }

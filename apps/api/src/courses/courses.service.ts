@@ -30,6 +30,31 @@ export class CoursesService {
   }
 
   async listMyCohorts(user: AuthenticatedUser) {
+    // An admin isn't enrolled in or assigned to anything, but manages everything —
+    // without this they'd land on an empty "My Cohorts" page.
+    if (user.role === Role.SUPER_ADMIN) {
+      const cohorts = await this.prisma.cohort.findMany({
+        select: {
+          id: true,
+          name: true,
+          startDate: true,
+          endDate: true,
+          course: { select: { id: true, title: true } },
+          modules: {
+            where: { scheduledFor: { not: null } },
+            orderBy: { scheduledFor: "asc" },
+            take: 1,
+            select: { scheduledFor: true },
+          },
+        },
+        orderBy: { startDate: "desc" },
+      });
+      return cohorts.map(({ modules, ...cohort }) => ({
+        ...cohort,
+        firstClassDate: modules[0]?.scheduledFor ?? null,
+      }));
+    }
+
     if (user.role === Role.MENTOR) {
       const assignments = await this.prisma.cohortMentorAssignment.findMany({
         where: { mentorProfile: { userId: user.id } },

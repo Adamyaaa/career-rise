@@ -12,6 +12,8 @@ import { displayName } from "@/lib/format";
 
 export default function MyCohortsPage() {
   const user = useAuthStore((s) => s.user);
+  // Admins reach this page too and see every cohort, not just assigned ones.
+  const isAdmin = user?.role === "SUPER_ADMIN";
 
   const { data: cohorts, isLoading } = useQuery({
     queryKey: ["my-cohorts"],
@@ -22,7 +24,11 @@ export default function MyCohortsPage() {
     <>
       <PageHeading
         title={`Hi, ${user ? displayName(user) : "there"}`}
-        description="Cohorts you mentor — resources, class slides, and lessons."
+        description={
+          isAdmin
+            ? "Every cohort — study plan, students, feedback, and announcements."
+            : "Cohorts you mentor — study plan, students, feedback, and announcements."
+        }
       />
 
       {isLoading && (
@@ -32,7 +38,15 @@ export default function MyCohortsPage() {
       )}
 
       {!isLoading && (!cohorts || cohorts.length === 0) && (
-        <EmptyState icon={GraduationCap} title="No assigned cohorts yet" description="Once you're assigned to a cohort, it'll show up here." />
+        <EmptyState
+          icon={GraduationCap}
+          title={isAdmin ? "No cohorts yet" : "No assigned cohorts yet"}
+          description={
+            isAdmin
+              ? "Create one under Cohorts in the admin area."
+              : "Once you're assigned to a cohort, it'll show up here."
+          }
+        />
       )}
 
       <div className="flex flex-col gap-4">

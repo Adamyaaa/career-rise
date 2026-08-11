@@ -54,9 +54,9 @@ model User {
   progressSignals   ProgressSignal[]
   attendances       Attendance[]       @relation("AttendanceStudent")
   markedAttendances Attendance[]       @relation("AttendanceMarkedBy")
-  sharedFiles       SharedFile[]       @relation("UploadedFiles")
   lessonCompletions LessonCompletion[]
   lessonFeedback    LessonFeedback[]   @relation("FeedbackStudent")
+  announcements     Announcement[]     @relation("AnnouncementAuthor")
 
   @@map("users")
 }
@@ -110,9 +110,9 @@ model Cohort {
   progressSignals       ProgressSignal[]
   evidence              Evidence[]
   attendances           Attendance[]
-  sharedFiles           SharedFile[]
   lessonCompletions     LessonCompletion[]
   lessonFeedback        LessonFeedback[]
+  announcements         Announcement[]
 
   @@index([courseId])
   @@map("cohorts")
@@ -173,7 +173,6 @@ model Lesson {
   module      Module             @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   sessions    LearningSession[]
   evidence    Evidence[]
-  sharedFiles SharedFile[]
   completions LessonCompletion[]
   feedback    LessonFeedback[]
 
@@ -255,6 +254,26 @@ model LessonCompletion {
   @@unique([studentId, lessonId])
   @@index([studentId, cohortId])
   @@map("lesson_completions")
+}
+
+// A note from a mentor or admin to a whole cohort: a heading, some body text, and an
+// optional link (slides, a form, a recording). Replaced file uploads, which wrote to
+// the API container's own disk and so were lost on every redeploy.
+model Announcement {
+  id        String   @id @default(cuid())
+  cohortId  String
+  authorId  String
+  title     String
+  content   String
+  link      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  author User   @relation("AnnouncementAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([cohortId, createdAt])
+  @@map("announcements")
 }
 
 // One-way feedback from a student to the cohort's mentors about a specific class.
@@ -350,25 +369,3 @@ model ProgressWeightConfig {
   @@map("progress_weight_configs")
 }
 
-model SharedFile {
-  id           String   @id @default(cuid())
-  title        String
-  description  String?
-  fileName     String
-  fileKey      String
-  mimeType     String
-  fileSize     Int
-  uploadedById String
-  cohortId     String? // null = global; auto-derived from lesson's module->cohort chain when lessonId is set
-  lessonId     String? // set when this file is course material for a specific lesson, rather than a general cohort/global file
-  createdAt    DateTime @default(now())
-
-  uploadedBy User    @relation("UploadedFiles", fields: [uploadedById], references: [id], onDelete: Cascade)
-  cohort     Cohort? @relation(fields: [cohortId], references: [id], onDelete: Cascade)
-  lesson     Lesson? @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-
-  @@index([uploadedById])
-  @@index([cohortId])
-  @@index([lessonId])
-  @@map("shared_files")
-}

@@ -7,7 +7,7 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { RedisModule } from "./redis/redis.module";
 import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
-import { SharedFilesModule } from "./shared-files/shared-files.module";
+import { AnnouncementsModule } from "./announcements/announcements.module";
 import { CoursesModule } from "./courses/courses.module";
 import { AdminModule } from "./admin/admin.module";
 import { HealthController } from "./health/health.controller";
@@ -33,7 +33,7 @@ import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
     RedisModule,
     AuthModule,
     UsersModule,
-    SharedFilesModule,
+    AnnouncementsModule,
     CoursesModule,
     AdminModule,
   ],

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Layers, Plus, Trash2, UserMinus, UserPlus } from "lucide-react";
+import Link from "next/link";
+import { Layers, Plus, Settings2, Trash2, UserMinus, UserPlus } from "lucide-react";
 import { PageHeading } from "@/components/common/page-heading";
 import { EmptyState } from "@/components/common/empty-state";
 import { Card, CardContent } from "@/components/ui/card";
@@ -134,16 +135,28 @@ export default function AdminCohortsPage() {
                     {cohort.moduleCount === 1 ? "" : "s"}
                   </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => handleDelete(cohort.id, cohort.name)}
-                  disabled={remove.isPending}
-                  className="shrink-0 text-destructive hover:bg-destructive/10"
-                  aria-label={`Delete ${cohort.name}`}
-                >
-                  <Trash2 className="size-3.5" />
-                </Button>
+                <div className="flex shrink-0 items-center gap-1">
+                  {/* Study plan, students, feedback and announcements all live on the
+                      cohort detail page, which admins can now open too. */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    render={<Link href={`/mentor/cohorts/${cohort.id}`} />}
+                  >
+                    <Settings2 className="size-3.5" />
+                    Manage
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => handleDelete(cohort.id, cohort.name)}
+                    disabled={remove.isPending}
+                    className="text-destructive hover:bg-destructive/10"
+                    aria-label={`Delete ${cohort.name}`}
+                  >
+                    <Trash2 className="size-3.5" />
+                  </Button>
+                </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-2 border-t border-border/40 pt-3">
