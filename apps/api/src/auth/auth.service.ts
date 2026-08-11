@@ -19,6 +19,11 @@ import { LoginDto } from "./dto/login.dto";
 
 const BCRYPT_ROUNDS = 10;
 const REFRESH_KEY_PREFIX = "refresh:";
+const OTP_TTL_SECONDS = 300;
+// Caps each issued code at 5 guesses out of a million.
+const OTP_MAX_ATTEMPTS = 5;
+
+const otpAttemptsKey = (email: string) => `otp-attempts:${email}`;
 
 export interface TokenPair {
   accessToken: string;
@@ -111,11 +116,30 @@ export class AuthService {
   }
 
   async sendOtp(email: string): Promise<{ success: boolean; delivered: boolean; otp?: string }> {
+    // Only send to addresses that actually have an account. Without this the endpoint
+    // is an open relay: anyone could make our mail account send to any address on the
+    // internet and drain the daily quota.
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: { id: true, isActive: true },
+    });
+
+    const isDev = this.config.get<string>("NODE_ENV") !== "production";
+
+    // The response is identical whether or not the account exists, so this can't be
+    // used to discover which email addresses are registered.
+    if (!user || !user.isActive) {
+      this.logger.warn(`OTP requested for unknown or inactive account ${email} — not sent`);
+      return { success: true, delivered: this.mail.isConfigured };
+    }
+
     const code = randomInt(100000, 1000000).toString();
     const redisKey = `otp:${email}`;
 
-    // Store in Redis with 5 minutes TTL
-    await this.redis.set(redisKey, code, "EX", 300);
+    await this.redis.set(redisKey, code, "EX", OTP_TTL_SECONDS);
+    // A fresh code resets the failure count, so earlier wrong guesses can't lock out
+    // the legitimate owner once they request a new one.
+    await this.redis.del(otpAttemptsKey(email));
 
     try {
       await this.mail.sendOtpCode(email, code);
@@ -130,7 +154,6 @@ export class AuthService {
     // The code is only ever returned when there's no mail provider configured — i.e. a
     // local dev machine with no BREVO_API_KEY. Returning it once mail works would let
     // anyone request a code for someone else's address and read it straight back.
-    const isDev = this.config.get<string>("NODE_ENV") !== "production";
     return {
       success: true,
       delivered: this.mail.isConfigured,
@@ -143,14 +166,29 @@ export class AuthService {
     const storedCode = await this.redis.get(redisKey);
 
     if (!storedCode || storedCode !== code) {
+      // Per-code failure counter, in Redis so it holds across API instances. IP
+      // throttling alone can't stop a distributed guess at a 6-digit code; burning the
+      // code after a handful of misses caps each code at OTP_MAX_ATTEMPTS tries out of
+      // a million, instead of unlimited.
+      if (storedCode) {
+        const attempts = await this.redis.incr(otpAttemptsKey(email));
+        if (attempts === 1) {
+          await this.redis.expire(otpAttemptsKey(email), OTP_TTL_SECONDS);
+        }
+        if (attempts >= OTP_MAX_ATTEMPTS) {
+          await this.redis.del(redisKey, otpAttemptsKey(email));
+          this.logger.warn(`OTP for ${email} invalidated after ${attempts} failed attempts`);
+        }
+      }
+
       throw new UnauthorizedException({
         code: "UNAUTHORIZED",
         message: "Invalid or expired OTP",
       });
     }
 
-    // Delete OTP after successful verification
-    await this.redis.del(redisKey);
+    // Consume the code and its counter on success — each code is single use.
+    await this.redis.del(redisKey, otpAttemptsKey(email));
 
     // OTP signs in existing accounts only. It used to silently create a STUDENT for any
     // unknown address, which meant anyone could mint an account — and it would bypass

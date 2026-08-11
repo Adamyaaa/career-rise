@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { APP_FILTER, APP_GUARD } from "@nestjs/core";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { envValidationSchema } from "./config/env.validation";
 import { PrismaModule } from "./prisma/prisma.module";
 import { RedisModule } from "./redis/redis.module";
@@ -23,6 +24,11 @@ import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
       envFilePath: [".env", "../../.env"],
       validationSchema: envValidationSchema,
     }),
+    // Baseline per-IP limit for the whole API. Auth routes narrow this further with
+    // @Throttle — see auth.controller.ts. Storage is in-memory, which is per-instance;
+    // the brute-force protection that must hold across instances (OTP attempt counting)
+    // lives in Redis instead.
+    ThrottlerModule.forRoot([{ name: "default", ttl: 60_000, limit: 120 }]),
     PrismaModule,
     RedisModule,
     AuthModule,
@@ -33,6 +39,9 @@ import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
   ],
   controllers: [HealthController],
   providers: [
+    // Throttling runs before auth so unauthenticated floods are rejected cheaply,
+    // without a database round-trip.
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
     // Order matters: JwtAuthGuard populates req.user before RolesGuard reads it.
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },

@@ -2,11 +2,18 @@ import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
 import { ValidationPipe, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { NestExpressApplication } from "@nestjs/platform-express";
 import { AppModule } from "./app.module";
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const config = app.get(ConfigService);
+
+  // Render terminates TLS at its own proxy. Without this, req.ip is the proxy's
+  // address for every request, so per-IP rate limiting would count the whole world as
+  // one client and lock everyone out at once. Trust exactly one hop — trusting all
+  // would let a client forge X-Forwarded-For and dodge the limits entirely.
+  app.set("trust proxy", 1);
 
   app.setGlobalPrefix("api/v1");
   app.enableCors({
