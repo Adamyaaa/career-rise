@@ -27,4 +27,4 @@ COPY --from=build /repo/apps/api/package.json ./apps/api/package.json
 EXPOSE 3001
 # nest build emits to dist/src/, because prisma.config.ts at the package root widens
 # tsc's inferred rootDir. Not dist/main.js.
-CMD ["node", "apps/api/dist/src/main.js"]
+CMD npx prisma migrate deploy --schema apps/api/prisma/schema.prisma && node apps/api/dist/src/main.js

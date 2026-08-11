@@ -13,8 +13,7 @@ services:
     dockerfilePath: ./apps/api/Dockerfile
     dockerContext: .
     healthCheckPath: /api/v1/health
-    # Runs once per deploy, before the new instance takes traffic.
-    preDeployCommand: npx prisma migrate deploy --schema apps/api/prisma/schema.prisma
+    # (Removed preDeployCommand as it's not supported on the free tier)
     envVars:
       - key: NODE_ENV
         value: production
