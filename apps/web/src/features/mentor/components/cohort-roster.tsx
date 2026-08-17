@@ -2,18 +2,17 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { UserPlus, UserMinus, Users } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { User, UserPlus, UserMinus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FormField } from "@/components/common/form-field";
 import { EmptyState } from "@/components/common/empty-state";
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { rosterService } from "@/services/learning.service";
-import { fullName } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { fullName, formatDate } from "@/lib/format";
 import { toast } from "sonner";
 
 export function CohortRoster({ cohortId }: { cohortId: string }) {
@@ -71,6 +70,8 @@ export function CohortRoster({ cohortId }: { cohortId: string }) {
 
   return (
     <>
+      {/* No per-student progress column here: progress is derived from the schedule, so it
+          would read identically for everyone. The cohort-wide figure lives in the header. */}
       <div className="mb-4 flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           {active.length} {active.length === 1 ? "student" : "students"} in this cohort
@@ -89,43 +90,51 @@ export function CohortRoster({ cohortId }: { cohortId: string }) {
         />
       )}
 
-      <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {roster?.map((entry) => {
           const withdrawn = entry.status !== "active";
           return (
-            <Card key={entry.studentId} className={withdrawn ? "opacity-60" : undefined}>
-              <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-medium text-foreground">{fullName(entry)}</p>
-                    <span className="truncate text-xs text-muted-foreground">{entry.email}</span>
+            <div
+              key={entry.studentId}
+              className={cn(
+                "flex flex-col gap-3 rounded-2xl bg-card p-5 ring-1 transition-shadow hover:shadow-md",
+                withdrawn ? "opacity-60 ring-foreground/5" : "ring-foreground/10",
+              )}
+            >
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                  <User className="size-4" />
+                </span>
+
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-heading text-sm font-medium text-foreground">{fullName(entry)}</p>
                     {withdrawn && (
                       <Badge variant="outline" className="text-[10px]">
                         Removed
                       </Badge>
                     )}
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Progress value={entry.percent} className="max-w-xs flex-1" />
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {entry.completedLessons}/{entry.totalLessons} lessons · {entry.percent}%
-                    </span>
-                  </div>
+                  <span className="truncate text-xs text-muted-foreground">{entry.email}</span>
                 </div>
 
                 {!withdrawn && (
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon-sm"
                     onClick={() => handleWithdraw(entry.studentId, entry.email)}
                     className="shrink-0 text-destructive hover:bg-destructive/10"
+                    aria-label={`Remove ${entry.email}`}
                   >
                     <UserMinus className="size-3.5" />
-                    Remove
                   </Button>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+
+              <p className="mt-auto border-t border-border/60 pt-3 text-xs text-muted-foreground">
+                Joined {formatDate(entry.enrolledAt)}
+              </p>
+            </div>
           );
         })}
       </div>

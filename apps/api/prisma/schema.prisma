@@ -146,11 +146,12 @@ model CohortMentorAssignment {
 }
 
 model Module {
-  id           String    @id @default(cuid())
-  cohortId     String
-  title        String
-  order        Int
-  scheduledFor DateTime? // the day this module runs; mentor-set, optional
+  id       String @id @default(cuid())
+  cohortId String
+  title    String
+  order    Int
+  // No date here on purpose: a module is a container, and its span is derived from the
+  // scheduledAt of the classes inside it.
 
   cohort  Cohort   @relation(fields: [cohortId], references: [id], onDelete: Cascade)
   lessons Lesson[]
@@ -167,8 +168,17 @@ model Lesson {
   order     Int
   slidesUrl String? // link to the previous class's slides (e.g. Google Drive) — mentor/admin-set, link only, no file upload
   assignmentsUrl String? // link to the assignment material
-  taughtAt  DateTime? // set when a mentor marks this class delivered to the whole cohort; null = not taught yet.
-  // Cohort-wide and mentor-owned — distinct from LessonCompletion, which is each student's own "I've done this".
+  // When this class runs — date *and* time. Whether a class has happened is derived from
+  // this rather than stored per student. Null means unscheduled.
+  scheduledAt DateTime?
+  // Mentor-set: this class expects the student to hand work in. Drives the denominator of
+  // the `evidence_submitted` progress signal, so it is deliberately explicit rather than
+  // inferred from whether an assignment link happens to be attached.
+  submissionRequired Boolean @default(false)
+  // A class that was called off. Whether a class has been taught is otherwise derived from
+  // the clock — a scheduled class whose time has passed was taught — so cancelling is the
+  // only thing a mentor needs to record, rather than ticking every class as delivered.
+  cancelled Boolean @default(false)
 
   module      Module             @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   sessions    LearningSession[]

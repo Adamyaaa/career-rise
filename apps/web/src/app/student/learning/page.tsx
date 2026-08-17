@@ -6,6 +6,7 @@ import { PageHeading } from "@/components/common/page-heading";
 import { EmptyState } from "@/components/common/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CohortCard } from "@/features/student/components/cohort-card";
+import { ContinueLearningCard } from "@/features/student/components/continue-learning-card";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { learningService } from "@/services/learning.service";
@@ -38,6 +39,11 @@ export default function MyLearningPage() {
   const availableCohorts = allCohorts?.filter((c) => !myCohortIds.has(c.id));
   const hasCohorts = cohorts && cohorts.length > 0;
 
+  // The cohort to lead with: the first one still in progress, or just the first one if
+  // every cohort is already complete.
+  const primaryCohort = cohorts?.find((c) => (c.progress?.percent ?? 0) < 100) ?? cohorts?.[0];
+  const otherCohorts = cohorts?.filter((c) => c.id !== primaryCohort?.id) ?? [];
+
   return (
     <>
       <PageHeading
@@ -59,11 +65,18 @@ export default function MyLearningPage() {
         />
       )}
 
-      {hasCohorts && (
-        <div className="flex flex-col gap-4">
-          {cohorts.map((cohort) => (
-            <CohortCard key={cohort.id} cohort={cohort} hrefBase="/student/learning" />
-          ))}
+      {hasCohorts && primaryCohort && (
+        <div className="flex flex-col gap-8">
+          <ContinueLearningCard cohort={primaryCohort} />
+
+          {otherCohorts.length > 0 && (
+            <div className="flex flex-col gap-4">
+              <h2 className="font-heading text-lg font-medium text-foreground">Other cohorts</h2>
+              {otherCohorts.map((cohort) => (
+                <CohortCard key={cohort.id} cohort={cohort} hrefBase="/student/learning" />
+              ))}
+            </div>
+          )}
         </div>
       )}
 

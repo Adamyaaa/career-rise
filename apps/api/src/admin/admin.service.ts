@@ -237,13 +237,17 @@ export class AdminService {
             },
           },
         },
-        // Earliest dated module — the real first class, shown in place of the admin-set
+        // Earliest dated class — the real first class, shown in place of the admin-set
         // startDate so this list agrees with the cohort header.
         modules: {
-          where: { scheduledFor: { not: null } },
-          orderBy: { scheduledFor: "asc" },
-          take: 1,
-          select: { scheduledFor: true },
+          select: {
+            lessons: {
+              where: { scheduledAt: { not: null } },
+              orderBy: { scheduledAt: "asc" },
+              take: 1,
+              select: { scheduledAt: true },
+            },
+          },
         },
         _count: { select: { enrollments: true, modules: true } },
       },
@@ -255,7 +259,11 @@ export class AdminService {
       name: cohort.name,
       startDate: cohort.startDate,
       endDate: cohort.endDate,
-      firstClassDate: cohort.modules[0]?.scheduledFor ?? null,
+      firstClassDate:
+        cohort.modules
+          .flatMap((m) => m.lessons.map((l) => l.scheduledAt))
+          .filter((d): d is Date => d !== null)
+          .sort((a, b) => a.getTime() - b.getTime())[0] ?? null,
       course: cohort.course,
       studentCount: cohort._count.enrollments,
       moduleCount: cohort._count.modules,

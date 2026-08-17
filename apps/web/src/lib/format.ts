@@ -23,6 +23,11 @@ export function formatDateTime(iso: string): string {
   });
 }
 
+// Just the clock time — pairs with formatDate where a class shows both.
+export function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+}
+
 export function formatPercent(value: number): string {
   return `${Math.round(value * 100)}%`;
 }

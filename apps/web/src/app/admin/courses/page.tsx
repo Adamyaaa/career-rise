@@ -5,7 +5,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, Plus, Trash2 } from "lucide-react";
 import { PageHeading } from "@/components/common/page-heading";
 import { EmptyState } from "@/components/common/empty-state";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -84,24 +83,22 @@ export default function AdminCoursesPage() {
         <EmptyState icon={BookOpen} title="No courses yet" description="Create a course, then add cohorts to it." />
       )}
 
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {courses?.map((course) => (
-          <Card key={course.id}>
-            <CardContent className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-              <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                <p className="font-heading text-sm font-medium text-foreground">{course.title}</p>
+          <div
+            key={course.id}
+            className="flex flex-col gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10 transition-shadow hover:shadow-md"
+          >
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                <BookOpen className="size-4" />
+              </span>
+
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <p className="font-heading text-base leading-snug font-medium text-foreground">{course.title}</p>
                 <p className="text-xs text-muted-foreground">{course.description}</p>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {course.category.map((c) => (
-                    <Badge key={c} variant="secondary" className="text-[10px]">
-                      {c}
-                    </Badge>
-                  ))}
-                  <span className="text-[11px] text-muted-foreground">
-                    {course._count.cohorts} cohort{course._count.cohorts === 1 ? "" : "s"}
-                  </span>
-                </div>
               </div>
+
               <Button
                 variant="ghost"
                 size="icon-sm"
@@ -112,8 +109,19 @@ export default function AdminCoursesPage() {
               >
                 <Trash2 className="size-3.5" />
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+
+            <div className="mt-auto flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-3">
+              {course.category.map((c) => (
+                <Badge key={c} variant="secondary" className="text-[10px]">
+                  {c}
+                </Badge>
+              ))}
+              <span className="ml-auto text-xs text-muted-foreground">
+                {course._count.cohorts} cohort{course._count.cohorts === 1 ? "" : "s"}
+              </span>
+            </div>
+          </div>
         ))}
       </div>
 

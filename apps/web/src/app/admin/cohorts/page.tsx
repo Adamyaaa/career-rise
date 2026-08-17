@@ -6,7 +6,6 @@ import Link from "next/link";
 import { Layers, Plus, Settings2, Trash2, UserMinus, UserPlus } from "lucide-react";
 import { PageHeading } from "@/components/common/page-heading";
 import { EmptyState } from "@/components/common/empty-state";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -115,20 +114,26 @@ export default function AdminCohortsPage() {
         />
       )}
 
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
         {cohorts?.map((cohort) => (
-          <Card key={cohort.id}>
-            <CardContent className="flex flex-col gap-3">
-              <div className="flex items-start justify-between gap-3">
+          <div
+            key={cohort.id}
+            className="flex flex-col gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10 transition-shadow hover:shadow-md"
+          >
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                  <Layers className="size-4" />
+                </span>
+
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary" className="text-[10px] uppercase">
-                      {cohort.name}
-                    </Badge>
-                    <p className="font-heading text-sm font-medium text-foreground">{cohort.course.title}</p>
-                  </div>
-                  {/* Start shown from the first scheduled module when there is one, so
-                      this agrees with the cohort header the mentors and students see. */}
+                  <Badge variant="secondary" className="w-fit text-[10px] uppercase">
+                    {cohort.name}
+                  </Badge>
+                  <p className="font-heading text-base leading-snug font-medium text-foreground">
+                    {cohort.course.title}
+                  </p>
+                  {/* Start shown from the first scheduled class when there is one, so this
+                      agrees with the cohort header the mentors and students see. */}
                   <p className="text-xs text-muted-foreground">
                     {formatDate(cohort.firstClassDate ?? cohort.startDate)} – {formatDate(cohort.endDate)} ·{" "}
                     {cohort.studentCount} student{cohort.studentCount === 1 ? "" : "s"} · {cohort.moduleCount} module
@@ -159,7 +164,7 @@ export default function AdminCohortsPage() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 border-t border-border/40 pt-3">
+              <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
                 <span className="text-xs text-muted-foreground">Mentors:</span>
                 {cohort.mentors.length === 0 && <span className="text-xs text-muted-foreground/70">none yet</span>}
                 {cohort.mentors.map((mentor) => (
@@ -190,8 +195,7 @@ export default function AdminCohortsPage() {
                   Assign
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+          </div>
         ))}
       </div>
 

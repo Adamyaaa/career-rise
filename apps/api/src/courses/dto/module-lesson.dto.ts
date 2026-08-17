@@ -1,15 +1,10 @@
-import { IsBoolean, IsISO8601, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
+import { IsBoolean, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
 
 export class CreateModuleDto {
   @IsString()
   @MinLength(1)
   @MaxLength(200)
   title: string;
-
-  // Empty string clears the date; omitted leaves it untouched.
-  @IsOptional()
-  @IsISO8601()
-  scheduledFor?: string;
 }
 
 export class UpdateModuleDto {
@@ -17,10 +12,6 @@ export class UpdateModuleDto {
   @MinLength(1)
   @MaxLength(200)
   title: string;
-
-  @IsOptional()
-  @IsString()
-  scheduledFor?: string;
 }
 
 export class CreateLessonDto {
@@ -28,6 +19,11 @@ export class CreateLessonDto {
   @MinLength(1)
   @MaxLength(200)
   title: string;
+
+  // Empty string clears the date; omitted leaves it untouched.
+  @IsOptional()
+  @IsString()
+  scheduledAt?: string;
 }
 
 export class UpdateLessonDto {
@@ -35,9 +31,24 @@ export class UpdateLessonDto {
   @MinLength(1)
   @MaxLength(200)
   title: string;
+
+  @IsOptional()
+  @IsString()
+  scheduledAt?: string;
+
+  // What the class covers, shown to students on the class page. "" clears it.
+  @IsOptional()
+  @IsString()
+  @MaxLength(5000)
+  content?: string;
+
+  // Whether this class expects work to be handed in.
+  @IsOptional()
+  @IsBoolean()
+  submissionRequired?: boolean;
 }
 
-export class SetLessonTaughtDto {
+export class SetLessonCancelledDto {
   @IsBoolean()
-  taught: boolean;
+  cancelled: boolean;
 }

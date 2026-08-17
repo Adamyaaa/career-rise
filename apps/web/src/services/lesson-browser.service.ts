@@ -6,8 +6,22 @@ export interface ModuleWithLessons {
   id: string;
   title: string;
   order: number;
-  scheduledFor: string | null;
-  lessons: { id: string; title: string; order: number; slidesUrl: string | null; assignmentsUrl: string | null; taught: boolean }[];
+  lessons: {
+    id: string;
+    title: string;
+    order: number;
+    // Mentor-written summary of what this class covers.
+    content: string;
+    slidesUrl: string | null;
+    assignmentsUrl: string | null;
+    // When the class runs — date and time. Null means unscheduled.
+    scheduledAt: string | null;
+    // Mentor-set: this class expects work to be handed in.
+    submissionRequired: boolean;
+    // Derived from the schedule; `cancelled` is the only delivery fact a mentor records.
+    taught: boolean;
+    cancelled: boolean;
+  }[];
 }
 
 export const lessonBrowserService = {

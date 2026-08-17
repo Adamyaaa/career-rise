@@ -9,12 +9,13 @@ import { UpdateLessonAssignmentsDto } from "./dto/update-lesson-assignments.dto"
 import {
   CreateLessonDto,
   CreateModuleDto,
-  SetLessonTaughtDto,
+  SetLessonCancelledDto,
   UpdateLessonDto,
   UpdateModuleDto,
 } from "./dto/module-lesson.dto";
 import { EnrollStudentDto } from "./dto/enroll-student.dto";
 import { PostFeedbackDto } from "./dto/feedback.dto";
+import { CreateSubmissionDto } from "./dto/submission.dto";
 
 @Controller()
 export class CoursesController {
@@ -42,18 +43,6 @@ export class CoursesController {
     return this.coursesService.getCohortOverview(id, user);
   }
 
-  @Post("lessons/:id/complete")
-  @Roles(Role.STUDENT)
-  markComplete(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
-    return this.coursesService.setLessonComplete(user, id, true);
-  }
-
-  @Delete("lessons/:id/complete")
-  @Roles(Role.STUDENT)
-  markIncomplete(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
-    return this.coursesService.setLessonComplete(user, id, false);
-  }
-
   @Patch("lessons/:id/slides")
   @Roles(Role.MENTOR, Role.SUPER_ADMIN)
   updateSlides(@Param("id") id: string, @Body() dto: UpdateLessonSlidesDto, @CurrentUser() user: AuthenticatedUser) {
@@ -66,10 +55,14 @@ export class CoursesController {
     return this.coursesService.updateLessonAssignmentsUrl(user, id, dto.assignmentsUrl);
   }
 
-  @Patch("lessons/:id/taught")
+  @Patch("lessons/:id/cancelled")
   @Roles(Role.MENTOR, Role.SUPER_ADMIN)
-  setTaught(@Param("id") id: string, @Body() dto: SetLessonTaughtDto, @CurrentUser() user: AuthenticatedUser) {
-    return this.coursesService.setLessonTaught(user, id, dto.taught);
+  setCancelled(
+    @Param("id") id: string,
+    @Body() dto: SetLessonCancelledDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.coursesService.setLessonCancelled(user, id, dto.cancelled);
   }
 
   @Get("cohorts/:id/students")
@@ -103,13 +96,13 @@ export class CoursesController {
   @Post("cohorts/:id/modules")
   @Roles(Role.MENTOR, Role.SUPER_ADMIN)
   createModule(@Param("id") id: string, @Body() dto: CreateModuleDto, @CurrentUser() user: AuthenticatedUser) {
-    return this.coursesService.createModule(user, id, dto.title, dto.scheduledFor);
+    return this.coursesService.createModule(user, id, dto.title);
   }
 
   @Patch("modules/:id")
   @Roles(Role.MENTOR, Role.SUPER_ADMIN)
   updateModule(@Param("id") id: string, @Body() dto: UpdateModuleDto, @CurrentUser() user: AuthenticatedUser) {
-    return this.coursesService.updateModule(user, id, dto.title, dto.scheduledFor);
+    return this.coursesService.updateModule(user, id, dto.title);
   }
 
   // Read is mentor/admin only — feedback is write-only from the student's side.
@@ -123,6 +116,28 @@ export class CoursesController {
   @Roles(Role.STUDENT)
   postFeedback(@Param("id") id: string, @Body() dto: PostFeedbackDto, @CurrentUser() user: AuthenticatedUser) {
     return this.coursesService.postFeedback(user, id, dto.body);
+  }
+
+  @Get("cohorts/:id/progress")
+  getCohortProgress(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.coursesService.getCohortProgress(id, user);
+  }
+
+  // Students see their own submissions here; mentors and admins see the whole cohort's.
+  @Get("cohorts/:id/submissions")
+  listSubmissions(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.coursesService.listSubmissions(user, id);
+  }
+
+  @Post("submissions")
+  @Roles(Role.STUDENT)
+  createSubmission(@Body() dto: CreateSubmissionDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.coursesService.createSubmission(user, dto.lessonId, dto.url, dto.note);
+  }
+
+  @Delete("submissions/:id")
+  deleteSubmission(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.coursesService.deleteSubmission(user, id);
   }
 
   @Delete("feedback/:id")
@@ -140,13 +155,20 @@ export class CoursesController {
   @Post("modules/:id/lessons")
   @Roles(Role.MENTOR, Role.SUPER_ADMIN)
   createLesson(@Param("id") id: string, @Body() dto: CreateLessonDto, @CurrentUser() user: AuthenticatedUser) {
-    return this.coursesService.createLesson(user, id, dto.title);
+    return this.coursesService.createLesson(user, id, dto.title, dto.scheduledAt);
   }
 
   @Patch("lessons/:id")
   @Roles(Role.MENTOR, Role.SUPER_ADMIN)
-  renameLesson(@Param("id") id: string, @Body() dto: UpdateLessonDto, @CurrentUser() user: AuthenticatedUser) {
-    return this.coursesService.renameLesson(user, id, dto.title);
+  updateLesson(@Param("id") id: string, @Body() dto: UpdateLessonDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.coursesService.updateLesson(
+      user,
+      id,
+      dto.title,
+      dto.scheduledAt,
+      dto.content,
+      dto.submissionRequired,
+    );
   }
 
   @Delete("lessons/:id")

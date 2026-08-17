@@ -39,19 +39,50 @@ export interface LessonProgress {
   id: string;
   title: string;
   order: number;
-  // The student's own "I've done this".
+  // Mentor-written summary of what this class covers. "" when nothing has been written.
+  content: string;
+  // Both derived server-side from `scheduledAt` and `cancelled` against the clock —
+  // nothing the student or the mentor ticks.
   completed: boolean;
-  // Cohort-wide: the mentor has delivered this class.
   taught: boolean;
+  // Called off by the mentor; excluded from progress on both sides of the fraction.
+  cancelled: boolean;
   slidesUrl: string | null;
   assignmentsUrl: string | null;
+  // When the class runs — date and time. Null means unscheduled, which never completes.
+  scheduledAt: string | null;
+  // Mentor-set: this class expects work to be handed in.
+  submissionRequired: boolean;
 }
 
+// One component of a student's progress, matching the ProgressSignal model. `active` is
+// false for signals whose write path doesn't exist yet — those are shown as not-yet-
+// tracked rather than counted as zero.
+export interface ProgressSignalView {
+  type: "evidence_submitted" | "attendance" | "review_score" | "quiz_score";
+  label: string;
+  description: string;
+  active: boolean;
+  value: number | null;
+  weight: number;
+  detail: { completed: number; total: number } | null;
+}
+
+export interface CohortProgress {
+  // The student's own weighted figure, across active signals only.
+  overallPercent: number;
+  // Where the cohort is in its own schedule — the same for everyone enrolled.
+  schedulePercent: number;
+  elapsedLessons: number;
+  totalLessons: number;
+  signals: ProgressSignalView[];
+}
+
+// Modules carry no date of their own; their span comes from the classes inside them.
 export interface ModuleProgress extends Progress {
   id: string;
   title: string;
   order: number;
-  scheduledFor: string | null;
   lessons: LessonProgress[];
 }
 
@@ -60,33 +91,43 @@ export const learningService = {
   listMyCohorts: () => apiClient.get<MyCohortSummary[]>("/cohorts/my"),
   getCohortOverview: (cohortId: string) => apiClient.get<CohortOverview>(`/cohorts/${cohortId}`),
   getCohortModules: (cohortId: string) => apiClient.get<ModuleProgress[]>(`/cohorts/${cohortId}/modules`),
-  markLessonComplete: (lessonId: string) => apiClient.post<{ lessonId: string; completed: boolean }>(`/lessons/${lessonId}/complete`),
-  markLessonIncomplete: (lessonId: string) => apiClient.delete<{ lessonId: string; completed: boolean }>(`/lessons/${lessonId}/complete`),
+  getCohortProgress: (cohortId: string) => apiClient.get<CohortProgress>(`/cohorts/${cohortId}/progress`),
   enrollSelf: (cohortId: string) => apiClient.post<{ studentId: string; email: string; status: string }>(`/cohorts/${cohortId}/enroll-me`),
 };
 
 // Mentor/admin edits to a cohort's study plan. Students never call these — the API
 // rejects them by role regardless.
 export const studyPlanService = {
-  setLessonTaught: (lessonId: string, taught: boolean) =>
-    apiClient.patch<{ lessonId: string; taught: boolean }>(`/lessons/${lessonId}/taught`, { taught }),
+  setLessonCancelled: (lessonId: string, cancelled: boolean) =>
+    apiClient.patch<{ lessonId: string; cancelled: boolean }>(`/lessons/${lessonId}/cancelled`, { cancelled }),
   setLessonSlides: (lessonId: string, slidesUrl: string) =>
     apiClient.patch<{ id: string; slidesUrl: string | null }>(`/lessons/${lessonId}/slides`, { slidesUrl }),
 
   setLessonAssignments: (lessonId: string, assignmentsUrl: string) =>
     apiClient.patch<{ id: string; assignmentsUrl: string | null }>(`/lessons/${lessonId}/assignments`, { assignmentsUrl }),
-  createModule: (cohortId: string, title: string, scheduledFor?: string) =>
-    apiClient.post<{ id: string; title: string; order: number }>(`/cohorts/${cohortId}/modules`, {
-      title,
-      ...(scheduledFor ? { scheduledFor } : {}),
-    }),
-  updateModule: (moduleId: string, title: string, scheduledFor: string) =>
-    apiClient.patch<{ id: string; title: string; order: number }>(`/modules/${moduleId}`, { title, scheduledFor }),
+  createModule: (cohortId: string, title: string) =>
+    apiClient.post<{ id: string; title: string; order: number }>(`/cohorts/${cohortId}/modules`, { title }),
+  updateModule: (moduleId: string, title: string) =>
+    apiClient.patch<{ id: string; title: string; order: number }>(`/modules/${moduleId}`, { title }),
   deleteModule: (moduleId: string) => apiClient.delete<{ id: string; deleted: true }>(`/modules/${moduleId}`),
-  createLesson: (moduleId: string, title: string) =>
-    apiClient.post<{ id: string; title: string; order: number }>(`/modules/${moduleId}/lessons`, { title }),
-  renameLesson: (lessonId: string, title: string) =>
-    apiClient.patch<{ id: string; title: string; order: number }>(`/lessons/${lessonId}`, { title }),
+  createLesson: (moduleId: string, title: string, scheduledAt?: string) =>
+    apiClient.post<{ id: string; title: string; order: number }>(`/modules/${moduleId}/lessons`, {
+      title,
+      ...(scheduledAt ? { scheduledAt } : {}),
+    }),
+  updateLesson: (
+    lessonId: string,
+    title: string,
+    scheduledAt?: string,
+    content?: string,
+    submissionRequired?: boolean,
+  ) =>
+    apiClient.patch<{ id: string; title: string; order: number }>(`/lessons/${lessonId}`, {
+      title,
+      ...(scheduledAt !== undefined ? { scheduledAt } : {}),
+      ...(content !== undefined ? { content } : {}),
+      ...(submissionRequired !== undefined ? { submissionRequired } : {}),
+    }),
   deleteLesson: (lessonId: string) => apiClient.delete<{ id: string; deleted: true }>(`/lessons/${lessonId}`),
 };
 

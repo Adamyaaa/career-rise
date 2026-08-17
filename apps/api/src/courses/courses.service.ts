@@ -41,17 +41,21 @@ export class CoursesService {
           endDate: true,
           course: { select: { id: true, title: true } },
           modules: {
-            where: { scheduledFor: { not: null } },
-            orderBy: { scheduledFor: "asc" },
-            take: 1,
-            select: { scheduledFor: true },
+            select: {
+              lessons: {
+                where: { scheduledAt: { not: null } },
+                orderBy: { scheduledAt: "asc" },
+                take: 1,
+                select: { scheduledAt: true },
+              },
+            },
           },
         },
         orderBy: { startDate: "desc" },
       });
       return cohorts.map(({ modules, ...cohort }) => ({
         ...cohort,
-        firstClassDate: modules[0]?.scheduledFor ?? null,
+        firstClassDate: earliestScheduledAt(modules),
       }));
     }
 
@@ -67,21 +71,25 @@ export class CoursesService {
               endDate: true,
               course: { select: { id: true, title: true } },
               modules: {
-                where: { scheduledFor: { not: null } },
-                orderBy: { scheduledFor: "asc" },
-                take: 1,
-                select: { scheduledFor: true },
+                select: {
+                  lessons: {
+                    where: { scheduledAt: { not: null } },
+                    orderBy: { scheduledAt: "asc" },
+                    take: 1,
+                    select: { scheduledAt: true },
+                  },
+                },
               },
             },
           },
         },
         orderBy: { cohort: { startDate: "desc" } },
       });
-      // A mentor has no personal lesson completion, so no `progress` field here —
-      // the frontend CohortCard renders without a progress bar when it's absent.
+      // A mentor has no personal progress, so no `progress` field here — the frontend
+      // CohortCard renders without a progress bar when it's absent.
       return assignments.map(({ cohort }) => {
         const { modules, ...rest } = cohort;
-        return { ...rest, firstClassDate: modules[0]?.scheduledFor ?? null };
+        return { ...rest, firstClassDate: earliestScheduledAt(modules) };
       });
     }
 
@@ -95,24 +103,23 @@ export class CoursesService {
             startDate: true,
             endDate: true,
             course: { select: { id: true, title: true } },
-            modules: { select: { scheduledFor: true, lessons: { select: { id: true } } } },
+            modules: { select: { lessons: { select: { id: true, scheduledAt: true, cancelled: true } } } },
           },
         },
       },
       orderBy: { enrolledAt: "desc" },
     });
 
-    const cohortIds = enrollments.map((e) => e.cohort.id);
-    const completedByCohort = await this.completedLessonIdsByCohort(user.id, cohortIds);
+    const now = new Date();
 
     return enrollments.map(({ cohort }) => {
-      const lessonIds = cohort.modules.flatMap((m) => m.lessons.map((l) => l.id));
-      const completed = completedByCohort.get(cohort.id) ?? new Set<string>();
-      const completedLessons = lessonIds.filter((id) => completed.has(id)).length;
+      // Cancelled classes count for nothing on either side of the fraction.
+      const lessons = cohort.modules.flatMap((m) => m.lessons).filter((l) => !l.cancelled);
+      const completedLessons = lessons.filter((l) => hasHappened(l, now)).length;
 
-      // Same rule as the cohort header: the first dated module is the real start.
-      const scheduled = cohort.modules
-        .map((m) => m.scheduledFor)
+      // Same rule as the cohort header: the first dated class is the real start.
+      const scheduled = lessons
+        .map((l) => l.scheduledAt)
         .filter((d): d is Date => d !== null)
         .sort((a, b) => a.getTime() - b.getTime());
 
@@ -123,7 +130,7 @@ export class CoursesService {
         endDate: cohort.endDate,
         firstClassDate: scheduled[0] ?? null,
         course: cohort.course,
-        progress: progressOf(completedLessons, lessonIds.length),
+        progress: progressOf(completedLessons, lessons.length),
       };
     });
   }
@@ -155,20 +162,24 @@ export class CoursesService {
       }
     }
 
-    const [studentCount, lessonCount, taughtCount, myCompletions, firstScheduledModule] = await Promise.all([
+    const now = new Date();
+    const [studentCount, lessonCount, taughtCount, elapsedCount, firstScheduledLesson] = await Promise.all([
       this.prisma.cohortEnrollment.count({ where: { cohortId, status: "active" } }),
-      this.prisma.lesson.count({ where: { module: { cohortId } } }),
-      this.prisma.lesson.count({ where: { module: { cohortId }, taughtAt: { not: null } } }),
-      user.role === Role.STUDENT
-        ? this.prisma.lessonCompletion.count({ where: { cohortId, studentId: user.id } })
-        : Promise.resolve(0),
-      // The earliest dated module is when teaching actually begins, which is what the
+      this.prisma.lesson.count({ where: { module: { cohortId }, cancelled: false } }),
+      // "Taught" and "elapsed" are the same question now, both answered by the clock.
+      this.prisma.lesson.count({
+        where: { module: { cohortId }, cancelled: false, scheduledAt: { not: null, lte: now } },
+      }),
+      this.prisma.lesson.count({
+        where: { module: { cohortId }, cancelled: false, scheduledAt: { not: null, lte: now } },
+      }),
+      // The earliest dated class is when teaching actually begins, which is what the
       // header should show — the cohort's own startDate is admin-set and drifts out of
-      // step with the schedule once modules are planned.
-      this.prisma.module.findFirst({
-        where: { cohortId, scheduledFor: { not: null } },
-        orderBy: { scheduledFor: "asc" },
-        select: { scheduledFor: true },
+      // step with the schedule once classes are planned.
+      this.prisma.lesson.findFirst({
+        where: { module: { cohortId }, cancelled: false, scheduledAt: { not: null } },
+        orderBy: { scheduledAt: "asc" },
+        select: { scheduledAt: true },
       }),
     ]);
 
@@ -180,10 +191,10 @@ export class CoursesService {
       studentCount,
       lessonCount,
       taughtCount,
-      // Null when no module has a date yet; the UI falls back to startDate.
-      firstClassDate: firstScheduledModule?.scheduledFor ?? null,
+      // Null when no class has a date yet; the UI falls back to startDate.
+      firstClassDate: firstScheduledLesson?.scheduledAt ?? null,
       myProgressPercent:
-        user.role === Role.STUDENT && lessonCount > 0 ? Math.round((myCompletions / lessonCount) * 100) : null,
+        user.role === Role.STUDENT && lessonCount > 0 ? Math.round((elapsedCount / lessonCount) * 100) : null,
     };
   }
 
@@ -199,19 +210,33 @@ export class CoursesService {
         id: true,
         title: true,
         order: true,
-        scheduledFor: true,
         lessons: {
-          select: { id: true, title: true, order: true, slidesUrl: true, assignmentsUrl: true, taughtAt: true },
-          orderBy: { order: "asc" },
+          select: {
+            id: true,
+            title: true,
+            order: true,
+            // The mentor-written summary of what the class covers.
+            content: true,
+            slidesUrl: true,
+            assignmentsUrl: true,
+            scheduledAt: true,
+            submissionRequired: true,
+            cancelled: true,
+          },
+          // Scheduled classes run in date order; undated ones fall to the end.
+          orderBy: [{ scheduledAt: { sort: "asc", nulls: "last" } }, { order: "asc" }],
         },
       },
       orderBy: { order: "asc" },
     });
 
-    // `taughtAt` is a timestamp in the DB but only ever read as a flag by both UIs.
+    const now = new Date();
+
+    // Both "taught" and "completed" come from the clock: a scheduled class whose time has
+    // passed, and which wasn't called off, has happened. Nobody ticks anything.
     const modules = rows.map((module) => ({
       ...module,
-      lessons: module.lessons.map(({ taughtAt, ...lesson }) => ({ ...lesson, taught: taughtAt !== null })),
+      lessons: module.lessons.map((lesson) => ({ ...lesson, taught: hasHappened(lesson, now) })),
     }));
 
     if (user.role !== Role.STUDENT) {
@@ -226,47 +251,15 @@ export class CoursesService {
       throw new ForbiddenException("You are not enrolled in this cohort");
     }
 
-    const completed = (await this.completedLessonIdsByCohort(user.id, [cohortId])).get(cohortId) ?? new Set<string>();
-
     return modules.map((module) => {
-      const lessons = module.lessons.map((lesson) => ({ ...lesson, completed: completed.has(lesson.id) }));
-      const completedLessons = lessons.filter((l) => l.completed).length;
+      const lessons = module.lessons.map((lesson) => ({ ...lesson, completed: lesson.taught }));
+      // Cancelled classes drop out of the denominator too — a student can't be behind on
+      // something that never ran.
+      const counted = lessons.filter((l) => !l.cancelled);
+      const completedLessons = counted.filter((l) => l.completed).length;
 
-      return { ...module, lessons, ...progressOf(completedLessons, lessons.length) };
+      return { ...module, lessons, ...progressOf(completedLessons, counted.length) };
     });
-  }
-
-  async setLessonComplete(user: AuthenticatedUser, lessonId: string, completed: boolean) {
-    const lesson = await this.prisma.lesson.findUnique({
-      where: { id: lessonId },
-      include: { module: true },
-    });
-    if (!lesson) {
-      throw new NotFoundException("Lesson not found");
-    }
-    const cohortId = lesson.module.cohortId;
-
-    const enrolled = await this.prisma.cohortEnrollment.findFirst({
-      where: { studentId: user.id, cohortId, status: "active" },
-      select: { id: true },
-    });
-    if (!enrolled) {
-      throw new ForbiddenException("You are not enrolled in this cohort");
-    }
-
-    if (completed) {
-      await this.prisma.lessonCompletion.upsert({
-        where: { studentId_lessonId: { studentId: user.id, lessonId } },
-        update: {},
-        create: { studentId: user.id, lessonId, cohortId },
-      });
-    } else {
-      await this.prisma.lessonCompletion.deleteMany({
-        where: { studentId: user.id, lessonId },
-      });
-    }
-
-    return { lessonId, completed };
   }
 
   async updateLessonSlidesUrl(user: AuthenticatedUser, lessonId: string, slidesUrl?: string) {
@@ -289,26 +282,31 @@ export class CoursesService {
     });
   }
 
-  // A mentor marking a class delivered to the whole cohort — not the same as a student's
-  // own LessonCompletion, which stays untouched here.
-  async setLessonTaught(user: AuthenticatedUser, lessonId: string, taught: boolean) {
+  // Calling a class off. The only delivery fact a mentor has to record — whether a class
+  // that *wasn't* cancelled has been taught follows from its scheduled time.
+  async setLessonCancelled(user: AuthenticatedUser, lessonId: string, cancelled: boolean) {
     await this.assertCanManageLesson(user, lessonId);
 
     await this.prisma.lesson.update({
       where: { id: lessonId },
-      data: { taughtAt: taught ? new Date() : null },
+      data: { cancelled },
     });
 
-    return { lessonId, taught };
+    return { lessonId, cancelled };
   }
 
-  // The cohort roster with each student's own completion — progress is per student
-  // (LessonCompletion is unique on studentId+lessonId), so these numbers differ per row.
+  // The cohort roster. Progress is derived from the schedule rather than from anything a
+  // student does, so every row in a cohort shows the same figures — it reads as "how far
+  // the cohort has got", not as a per-student ranking.
   async listCohortStudents(user: AuthenticatedUser, cohortId: string) {
     await this.assertCanManageCohort(user, cohortId);
 
-    const [lessonCount, enrollments, completionCounts] = await Promise.all([
-      this.prisma.lesson.count({ where: { module: { cohortId } } }),
+    const now = new Date();
+    const [lessonCount, elapsedCount, enrollments] = await Promise.all([
+      this.prisma.lesson.count({ where: { module: { cohortId }, cancelled: false } }),
+      this.prisma.lesson.count({
+        where: { module: { cohortId }, cancelled: false, scheduledAt: { not: null, lte: now } },
+      }),
       this.prisma.cohortEnrollment.findMany({
         where: { cohortId },
         select: {
@@ -318,29 +316,19 @@ export class CoursesService {
         },
         orderBy: { enrolledAt: "asc" },
       }),
-      this.prisma.lessonCompletion.groupBy({
-        by: ["studentId"],
-        where: { cohortId },
-        _count: { _all: true },
-      }),
     ]);
 
-    const completedByStudent = new Map(completionCounts.map((row) => [row.studentId, row._count._all]));
-
-    return enrollments.map((enrollment) => {
-      const completedLessons = completedByStudent.get(enrollment.student.id) ?? 0;
-      return {
-        studentId: enrollment.student.id,
-        email: enrollment.student.email,
-        firstName: enrollment.student.firstName,
-        lastName: enrollment.student.lastName,
-        status: enrollment.status,
-        enrolledAt: enrollment.enrolledAt,
-        completedLessons,
-        totalLessons: lessonCount,
-        percent: lessonCount === 0 ? 0 : Math.round((completedLessons / lessonCount) * 100),
-      };
-    });
+    return enrollments.map((enrollment) => ({
+      studentId: enrollment.student.id,
+      email: enrollment.student.email,
+      firstName: enrollment.student.firstName,
+      lastName: enrollment.student.lastName,
+      status: enrollment.status,
+      enrolledAt: enrollment.enrolledAt,
+      completedLessons: elapsedCount,
+      totalLessons: lessonCount,
+      percent: lessonCount === 0 ? 0 : Math.round((elapsedCount / lessonCount) * 100),
+    }));
   }
 
   // Enrolls an existing account. Deliberately does not create users — a person signs up
@@ -434,7 +422,7 @@ export class CoursesService {
     return { studentId, status: "withdrawn" };
   }
 
-  async createModule(user: AuthenticatedUser, cohortId: string, title: string, scheduledFor?: string) {
+  async createModule(user: AuthenticatedUser, cohortId: string, title: string) {
     await this.assertCanManageCohort(user, cohortId);
 
     const last = await this.prisma.module.findFirst({
@@ -444,28 +432,19 @@ export class CoursesService {
     });
 
     return this.prisma.module.create({
-      data: {
-        cohortId,
-        title: title.trim(),
-        order: (last?.order ?? 0) + 1,
-        scheduledFor: parseScheduledFor(scheduledFor),
-      },
-      select: { id: true, title: true, order: true, scheduledFor: true },
+      data: { cohortId, title: title.trim(), order: (last?.order ?? 0) + 1 },
+      select: { id: true, title: true, order: true },
     });
   }
 
-  async updateModule(user: AuthenticatedUser, moduleId: string, title: string, scheduledFor?: string) {
+  async updateModule(user: AuthenticatedUser, moduleId: string, title: string) {
     const module = await this.findModuleOrThrow(moduleId);
     await this.assertCanManageCohort(user, module.cohortId);
 
     return this.prisma.module.update({
       where: { id: moduleId },
-      data: {
-        title: title.trim(),
-        // Undefined leaves the existing date alone; an empty string clears it.
-        ...(scheduledFor !== undefined ? { scheduledFor: parseScheduledFor(scheduledFor) } : {}),
-      },
-      select: { id: true, title: true, order: true, scheduledFor: true },
+      data: { title: title.trim() },
+      select: { id: true, title: true, order: true },
     });
   }
 
@@ -478,7 +457,7 @@ export class CoursesService {
     return { id: moduleId, deleted: true };
   }
 
-  async createLesson(user: AuthenticatedUser, moduleId: string, title: string) {
+  async createLesson(user: AuthenticatedUser, moduleId: string, title: string, scheduledAt?: string) {
     const module = await this.findModuleOrThrow(moduleId);
     await this.assertCanManageCohort(user, module.cohortId);
 
@@ -490,18 +469,44 @@ export class CoursesService {
 
     return this.prisma.lesson.create({
       // `content` is required by the schema but there's no lesson-body editor yet.
-      data: { moduleId, title: title.trim(), content: "", order: (last?.order ?? 0) + 1 },
-      select: { id: true, title: true, order: true },
+      data: {
+        moduleId,
+        title: title.trim(),
+        content: "",
+        order: (last?.order ?? 0) + 1,
+        scheduledAt: parseScheduledAt(scheduledAt),
+      },
+      select: { id: true, title: true, order: true, scheduledAt: true },
     });
   }
 
-  async renameLesson(user: AuthenticatedUser, lessonId: string, title: string) {
+  async updateLesson(
+    user: AuthenticatedUser,
+    lessonId: string,
+    title: string,
+    scheduledAt?: string,
+    content?: string,
+    submissionRequired?: boolean,
+  ) {
     await this.assertCanManageLesson(user, lessonId);
 
     return this.prisma.lesson.update({
       where: { id: lessonId },
-      data: { title: title.trim() },
-      select: { id: true, title: true, order: true },
+      data: {
+        title: title.trim(),
+        // Undefined leaves the existing value alone; an empty string clears it.
+        ...(scheduledAt !== undefined ? { scheduledAt: parseScheduledAt(scheduledAt) } : {}),
+        ...(content !== undefined ? { content: content.trim() } : {}),
+        ...(submissionRequired !== undefined ? { submissionRequired } : {}),
+      },
+      select: {
+        id: true,
+        title: true,
+        order: true,
+        scheduledAt: true,
+        content: true,
+        submissionRequired: true,
+      },
     });
   }
 
@@ -582,6 +587,199 @@ export class CoursesService {
     return { id: feedbackId, deleted: true };
   }
 
+  // A student's progress in a cohort, shaped around the ProgressSignal design: several
+  // named signals, each normalized 0-1, blended by weight into one figure.
+  //
+  // Only `evidence_submitted` is wired up today — attendance, review scores and quizzes
+  // have models but no write path, so they report `active: false` and are excluded from
+  // the blend rather than contributing a fake zero. As each one is built it flips to
+  // active and starts counting, without the shape of this response changing.
+  async getCohortProgress(cohortId: string, user: AuthenticatedUser) {
+    if (user.role === Role.STUDENT) {
+      await this.assertEnrolled(user.id, cohortId);
+    } else {
+      await this.assertCanManageCohort(user, cohortId);
+    }
+
+    const now = new Date();
+    const [lessonCount, elapsedCount, dueLessons, submittedLessonIds] = await Promise.all([
+      this.prisma.lesson.count({ where: { module: { cohortId }, cancelled: false } }),
+      this.prisma.lesson.count({
+        where: { module: { cohortId }, cancelled: false, scheduledAt: { not: null, lte: now } },
+      }),
+      // Only classes that actually ask for work, and only once they've happened — a
+      // submission isn't late (or missing) before its class has run.
+      this.prisma.lesson.findMany({
+        where: {
+          module: { cohortId },
+          cancelled: false,
+          submissionRequired: true,
+          scheduledAt: { not: null, lte: now },
+        },
+        select: { id: true },
+      }),
+      user.role === Role.STUDENT
+        ? this.prisma.evidence
+            .findMany({
+              where: { cohortId, studentId: user.id },
+              select: { lessonId: true },
+              distinct: ["lessonId"],
+            })
+            .then((rows) => rows.map((r) => r.lessonId))
+        : Promise.resolve([]),
+    ]);
+
+    const submitted = new Set(submittedLessonIds);
+    const expected = dueLessons.length;
+    const done = dueLessons.filter((l) => submitted.has(l.id)).length;
+
+    const signals = [
+      {
+        type: "evidence_submitted",
+        label: "Work submitted",
+        description: "Classes that asked for work, and whether you handed it in.",
+        active: true,
+        // Nothing due yet reads as complete rather than as a zero the student can't act on.
+        value: expected === 0 ? 1 : done / expected,
+        weight: 1,
+        detail: { completed: done, total: expected },
+      },
+      {
+        type: "attendance",
+        label: "Attendance",
+        description: "Turning up to scheduled classes.",
+        active: false,
+        value: null,
+        weight: 0,
+        detail: null,
+      },
+      {
+        type: "review_score",
+        label: "Mentor reviews",
+        description: "Scores your mentor gives the work you submit.",
+        active: false,
+        value: null,
+        weight: 0,
+        detail: null,
+      },
+      {
+        type: "quiz_score",
+        label: "Quizzes",
+        description: "How you score on quizzes for each class.",
+        active: false,
+        value: null,
+        weight: 0,
+        detail: null,
+      },
+    ];
+
+    const live = signals.filter((s) => s.active && s.value !== null);
+    const totalWeight = live.reduce((sum, s) => sum + s.weight, 0);
+    const overall =
+      totalWeight === 0 ? 0 : live.reduce((sum, s) => sum + (s.value as number) * s.weight, 0) / totalWeight;
+
+    return {
+      // The student's own figure — what they've done.
+      overallPercent: Math.round(overall * 100),
+      // The cohort's position in its own schedule. Identical for everyone in the cohort,
+      // and deliberately kept separate from the figure above.
+      schedulePercent: lessonCount === 0 ? 0 : Math.round((elapsedCount / lessonCount) * 100),
+      elapsedLessons: elapsedCount,
+      totalLessons: lessonCount,
+      signals,
+    };
+  }
+
+  // Work a student hands in for a class. Backed by Evidence, which already models exactly
+  // this — a link plus metadata, scoped to a lesson and cohort, reviewable by a mentor.
+  async createSubmission(user: AuthenticatedUser, lessonId: string, url: string, note?: string) {
+    const lesson = await this.prisma.lesson.findUnique({
+      where: { id: lessonId },
+      select: { id: true, module: { select: { cohortId: true } } },
+    });
+    if (!lesson) {
+      throw new NotFoundException("Class not found");
+    }
+    const cohortId = lesson.module.cohortId;
+    await this.assertEnrolled(user.id, cohortId);
+
+    const submission = await this.prisma.evidence.create({
+      data: {
+        studentId: user.id,
+        lessonId,
+        cohortId,
+        evidenceType: "link",
+        externalUrl: url.trim(),
+        metadata: note?.trim() ? { note: note.trim() } : {},
+      },
+      select: { id: true, externalUrl: true, submittedAt: true, status: true },
+    });
+
+    return submission;
+  }
+
+  // A student's own submissions for a cohort. Students see only their own; mentors and
+  // admins managing the cohort see everyone's.
+  async listSubmissions(user: AuthenticatedUser, cohortId: string) {
+    if (user.role === Role.STUDENT) {
+      await this.assertEnrolled(user.id, cohortId);
+    } else {
+      await this.assertCanManageCohort(user, cohortId);
+    }
+
+    const rows = await this.prisma.evidence.findMany({
+      where: {
+        cohortId,
+        ...(user.role === Role.STUDENT ? { studentId: user.id } : {}),
+      },
+      select: {
+        id: true,
+        externalUrl: true,
+        metadata: true,
+        submittedAt: true,
+        status: true,
+        student: { select: { id: true, email: true, firstName: true, lastName: true } },
+        lesson: { select: { id: true, title: true, module: { select: { title: true } } } },
+      },
+      orderBy: { submittedAt: "desc" },
+    });
+
+    return rows.map((row) => ({
+      id: row.id,
+      url: row.externalUrl,
+      note: (row.metadata as { note?: string } | null)?.note ?? null,
+      submittedAt: row.submittedAt,
+      status: row.status,
+      student: row.student,
+      lessonId: row.lesson.id,
+      lessonTitle: row.lesson.title,
+      moduleTitle: row.lesson.module.title,
+    }));
+  }
+
+  // A student can retract their own submission; mentors and admins can clear any in a
+  // cohort they manage.
+  async deleteSubmission(user: AuthenticatedUser, submissionId: string) {
+    const submission = await this.prisma.evidence.findUnique({
+      where: { id: submissionId },
+      select: { id: true, cohortId: true, studentId: true },
+    });
+    if (!submission) {
+      throw new NotFoundException("Submission not found");
+    }
+
+    if (user.role === Role.STUDENT) {
+      if (submission.studentId !== user.id) {
+        throw new ForbiddenException("That isn't your submission");
+      }
+    } else {
+      await this.assertCanManageCohort(user, submission.cohortId);
+    }
+
+    await this.prisma.evidence.delete({ where: { id: submissionId } });
+    return { id: submissionId, deleted: true };
+  }
+
   private async assertEnrolled(studentId: string, cohortId: string) {
     const enrolled = await this.prisma.cohortEnrollment.findFirst({
       where: { studentId, cohortId, status: "active" },
@@ -635,26 +833,12 @@ export class CoursesService {
     }
   }
 
-  // Lessons a student has marked done, grouped by cohort — one query for any number
-  // of cohorts (listMyCohorts scans several at once; the modules endpoint just one).
-  private async completedLessonIdsByCohort(studentId: string, cohortIds: string[]) {
-    const completions = await this.prisma.lessonCompletion.findMany({
-      where: { studentId, cohortId: { in: cohortIds } },
-      select: { cohortId: true, lessonId: true },
-    });
-
-    const byCohort = new Map<string, Set<string>>();
-    for (const { cohortId, lessonId } of completions) {
-      if (!byCohort.has(cohortId)) byCohort.set(cohortId, new Set());
-      byCohort.get(cohortId)!.add(lessonId);
-    }
-    return byCohort;
-  }
 }
 
-// "" clears the date, a date-only string ("2026-07-14") is anchored to midday UTC so it
-// can't drift to the previous day for users behind UTC.
-function parseScheduledFor(value?: string): Date | null {
+// "" clears the date. A date-only string ("2026-07-14") is anchored to midday UTC so it
+// can't drift to the previous day for users behind UTC; anything with a time component
+// (what <input type="datetime-local"> sends) is taken as given.
+function parseScheduledAt(value?: string): Date | null {
   const trimmed = value?.trim();
   if (!trimmed) {
     return null;
@@ -662,9 +846,24 @@ function parseScheduledFor(value?: string): Date | null {
   const iso = /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? `${trimmed}T12:00:00.000Z` : trimmed;
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) {
-    throw new BadRequestException("scheduledFor must be a valid date");
+    throw new BadRequestException("scheduledAt must be a valid date");
   }
   return date;
+}
+
+// A class has happened once its scheduled moment has passed, unless it was called off.
+// Undated classes never count — there is nothing to compare against.
+function hasHappened(lesson: { scheduledAt: Date | null; cancelled: boolean }, now: Date): boolean {
+  return !lesson.cancelled && lesson.scheduledAt !== null && lesson.scheduledAt.getTime() <= now.getTime();
+}
+
+// The earliest scheduled class across a cohort's modules — when teaching actually begins.
+function earliestScheduledAt(modules: { lessons: { scheduledAt: Date | null }[] }[]): Date | null {
+  const dates = modules
+    .flatMap((m) => m.lessons.map((l) => l.scheduledAt))
+    .filter((d): d is Date => d !== null)
+    .sort((a, b) => a.getTime() - b.getTime());
+  return dates[0] ?? null;
 }
 
 function progressOf(completedLessons: number, totalLessons: number) {

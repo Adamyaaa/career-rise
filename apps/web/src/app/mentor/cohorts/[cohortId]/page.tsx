@@ -7,6 +7,7 @@ import { CohortRoster } from "@/features/mentor/components/cohort-roster";
 import { CohortFeedback } from "@/features/mentor/components/cohort-feedback";
 import { CohortHeader } from "@/features/cohort/components/cohort-header";
 import { CohortAnnouncements } from "@/features/cohort/components/cohort-announcements";
+import { CohortSubmissions } from "@/features/student/components/cohort-submissions";
 
 export default function MentorCohortDetailPage({ params }: { params: Promise<{ cohortId: string }> }) {
   const { cohortId } = use(params);
@@ -19,6 +20,7 @@ export default function MentorCohortDetailPage({ params }: { params: Promise<{ c
         <TabsList variant="line">
           <TabsTrigger value="study-plan">Study plan</TabsTrigger>
           <TabsTrigger value="students">Students</TabsTrigger>
+          <TabsTrigger value="submissions">Submissions</TabsTrigger>
           <TabsTrigger value="feedback">Feedback</TabsTrigger>
           <TabsTrigger value="announcements">Announcements</TabsTrigger>
         </TabsList>
@@ -29,6 +31,10 @@ export default function MentorCohortDetailPage({ params }: { params: Promise<{ c
 
         <TabsContent value="students" className="mt-4">
           <CohortRoster cohortId={cohortId} />
+        </TabsContent>
+
+        <TabsContent value="submissions" className="mt-4">
+          <CohortSubmissions cohortId={cohortId} canManage />
         </TabsContent>
 
         <TabsContent value="feedback" className="mt-4">

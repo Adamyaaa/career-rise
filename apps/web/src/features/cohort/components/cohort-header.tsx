@@ -37,7 +37,7 @@ export function CohortHeader({ cohortId }: { cohortId: string }) {
   const meta = [
     { icon: GraduationCap, label: `${cohort.studentCount} ${cohort.studentCount === 1 ? "student" : "students"}` },
     { icon: Layers, label: `${cohort.moduleCount} ${cohort.moduleCount === 1 ? "module" : "modules"}` },
-    { icon: BookOpen, label: `${cohort.taughtCount}/${cohort.lessonCount} classes taught` },
+    { icon: BookOpen, label: `${cohort.taughtCount}/${cohort.lessonCount} classes delivered` },
     { icon: CalendarDays, label: `${hasStarted ? "Started" : "Starts"} ${formatDate(start)}` },
   ];
 
