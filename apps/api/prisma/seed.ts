@@ -97,6 +97,13 @@ async function main() {
     { title: "Building your first agent", lessons: ["Planning & reasoning loops", "Shipping to production"] },
   ];
 
+  for (let i = 3; i <= 12; i++) {
+    moduleSpecs.push({
+      title: `Module ${i}`,
+      lessons: [`Class 1`, `Class 2`],
+    });
+  }
+
   for (let i = 0; i < moduleSpecs.length; i++) {
     const spec = moduleSpecs[i];
     let mod = await prisma.module.findFirst({ where: { cohortId: cohort.id, title: spec.title } });
