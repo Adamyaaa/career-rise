@@ -6,7 +6,11 @@ import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 const BCRYPT_ROUNDS = 10;
-const SEED_PASSWORD = "X9$pL2!mQ8#vK4@w";
+const SEED_PASSWORD = process.env.SEED_PASSWORD;
+if (!SEED_PASSWORD) {
+  console.error("ERROR: SEED_PASSWORD environment variable is missing.");
+  process.exit(1);
+}
 
 // Minimal sample data so the mentor lesson-material feature (and anything else
 // that needs a real cohort/lesson to point at) is actually testable — course/cohort
