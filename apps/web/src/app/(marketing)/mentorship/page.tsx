@@ -462,7 +462,7 @@ export default function MentorshipPage() {
               },
               {
                 q: "How do I pay?",
-                a: "Payment terms are shared on the intake call, once tier fit is confirmed. Full payment is required before Week 1 kickoff. Refund terms are covered in our enrolment agreement."
+                a: "Payment terms are yet to be decided and will be announced soon. In the meantime, you can apply and secure a spot for the intake call."
               }
             ].map((item, i) => (
               <FaqItem key={i} question={item.q} answer={item.a} />
