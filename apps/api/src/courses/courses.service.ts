@@ -164,13 +164,16 @@ export class CoursesService {
     }
 
     const now = new Date();
-    const [studentCount, lessonCount, taughtCount, elapsedCount, firstScheduledLesson] = await Promise.all([
+    const [studentCount, lessonCount, completedLessonsCount, taughtCount, firstScheduledLesson] = await Promise.all([
       this.prisma.cohortEnrollment.count({ where: { cohortId, status: "active" } }),
       this.prisma.lesson.count({ where: { module: { cohortId }, cancelled: false } }),
-      // "Taught" and "elapsed" are the same question now, both answered by the clock.
-      this.prisma.lesson.count({
-        where: { module: { cohortId }, cancelled: false, scheduledAt: { not: null, lte: now } },
-      }),
+      // Student's completed lessons count based on feedback provided
+      user.role === Role.STUDENT
+        ? this.prisma.lessonFeedback.count({
+            where: { studentId: user.id, cohortId, lesson: { cancelled: false } },
+          })
+        : Promise.resolve(0),
+      // "Taught" is answered by the clock.
       this.prisma.lesson.count({
         where: { module: { cohortId }, cancelled: false, scheduledAt: { not: null, lte: now } },
       }),
@@ -195,7 +198,7 @@ export class CoursesService {
       // Null when no class has a date yet; the UI falls back to startDate.
       firstClassDate: firstScheduledLesson?.scheduledAt ?? null,
       myProgressPercent:
-        user.role === Role.STUDENT && lessonCount > 0 ? Math.round((elapsedCount / lessonCount) * 100) : null,
+        user.role === Role.STUDENT && lessonCount > 0 ? Math.round((completedLessonsCount / lessonCount) * 100) : null,
     };
   }
 
