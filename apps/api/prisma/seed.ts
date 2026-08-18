@@ -6,7 +6,7 @@ import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 const BCRYPT_ROUNDS = 10;
-const SEED_PASSWORD = "Password123!";
+const SEED_PASSWORD = "X9$pL2!mQ8#vK4@w";
 
 // Minimal sample data so the mentor lesson-material feature (and anything else
 // that needs a real cohort/lesson to point at) is actually testable — course/cohort
@@ -16,7 +16,7 @@ async function main() {
 
   const mentorUser = await prisma.user.upsert({
     where: { email: "mentor@careerrise.dev" },
-    update: {},
+    update: { passwordHash },
     create: {
       email: "mentor@careerrise.dev",
       passwordHash,
@@ -27,7 +27,7 @@ async function main() {
 
   const studentUser = await prisma.user.upsert({
     where: { email: "student@careerrise.dev" },
-    update: {},
+    update: { passwordHash },
     create: {
       email: "student@careerrise.dev",
       passwordHash,
@@ -41,7 +41,7 @@ async function main() {
   // mentor/admin accounts isn't built yet, so this seed is the only way in.
   await prisma.user.upsert({
     where: { email: "admin@careerrise.dev" },
-    update: {},
+    update: { passwordHash },
     create: {
       email: "admin@careerrise.dev",
       passwordHash,
