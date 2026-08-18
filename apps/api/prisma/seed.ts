@@ -6,7 +6,7 @@ import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 const BCRYPT_ROUNDS = 10;
-const SEED_PASSWORD = process.env.SEED_PASSWORD;
+const SEED_PASSWORD = process.env.SEED_PASSWORD as string;
 if (!SEED_PASSWORD) {
   console.error("ERROR: SEED_PASSWORD environment variable is missing.");
   process.exit(1);
