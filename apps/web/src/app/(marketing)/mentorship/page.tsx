@@ -39,7 +39,7 @@ export default function MentorshipPage() {
             12 weeks. 12 sessions. One career move, done right.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground text-balance">
-            A structured 1:1 mentorship program for students and professionals who are done with generic advice and ready for a plan they can actually execute.
+            A structured 1:1 mentorship program for students and professionals who are done with generic advice — and ready for a plan they can actually execute.
           </p>
           <div className="mt-8 flex justify-center gap-4">
             <ApplyMentorshipDialog>
@@ -67,7 +67,7 @@ export default function MentorshipPage() {
                 Career Rise Mentorship is the opposite. Every student gets a fixed program: 12 sessions across 12 weeks, with a defined start, a defined end, and a written plan built in Week 1.
               </p>
               <p>
-                Your senior mentor anchors the strategy: the kickoff, the recalibration, the offer prep, the close. Around those sessions, our specialists deliver the execution: resume and LinkedIn overhaul, domain preparation, mock interviews, portfolio review, and salary negotiation.
+                Your senior mentor anchors the strategy — the kickoff, the recalibration, the offer prep, the close. Around those sessions, our specialists deliver the execution: resume and LinkedIn overhaul, domain preparation, mock interviews, portfolio review, and salary negotiation.
               </p>
               <p className="font-medium text-foreground">
                 You are not buying access to someone's calendar. You are enrolling in a program.
@@ -83,7 +83,7 @@ export default function MentorshipPage() {
           <Reveal>
             <h2 className="text-3xl font-semibold tracking-tight text-foreground">A senior mentor team, not a marketplace</h2>
             <p className="mt-4 text-muted-foreground text-balance max-w-2xl mx-auto">
-              Every session in Career Rise Mentorship is delivered by a senior mentor or a vetted specialist from our roster. The mentor team is small on purpose. Quality is easier to defend when the group is tight.
+              Every session in Career Rise Mentorship is delivered by a senior mentor or a vetted specialist from our roster. The mentor team is small on purpose — quality is easier to defend when the group is tight.
             </p>
           </Reveal>
           
@@ -157,7 +157,7 @@ export default function MentorshipPage() {
                 <div className="hidden sm:block sm:w-1/2" />
                 <div className="pl-12 w-full sm:w-1/2">
                   <h3 className="font-semibold text-foreground">12 weeks of structured delivery</h3>
-                  <p className="mt-1 text-sm text-muted-foreground text-balance">One session per week. Every session produces a written outcome: a revised resume, a mock feedback report, a strategy document. Nothing is left to memory.</p>
+                  <p className="mt-1 text-sm text-muted-foreground text-balance">One session per week. Every session produces a written outcome — a revised resume, a mock feedback report, a strategy document. Nothing is left to memory.</p>
                 </div>
               </Reveal>
             </div>
@@ -458,7 +458,7 @@ export default function MentorshipPage() {
               },
               {
                 q: "Do I get to choose Starter or Pro?",
-                a: "The intake call determines the right plan for your situation. Both plans are available to anyone who fits the profile, but we will not enroll a student in the wrong tier as it wastes their money and our team's time."
+                a: "The intake call determines the right plan for your situation. Both plans are available to anyone who fits the profile, but we will not enroll a student in the wrong tier — it wastes their money and our team's time."
               },
               {
                 q: "How do I pay?",
