@@ -12,7 +12,7 @@ export interface ModuleWithLessons {
     order: number;
     // Mentor-written summary of what this class covers.
     content: string;
-    slidesUrl: string | null;
+    slides: { title: string; url: string }[];
     assignmentsUrl: string | null;
     // When the class runs — date and time. Null means unscheduled.
     scheduledAt: string | null;

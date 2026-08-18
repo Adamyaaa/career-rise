@@ -133,12 +133,24 @@ export default function ClassDetailPage({
             <h2 className="font-heading text-sm font-semibold text-foreground">Material</h2>
 
             <div className="flex flex-col gap-2">
-              <MaterialRow
-                icon={Presentation}
-                label="Slides"
-                url={lesson.slidesUrl}
-                emptyHint="No slides shared yet"
-              />
+              {lesson.slides.length > 0 ? (
+                lesson.slides.map((slide, idx) => (
+                  <MaterialRow
+                    key={idx}
+                    icon={Presentation}
+                    label={slide.title || `Slides ${idx + 1}`}
+                    url={slide.url}
+                    emptyHint=""
+                  />
+                ))
+              ) : (
+                <MaterialRow
+                  icon={Presentation}
+                  label="Slides"
+                  url={null}
+                  emptyHint="No slides shared yet"
+                />
+              )}
               <MaterialRow
                 icon={FileText}
                 label="Assignments"

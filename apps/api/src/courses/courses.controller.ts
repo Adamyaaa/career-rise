@@ -46,7 +46,7 @@ export class CoursesController {
   @Patch("lessons/:id/slides")
   @Roles(Role.MENTOR, Role.SUPER_ADMIN)
   updateSlides(@Param("id") id: string, @Body() dto: UpdateLessonSlidesDto, @CurrentUser() user: AuthenticatedUser) {
-    return this.coursesService.updateLessonSlidesUrl(user, id, dto.slidesUrl);
+    return this.coursesService.updateLessonSlides(user, id, dto.slides);
   }
 
   @Patch("lessons/:id/assignments")

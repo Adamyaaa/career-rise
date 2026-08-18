@@ -47,7 +47,7 @@ export interface LessonProgress {
   taught: boolean;
   // Called off by the mentor; excluded from progress on both sides of the fraction.
   cancelled: boolean;
-  slidesUrl: string | null;
+  slides: { title: string; url: string }[];
   assignmentsUrl: string | null;
   // When the class runs — date and time. Null means unscheduled, which never completes.
   scheduledAt: string | null;
@@ -100,8 +100,8 @@ export const learningService = {
 export const studyPlanService = {
   setLessonCancelled: (lessonId: string, cancelled: boolean) =>
     apiClient.patch<{ lessonId: string; cancelled: boolean }>(`/lessons/${lessonId}/cancelled`, { cancelled }),
-  setLessonSlides: (lessonId: string, slidesUrl: string) =>
-    apiClient.patch<{ id: string; slidesUrl: string | null }>(`/lessons/${lessonId}/slides`, { slidesUrl }),
+  setLessonSlides: (lessonId: string, slides: { title: string; url: string }[]) =>
+    apiClient.patch<{ id: string; slides: { title: string; url: string }[] }>(`/lessons/${lessonId}/slides`, { slides }),
 
   setLessonAssignments: (lessonId: string, assignmentsUrl: string) =>
     apiClient.patch<{ id: string; assignmentsUrl: string | null }>(`/lessons/${lessonId}/assignments`, { assignmentsUrl }),

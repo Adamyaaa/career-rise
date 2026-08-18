@@ -221,7 +221,7 @@ export class CoursesService {
             order: true,
             // The mentor-written summary of what the class covers.
             content: true,
-            slidesUrl: true,
+            slides: true,
             assignmentsUrl: true,
             scheduledAt: true,
             submissionRequired: true,
@@ -278,13 +278,18 @@ export class CoursesService {
     });
   }
 
-  async updateLessonSlidesUrl(user: AuthenticatedUser, lessonId: string, slidesUrl?: string) {
+  async updateLessonSlides(user: AuthenticatedUser, lessonId: string, slides?: { title: string; url: string }[]) {
     await this.assertCanManageLesson(user, lessonId);
+
+    // Filter out items with empty URLs and trim titles/urls
+    const validSlides = slides
+      ?.filter((s) => s.url?.trim())
+      .map((s) => ({ title: s.title?.trim() || "Slides", url: s.url.trim() })) || [];
 
     return this.prisma.lesson.update({
       where: { id: lessonId },
-      data: { slidesUrl: slidesUrl?.trim() || null },
-      select: { id: true, slidesUrl: true },
+      data: { slides: validSlides },
+      select: { id: true, slides: true },
     });
   }
 

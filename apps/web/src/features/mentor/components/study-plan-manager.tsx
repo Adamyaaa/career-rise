@@ -35,7 +35,7 @@ import { formatDate, formatTime } from "@/lib/format";
 import { toast } from "sonner";
 
 type Editor =
-  | { kind: "slides"; lessonId: string; value: string }
+  | { kind: "slides"; lessonId: string; value: { title: string; url: string }[] }
   | { kind: "assignments"; lessonId: string; value: string }
   | { kind: "module"; moduleId: string; value: string }
   | { kind: "lesson"; lessonId: string; value: string; date: string }
@@ -48,7 +48,7 @@ const hasDate = (editor: Editor): editor is Extract<Editor, { date: string }> =>
   editor.kind === "lesson" || editor.kind === "new-lesson";
 
 const EDITOR_COPY: Record<Editor["kind"], { title: string; label: string; placeholder: string }> = {
-  slides: { title: "Slides link", label: "Google Drive link", placeholder: "https://drive.google.com/..." },
+  slides: { title: "Slides links", label: "Slide links", placeholder: "" },
   assignments: { title: "Assignments link", label: "Google Drive link", placeholder: "https://drive.google.com/..." },
   module: { title: "Rename module", label: "Module title", placeholder: "e.g. Foundations" },
   lesson: { title: "Edit class", label: "Class title", placeholder: "e.g. What is an agent?" },
@@ -93,18 +93,21 @@ export function StudyPlanManager({ cohortId }: { cohortId: string }) {
 
   const handleSave = () => {
     if (!editor) return;
+    
+    if (editor.kind === "slides") {
+      return run(() => studyPlanService.setLessonSlides(editor.lessonId, editor.value));
+    }
+
     const value = editor.value.trim();
     // Slides/assignments links and the summary may all be cleared by emptying the field;
     // everything else is a title and must have something in it.
-    const optional = editor.kind === "slides" || editor.kind === "assignments" || editor.kind === "summary";
+    const optional = editor.kind === "assignments" || editor.kind === "summary";
     if (!optional && !value) {
       toast.error("Please enter a title");
       return;
     }
 
     switch (editor.kind) {
-      case "slides":
-        return run(() => studyPlanService.setLessonSlides(editor.lessonId, editor.value));
       case "assignments":
         return run(() => studyPlanService.setLessonAssignments(editor.lessonId, editor.value));
       case "module":
@@ -353,12 +356,10 @@ export function StudyPlanManager({ cohortId }: { cohortId: string }) {
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
-                          <MaterialButton
-                            icon={Presentation}
-                            label="slides"
-                            url={lesson.slidesUrl}
+                          <SlidesButton
+                            slides={lesson.slides}
                             onEdit={() =>
-                              setEditor({ kind: "slides", lessonId: lesson.id, value: lesson.slidesUrl ?? "" })
+                              setEditor({ kind: "slides", lessonId: lesson.id, value: lesson.slides ?? [] })
                             }
                           />
                           <MaterialButton
@@ -446,25 +447,68 @@ export function StudyPlanManager({ cohortId }: { cohortId: string }) {
             <DialogTitle>{copy?.title}</DialogTitle>
           </DialogHeader>
 
-          <FormField label={copy?.label ?? ""} htmlFor="editorValue">
-            {editor?.kind === "summary" ? (
-              <Textarea
-                id="editorValue"
-                rows={6}
-                value={editor.value}
-                onChange={(e) => setEditor({ ...editor, value: e.target.value })}
-                placeholder={copy?.placeholder}
-              />
-            ) : (
-              <Input
-                id="editorValue"
-                type={editor?.kind === "slides" ? "url" : "text"}
-                value={editor?.value ?? ""}
-                onChange={(e) => setEditor(editor && { ...editor, value: e.target.value })}
-                placeholder={copy?.placeholder}
-              />
-            )}
-          </FormField>
+          {editor?.kind === "slides" ? (
+            <div className="flex flex-col gap-3">
+              <span className="text-sm font-medium text-foreground">Links</span>
+              {editor.value.map((slide, i) => (
+                <div key={i} className="flex gap-2">
+                  <Input 
+                    value={slide.title} 
+                    onChange={(e) => {
+                      const newSlides = [...editor.value];
+                      newSlides[i].title = e.target.value;
+                      setEditor({ ...editor, value: newSlides });
+                    }} 
+                    placeholder="Title" 
+                    className="flex-1"
+                  />
+                  <Input 
+                    type="url" 
+                    value={slide.url} 
+                    onChange={(e) => {
+                      const newSlides = [...editor.value];
+                      newSlides[i].url = e.target.value;
+                      setEditor({ ...editor, value: newSlides });
+                    }} 
+                    placeholder="https://..." 
+                    className="flex-[2]"
+                  />
+                  <Button variant="ghost" size="icon" className="shrink-0" onClick={() => {
+                    const newSlides = editor.value.filter((_, idx) => idx !== i);
+                    setEditor({ ...editor, value: newSlides });
+                  }}>
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button variant="outline" size="sm" className="w-fit" onClick={() => {
+                setEditor({ ...editor, value: [...editor.value, { title: "", url: "" }] });
+              }}>
+                <Plus className="mr-2 size-3.5" />
+                Add link
+              </Button>
+            </div>
+          ) : (
+            <FormField label={copy?.label ?? ""} htmlFor="editorValue">
+              {editor?.kind === "summary" ? (
+                <Textarea
+                  id="editorValue"
+                  rows={6}
+                  value={editor.value}
+                  onChange={(e) => setEditor({ ...editor, value: e.target.value })}
+                  placeholder={copy?.placeholder}
+                />
+              ) : (
+                <Input
+                  id="editorValue"
+                  type="text"
+                  value={editor?.value ?? ""}
+                  onChange={(e) => setEditor(editor && { ...editor, value: e.target.value })}
+                  placeholder={copy?.placeholder}
+                />
+              )}
+            </FormField>
+          )}
 
           {editor && hasDate(editor) && (
             <FormField label="Scheduled date & time (optional)" htmlFor="editorDate">
@@ -518,6 +562,24 @@ function MaterialButton({
           <ExternalLink className="size-3.5" />
         </Button>
       )}
+    </div>
+  );
+}
+
+function SlidesButton({
+  slides,
+  onEdit,
+}: {
+  slides: { title: string; url: string }[];
+  onEdit: () => void;
+}) {
+  const count = slides.length;
+  return (
+    <div className="flex items-center gap-1">
+      <Button variant="outline" size="sm" onClick={onEdit}>
+        <Presentation className="size-3.5" />
+        {count > 0 ? `Edit slides (${count})` : `Add slides`}
+      </Button>
     </div>
   );
 }

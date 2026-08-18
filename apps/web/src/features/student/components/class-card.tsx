@@ -109,7 +109,7 @@ export function ClassCard({ lesson, index, href }: { lesson: LessonProgress; ind
       {/* What's waiting inside, so the card still signals it without being clickable
           itself — the whole card is one link. */}
       <div className="mt-auto flex flex-wrap items-center gap-3 border-t border-border/60 pt-3 text-xs">
-        <span className={cn("flex items-center gap-1.5", lesson.slidesUrl ? "text-primary" : "text-muted-foreground/50")}>
+        <span className={cn("flex items-center gap-1.5", lesson.slides.length > 0 ? "text-primary" : "text-muted-foreground/50")}>
           <Presentation className="size-3.5" />
           Slides
         </span>

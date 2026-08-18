@@ -166,7 +166,7 @@ model Lesson {
   title     String
   content   String
   order     Int
-  slidesUrl String? // link to the previous class's slides (e.g. Google Drive) — mentor/admin-set, link only, no file upload
+  slides         Json      @default("[]") // array of { title: string, url: string }
   assignmentsUrl String? // link to the assignment material
   // When this class runs — date *and* time. Whether a class has happened is derived from
   // this rather than stored per student. Null means unscheduled.
