@@ -10,6 +10,7 @@ import { UsersModule } from "./users/users.module";
 import { AnnouncementsModule } from "./announcements/announcements.module";
 import { CoursesModule } from "./courses/courses.module";
 import { AdminModule } from "./admin/admin.module";
+import { MentorshipModule } from "./mentorship/mentorship.module";
 import { HealthController } from "./health/health.controller";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { RolesGuard } from "./common/guards/roles.guard";
@@ -36,6 +37,7 @@ import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
     AnnouncementsModule,
     CoursesModule,
     AdminModule,
+    MentorshipModule,
   ],
   controllers: [HealthController],
   providers: [

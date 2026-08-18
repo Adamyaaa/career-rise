@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 // Write-only by design: the student sends feedback and never sees it again, so there's
 // nothing to list here — just a trigger and a compose box.
-export function LessonFeedbackComposer({ lessonId, lessonTitle }: { lessonId: string; lessonTitle: string }) {
+export function LessonFeedbackComposer({ lessonId, lessonTitle, buttonLabel = "Feedback" }: { lessonId: string; lessonTitle: string; buttonLabel?: string }) {
   const [open, setOpen] = useState(false);
   const [body, setBody] = useState("");
 
@@ -21,6 +21,8 @@ export function LessonFeedbackComposer({ lessonId, lessonTitle }: { lessonId: st
       setBody("");
       setOpen(false);
       toast.success("Feedback sent — only your mentor can see it");
+      // Page should probably be revalidated to show completion
+      window.location.reload();
     },
     onError: (err: Error) => toast.error(err.message || "Couldn't send that — try again"),
   });
@@ -30,10 +32,10 @@ export function LessonFeedbackComposer({ lessonId, lessonTitle }: { lessonId: st
       {/* Sits alongside the Slides link, styled to match it. */}
       <button
         onClick={() => setOpen(true)}
-        className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+        className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent hover:border-border"
       >
         <MessageSquare className="size-3.5" />
-        Feedback
+        {buttonLabel}
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>

@@ -9,17 +9,16 @@ export function HeroSection() {
     <section className="relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 pt-20 pb-20 sm:px-6 lg:px-8 lg:pt-28 lg:pb-28">
         <div className="mx-auto max-w-3xl text-center">
-          <Badge variant="secondary">Now open — Agentic AI cohort</Badge>
-
-          <h1 className="font-heading mt-6 text-4xl font-medium tracking-tight text-balance sm:text-5xl lg:text-6xl">
+          <Badge variant="secondary">Now open: Agentic AI cohort</Badge>
+          <h1 className="mt-8 font-heading text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-7xl text-foreground">
             Learn in cohorts.
             <br />
             Prove it with evidence.
           </h1>
 
-          <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground text-balance">
+          <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground text-balance">
             Join a cohort, work through real lessons and activities, submit
-            evidence of your learning, and get direct feedback from mentors —
+            evidence of your learning, and get direct feedback from mentors,
             all tracked on one roadmap.
           </p>
 

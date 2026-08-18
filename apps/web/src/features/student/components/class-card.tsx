@@ -18,9 +18,8 @@ import { cn } from "@/lib/utils";
 import type { LessonProgress } from "@/services/learning.service";
 
 export function ClassCard({ lesson, index, href }: { lesson: LessonProgress; index: number; href: string }) {
-  // `completed` comes from the server, derived from scheduledAt and cancelled against the
-  // clock — there is nothing for the student to tick here.
-  const { completed, cancelled } = lesson;
+  // `completed` is true when feedback is provided. `taught` is true when time has passed.
+  const { completed, cancelled, taught } = lesson;
 
   return (
     <Link
@@ -33,23 +32,31 @@ export function ClassCard({ lesson, index, href }: { lesson: LessonProgress; ind
       <div className="flex items-start gap-3">
         <span
           className={cn(
-            "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full",
+            "flex w-fit items-center gap-1 text-[11px] font-medium uppercase tracking-wider",
             cancelled
-              ? "bg-destructive/10 text-destructive"
+              ? "text-destructive"
               : completed
-                ? "bg-primary/10 text-primary"
-                : "bg-muted text-muted-foreground",
+                ? "text-primary"
+                : "text-muted-foreground",
           )}
         >
           {cancelled ? (
-            <XCircle className="size-4" />
+            <>
+              <XCircle className="size-3.5" />
+              Cancelled
+            </>
           ) : completed ? (
-            <CheckCircle2 className="size-4" />
+            <>
+              <CheckCircle2 className="size-3.5" />
+              Completed
+            </>
           ) : (
-            <Circle className="size-4" />
+            <>
+              <Circle className="size-3.5" />
+              Upcoming
+            </>
           )}
         </span>
-
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">

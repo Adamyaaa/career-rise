@@ -379,3 +379,15 @@ model ProgressWeightConfig {
   @@map("progress_weight_configs")
 }
 
+model MentorshipApplication {
+  id          String   @id @default(cuid())
+  name        String
+  email       String
+  currentRole String?
+  targetRole  String?
+  timeline    String?
+  status      String   @default("pending") // pending | contacted | enrolled | rejected
+  createdAt   DateTime @default(now())
+
+  @@map("mentorship_applications")
+}

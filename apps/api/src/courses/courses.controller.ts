@@ -132,7 +132,7 @@ export class CoursesController {
   @Post("submissions")
   @Roles(Role.STUDENT)
   createSubmission(@Body() dto: CreateSubmissionDto, @CurrentUser() user: AuthenticatedUser) {
-    return this.coursesService.createSubmission(user, dto.lessonId, dto.url, dto.note);
+    return this.coursesService.createSubmission(user, dto);
   }
 
   @Delete("submissions/:id")

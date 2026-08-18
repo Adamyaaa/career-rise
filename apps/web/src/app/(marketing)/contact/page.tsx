@@ -20,8 +20,8 @@ export default function ContactPage() {
           </span>
           <h3 className="text-base font-medium text-foreground">Email us directly</h3>
           <p className="text-sm text-muted-foreground">
-            <a href="mailto:hello@careerrise.app" className="font-medium text-foreground hover:underline">
-              hello@careerrise.app
+            <a href="mailto:hello@iagentlabs.com" className="font-medium text-foreground hover:underline">
+              hello@iagentlabs.com
             </a>{" "}
             — we typically reply within one business day.
           </p>

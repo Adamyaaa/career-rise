@@ -91,7 +91,7 @@ export default function ClassDetailPage({
                 ) : (
                   <Circle className="size-3.5" />
                 )}
-                {lesson.cancelled ? "Cancelled" : lesson.completed ? "Completed" : "Upcoming"}
+              {lesson.cancelled ? "Cancelled" : lesson.completed ? "Completed" : "Upcoming"}
               </span>
               {lesson.submissionRequired && (
                 <Badge variant="outline" className="border-primary/40 text-[10px] text-primary">
@@ -184,11 +184,11 @@ export default function ClassDetailPage({
             <div className="flex flex-col gap-1">
               <h2 className="font-heading text-sm font-semibold text-foreground">Feedback</h2>
               <p className="text-xs text-muted-foreground">
-                Tell your mentor how this class went. They read it privately — it isn&apos;t shown back to you.
+                You must provide feedback to mark this class as your progress (enter 'n/a' if you have none). Your mentor reads this privately.
               </p>
             </div>
             <div className="w-fit">
-              <LessonFeedbackComposer lessonId={lesson.id} lessonTitle={lesson.title} />
+              <LessonFeedbackComposer lessonId={lesson.id} lessonTitle={lesson.title} buttonLabel="Feedback" />
             </div>
           </section>
         </div>

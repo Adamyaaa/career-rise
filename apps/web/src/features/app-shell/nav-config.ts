@@ -14,10 +14,12 @@ export const studentNav: NavItem[] = [
 
 export const mentorNav: NavItem[] = [
   { label: "My Cohorts", href: "/mentor/cohorts", icon: GraduationCap },
+  { label: "Mentorship", href: "/mentor/mentorship", icon: Users },
 ];
 
 export const adminNav: NavItem[] = [
   { label: "People", href: "/admin/users", icon: Users },
   { label: "Courses", href: "/admin/courses", icon: BookOpen },
   { label: "Cohorts", href: "/admin/cohorts", icon: Layers },
+  { label: "Mentorship", href: "/admin/mentorship", icon: Users },
 ];

@@ -25,7 +25,15 @@ import { learningService } from "@/services/learning.service";
 import { fullName, formatRelativeTime } from "@/lib/format";
 import { toast } from "sonner";
 
-const emptyDraft = { lessonId: "", url: "", note: "" };
+const emptyDraft = { 
+  lessonId: "", 
+  projectName: "", 
+  linkType: "both" as "both" | "drive" | "github",
+  driveUrl: "",
+  githubUrl: "",
+  projectSummary: "",
+  note: "" 
+};
 
 // One component for both sides: a student sees only their own submissions and can add
 // new ones; a mentor or admin sees the whole cohort's and can only clear them.
@@ -54,7 +62,10 @@ export function CohortSubmissions({ cohortId, canManage }: { cohortId: string; c
     mutationFn: () =>
       submissionsService.create({
         lessonId: draft.lessonId,
-        url: draft.url.trim(),
+        projectName: draft.projectName.trim(),
+        ...(draft.driveUrl.trim() ? { driveUrl: draft.driveUrl.trim() } : {}),
+        ...(draft.githubUrl.trim() ? { githubUrl: draft.githubUrl.trim() } : {}),
+        ...(draft.projectSummary.trim() ? { projectSummary: draft.projectSummary.trim() } : {}),
         ...(draft.note.trim() ? { note: draft.note.trim() } : {}),
       }),
     onSuccess: () => {
@@ -162,51 +173,100 @@ export function CohortSubmissions({ cohortId, canManage }: { cohortId: string; c
       </div>
 
       <Dialog open={adding} onOpenChange={setAdding}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Submit your work</DialogTitle>
           </DialogHeader>
 
-          <FormField label="Which class is this for?" htmlFor="submissionLesson">
-            {/* Base UI clears to null when the selection is reset; the draft holds "" for that. */}
-            <Select value={draft.lessonId} onValueChange={(value) => setDraft({ ...draft, lessonId: value ?? "" })}>
-              <SelectTrigger id="submissionLesson">
-                {/* Without a formatter Base UI renders the raw value — the lesson id. */}
-                <SelectValue placeholder="Pick a class">
-                  {(value: string | null) =>
-                    classes.find((lesson) => lesson.id === value)?.title ?? "Pick a class"
-                  }
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {classes.map((lesson) => (
-                  <SelectItem key={lesson.id} value={lesson.id}>
-                    {lesson.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FormField>
+          <div className="grid gap-4 py-4">
+            <FormField label="Which class is this for?" htmlFor="submissionLesson">
+              <Select value={draft.lessonId} onValueChange={(value) => setDraft({ ...draft, lessonId: value ?? "" })}>
+                <SelectTrigger id="submissionLesson">
+                  <SelectValue placeholder="Pick a class">
+                    {(value: string | null) =>
+                      classes.find((lesson) => lesson.id === value)?.title ?? "Pick a class"
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {classes.map((lesson) => (
+                    <SelectItem key={lesson.id} value={lesson.id}>
+                      {lesson.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormField>
 
-          <FormField label="Link to your work" htmlFor="submissionUrl">
-            <Input
-              id="submissionUrl"
-              type="url"
-              value={draft.url}
-              onChange={(e) => setDraft({ ...draft, url: e.target.value })}
-              placeholder="https://github.com/..."
-            />
-          </FormField>
+            <FormField label="Project Name" htmlFor="projectName">
+              <Input
+                id="projectName"
+                value={draft.projectName}
+                onChange={(e) => setDraft({ ...draft, projectName: e.target.value })}
+                placeholder="My Awesome Project"
+              />
+            </FormField>
 
-          <FormField label="Note for your mentor (optional)" htmlFor="submissionNote">
-            <Textarea
-              id="submissionNote"
-              rows={3}
-              value={draft.note}
-              onChange={(e) => setDraft({ ...draft, note: e.target.value })}
-              placeholder="Anything they should know before reviewing it."
-            />
-          </FormField>
+            <FormField label="Link Type" htmlFor="linkType">
+              <Select value={draft.linkType} onValueChange={(val: any) => setDraft({ ...draft, linkType: val })}>
+                <SelectTrigger id="linkType">
+                  <SelectValue placeholder="Select type of link" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="both">Both (Drive & GitHub)</SelectItem>
+                  <SelectItem value="github">GitHub Only</SelectItem>
+                  <SelectItem value="drive">Drive Only</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                You must upload your materials to Drive or GitHub and share the link.
+              </p>
+            </FormField>
+
+            {(draft.linkType === "both" || draft.linkType === "github") && (
+              <FormField label="GitHub Repository Link" htmlFor="githubUrl">
+                <Input
+                  id="githubUrl"
+                  type="url"
+                  value={draft.githubUrl}
+                  onChange={(e) => setDraft({ ...draft, githubUrl: e.target.value })}
+                  placeholder="https://github.com/..."
+                />
+              </FormField>
+            )}
+
+            {(draft.linkType === "both" || draft.linkType === "drive") && (
+              <FormField label="Google Drive Link" htmlFor="driveUrl">
+                <Input
+                  id="driveUrl"
+                  type="url"
+                  value={draft.driveUrl}
+                  onChange={(e) => setDraft({ ...draft, driveUrl: e.target.value })}
+                  placeholder="https://drive.google.com/..."
+                />
+              </FormField>
+            )}
+
+            <FormField label="Project Summary (optional)" htmlFor="projectSummary">
+              <Textarea
+                id="projectSummary"
+                rows={2}
+                value={draft.projectSummary}
+                onChange={(e) => setDraft({ ...draft, projectSummary: e.target.value })}
+                placeholder="A brief summary of your project..."
+              />
+            </FormField>
+
+            <FormField label="Note for your mentor (optional)" htmlFor="submissionNote">
+              <Textarea
+                id="submissionNote"
+                rows={2}
+                value={draft.note}
+                onChange={(e) => setDraft({ ...draft, note: e.target.value })}
+                placeholder="Anything they should know before reviewing it."
+              />
+            </FormField>
+          </div>
 
           <DialogFooter>
             <DialogClose nativeButton render={<Button variant="outline" />}>
@@ -214,7 +274,14 @@ export function CohortSubmissions({ cohortId, canManage }: { cohortId: string; c
             </DialogClose>
             <Button
               onClick={() => create.mutate()}
-              disabled={create.isPending || !draft.lessonId || !draft.url.trim()}
+              disabled={
+                create.isPending ||
+                !draft.lessonId ||
+                !draft.projectName.trim() ||
+                (draft.linkType === "drive" && !draft.driveUrl.trim()) ||
+                (draft.linkType === "github" && !draft.githubUrl.trim()) ||
+                (draft.linkType === "both" && !draft.driveUrl.trim() && !draft.githubUrl.trim())
+              }
             >
               Submit
             </Button>

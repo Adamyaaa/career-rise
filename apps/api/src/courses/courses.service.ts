@@ -8,6 +8,7 @@ import {
 import { Role } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { AuthenticatedUser } from "../auth/strategies/jwt.strategy";
+import { CreateSubmissionDto } from "./dto/submission.dto";
 
 // listCohorts/listModulesWithLessons also serve the mentor material-upload picker
 // (any authenticated role, no progress fields); listMyCohorts and the STUDENT branch
@@ -236,7 +237,10 @@ export class CoursesService {
     // passed, and which wasn't called off, has happened. Nobody ticks anything.
     const modules = rows.map((module) => ({
       ...module,
-      lessons: module.lessons.map((lesson) => ({ ...lesson, taught: hasHappened(lesson, now) })),
+      lessons: module.lessons.map((lesson) => {
+        const taught = hasHappened(lesson, now);
+        return { ...lesson, taught, completed: taught };
+      }),
     }));
 
     if (user.role !== Role.STUDENT) {
@@ -251,8 +255,17 @@ export class CoursesService {
       throw new ForbiddenException("You are not enrolled in this cohort");
     }
 
+    const feedbacks = await this.prisma.lessonFeedback.findMany({
+      where: { studentId: user.id, cohortId },
+      select: { lessonId: true },
+    });
+    const feedbackSet = new Set(feedbacks.map((f) => f.lessonId));
+
     return modules.map((module) => {
-      const lessons = module.lessons.map((lesson) => ({ ...lesson, completed: lesson.taught }));
+      const lessons = module.lessons.map((lesson) => ({
+        ...lesson,
+        completed: feedbackSet.has(lesson.id), // A class is complete once feedback is provided
+      }));
       // Cancelled classes drop out of the denominator too — a student can't be behind on
       // something that never ran.
       const counted = lessons.filter((l) => !l.cancelled);
@@ -692,9 +705,9 @@ export class CoursesService {
 
   // Work a student hands in for a class. Backed by Evidence, which already models exactly
   // this — a link plus metadata, scoped to a lesson and cohort, reviewable by a mentor.
-  async createSubmission(user: AuthenticatedUser, lessonId: string, url: string, note?: string) {
+  async createSubmission(user: AuthenticatedUser, dto: CreateSubmissionDto) {
     const lesson = await this.prisma.lesson.findUnique({
-      where: { id: lessonId },
+      where: { id: dto.lessonId },
       select: { id: true, module: { select: { cohortId: true } } },
     });
     if (!lesson) {
@@ -703,14 +716,32 @@ export class CoursesService {
     const cohortId = lesson.module.cohortId;
     await this.assertEnrolled(user.id, cohortId);
 
+    const metadata: any = {
+      projectName: dto.projectName,
+    };
+    if (dto.projectSummary?.trim()) {
+      metadata.projectSummary = dto.projectSummary.trim();
+    }
+    if (dto.note?.trim()) {
+      metadata.note = dto.note.trim();
+    }
+    if (dto.githubUrl?.trim()) {
+      metadata.githubUrl = dto.githubUrl.trim();
+    }
+    if (dto.driveUrl?.trim()) {
+      metadata.driveUrl = dto.driveUrl.trim();
+    }
+
+    const externalUrl = dto.driveUrl?.trim() || dto.githubUrl?.trim() || "";
+
     const submission = await this.prisma.evidence.create({
       data: {
         studentId: user.id,
-        lessonId,
+        lessonId: dto.lessonId,
         cohortId,
         evidenceType: "link",
-        externalUrl: url.trim(),
-        metadata: note?.trim() ? { note: note.trim() } : {},
+        externalUrl,
+        metadata,
       },
       select: { id: true, externalUrl: true, submittedAt: true, status: true },
     });
@@ -744,17 +775,31 @@ export class CoursesService {
       orderBy: { submittedAt: "desc" },
     });
 
-    return rows.map((row) => ({
-      id: row.id,
-      url: row.externalUrl,
-      note: (row.metadata as { note?: string } | null)?.note ?? null,
-      submittedAt: row.submittedAt,
-      status: row.status,
-      student: row.student,
-      lessonId: row.lesson.id,
-      lessonTitle: row.lesson.title,
-      moduleTitle: row.lesson.module.title,
-    }));
+    return rows.map((row) => {
+      const metadata = row.metadata as { 
+        projectName?: string; 
+        githubUrl?: string; 
+        driveUrl?: string; 
+        projectSummary?: string; 
+        note?: string 
+      } | null;
+      
+      return {
+        id: row.id,
+        url: row.externalUrl,
+        projectName: metadata?.projectName ?? null,
+        githubUrl: metadata?.githubUrl ?? null,
+        driveUrl: metadata?.driveUrl ?? null,
+        projectSummary: metadata?.projectSummary ?? null,
+        note: metadata?.note ?? null,
+        submittedAt: row.submittedAt,
+        status: row.status,
+        student: row.student,
+        lessonId: row.lesson.id,
+        lessonTitle: row.lesson.title,
+        moduleTitle: row.lesson.module.title,
+      };
+    });
   }
 
   // A student can retract their own submission; mentors and admins can clear any in a

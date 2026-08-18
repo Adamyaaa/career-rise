@@ -11,9 +11,8 @@ export function CtaSection() {
           <h2 className="font-heading text-3xl font-medium tracking-tight sm:text-4xl">
             Ready to start your cohort?
           </h2>
-          <p className="max-w-md text-muted-foreground text-balance">
-            Join the next cohort and start building evidence of what you can
-            do — with a mentor looking at your work, not just a syllabus.
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground text-balance">
+            Stop collecting courses and start building a portfolio you can actually show to employers. Do it with a mentor reviewing your work, not just a syllabus.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button size="lg" render={<Link href="/register" />}>

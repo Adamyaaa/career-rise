@@ -34,18 +34,39 @@ export function CohortProgressPanel({ cohortId, modules }: { cohortId: string; m
   const liveSignals = progress.signals.filter((s) => s.active);
   const plannedSignals = progress.signals.filter((s) => !s.active);
 
+  const attendanceSignal = progress.signals.find((s) => s.type === "attendance");
+  const submissionsSignal = progress.signals.find((s) => s.type === "evidence_submitted");
+
   return (
     <div className="flex flex-col gap-6">
       {/* Two distinct figures, deliberately not merged: one is what this student has done,
           the other is where the cohort has got to. */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="flex items-center gap-4 rounded-2xl bg-gradient-to-br from-primary/10 via-card to-card p-6 shadow-sm ring-1 ring-foreground/10">
-          <CircularProgress percent={progress.overallPercent} size={72} strokeWidth={6} />
-          <div className="min-w-0">
-            <p className="font-heading text-lg font-medium text-foreground">Your progress</p>
-            <p className="text-sm text-muted-foreground">
-              Across {liveSignals.length} tracked {liveSignals.length === 1 ? "signal" : "signals"}
-            </p>
+        <div className="flex flex-col justify-center gap-4 rounded-2xl bg-gradient-to-br from-primary/10 via-card to-card p-6 shadow-sm ring-1 ring-foreground/10">
+          <p className="font-heading text-lg font-medium text-foreground">Your progress</p>
+          <div className="flex flex-col gap-3">
+            {attendanceSignal && (
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-1.5 font-medium text-foreground">
+                    <Users className="size-4 text-primary" /> Attendance
+                  </span>
+                  <span className="text-muted-foreground">{Math.round(attendanceSignal.value! * 100)}%</span>
+                </div>
+                <Progress value={Math.round(attendanceSignal.value! * 100)} />
+              </div>
+            )}
+            {submissionsSignal && (
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-1.5 font-medium text-foreground">
+                    <ClipboardCheck className="size-4 text-primary" /> Submissions
+                  </span>
+                  <span className="text-muted-foreground">{Math.round(submissionsSignal.value! * 100)}%</span>
+                </div>
+                <Progress value={Math.round(submissionsSignal.value! * 100)} />
+              </div>
+            )}
           </div>
         </div>
 
