@@ -16,8 +16,13 @@ async function bootstrap(): Promise<void> {
   app.set("trust proxy", 1);
 
   app.setGlobalPrefix("api/v1");
+  const corsOrigin = config.getOrThrow<string>("CORS_ORIGIN");
+  const origin = corsOrigin.includes(",") 
+    ? corsOrigin.split(",").map((o) => o.trim()) 
+    : corsOrigin;
+
   app.enableCors({
-    origin: config.getOrThrow<string>("CORS_ORIGIN"),
+    origin,
     credentials: true,
   });
   app.useGlobalPipes(
