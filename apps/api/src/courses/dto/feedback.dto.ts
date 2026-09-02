@@ -1,8 +1,6 @@
-import { IsString, MaxLength, MinLength } from "class-validator";
+import { IsObject } from "class-validator";
 
 export class PostFeedbackDto {
-  @IsString()
-  @MinLength(1)
-  @MaxLength(2000)
-  body: string;
+  @IsObject()
+  responses: Record<string, string>;
 }

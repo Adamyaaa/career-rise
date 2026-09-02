@@ -21,15 +21,13 @@ export function LessonFeedbackComposer({ lessonId, lessonTitle, buttonLabel = "F
 
   const send = useMutation({
     mutationFn: () => {
-      const parts = [];
-      if (feedback.trim()) parts.push(`**Feedback on this class:**\n${feedback}`);
-      if (suggestions.trim()) parts.push(`**Suggestions for improvement:**\n${suggestions}`);
-      if (heaviness) parts.push(`**Do you think classroom project that was given is very heavy?**\n${heaviness}`);
-      if (upcomingTopics.trim()) parts.push(`**What more topic do you want to take in upcoming sessions:**\n${upcomingTopics}`);
+      const responses: Record<string, string> = {};
+      if (feedback.trim()) responses["Feedback on this class"] = feedback;
+      if (suggestions.trim()) responses["Suggestions for improvement"] = suggestions;
+      if (heaviness) responses["Project heaviness"] = heaviness;
+      if (upcomingTopics.trim()) responses["Upcoming topics"] = upcomingTopics;
       
-      const combinedBody = parts.length > 0 ? parts.join("\n\n") : "No feedback provided.";
-      
-      return feedbackService.post(lessonId, combinedBody);
+      return feedbackService.post(lessonId, { responses });
     },
     onSuccess: () => {
       setFeedback("");

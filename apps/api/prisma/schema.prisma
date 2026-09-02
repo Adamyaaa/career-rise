@@ -294,7 +294,7 @@ model LessonFeedback {
   lessonId  String
   cohortId  String // denormalized from the lesson->module->cohort chain; see header note
   studentId String
-  body      String
+  responses Json     @default("{}")
   createdAt DateTime @default(now())
 
   lesson  Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)

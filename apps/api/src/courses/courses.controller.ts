@@ -115,7 +115,7 @@ export class CoursesController {
   @Post("lessons/:id/feedback")
   @Roles(Role.STUDENT)
   postFeedback(@Param("id") id: string, @Body() dto: PostFeedbackDto, @CurrentUser() user: AuthenticatedUser) {
-    return this.coursesService.postFeedback(user, id, dto.body);
+    return this.coursesService.postFeedback(user, id, dto.responses);
   }
 
   @Get("cohorts/:id/progress")

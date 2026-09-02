@@ -133,7 +133,7 @@ export const studyPlanService = {
 
 export interface FeedbackEntry {
   id: string;
-  body: string;
+  responses: Record<string, any>;
   createdAt: string;
   student: { id: string; email: string; firstName: string | null; lastName: string | null };
   lessonId: string;
@@ -145,8 +145,8 @@ export interface FeedbackEntry {
 // `list` is rejected by role for anyone who isn't a mentor or admin.
 export const feedbackService = {
   listForCohort: (cohortId: string) => apiClient.get<FeedbackEntry[]>(`/cohorts/${cohortId}/feedback`),
-  post: (lessonId: string, body: string) =>
-    apiClient.post<{ sent: true }>(`/lessons/${lessonId}/feedback`, { body }),
+  post: (lessonId: string, payload: { responses: Record<string, string> }) =>
+    apiClient.post<{ sent: true }>(`/lessons/${lessonId}/feedback`, payload),
   delete: (feedbackId: string) => apiClient.delete<{ id: string; deleted: true }>(`/feedback/${feedbackId}`),
 };
 

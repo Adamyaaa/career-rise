@@ -572,10 +572,10 @@ export class CoursesService {
     }));
   }
 
-  async postFeedback(user: AuthenticatedUser, lessonId: string, body: string) {
+  async postFeedback(user: AuthenticatedUser, lessonId: string, responses: any) {
     const lesson = await this.prisma.lesson.findUnique({
       where: { id: lessonId },
-      select: { id: true, module: { select: { cohortId: true } } },
+      include: { module: true },
     });
     if (!lesson) {
       throw new NotFoundException("Lesson not found");
@@ -584,7 +584,7 @@ export class CoursesService {
     await this.assertEnrolled(user.id, cohortId);
 
     await this.prisma.lessonFeedback.create({
-      data: { lessonId, cohortId, studentId: user.id, body: body.trim() },
+      data: { lessonId, cohortId, studentId: user.id, responses },
     });
 
     // Nothing about the stored row is returned: the student can't read feedback back,
