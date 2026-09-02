@@ -5,6 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { feedbackService } from "@/services/learning.service";
 import { toast } from "sonner";
@@ -13,12 +14,28 @@ import { toast } from "sonner";
 // nothing to list here — just a trigger and a compose box.
 export function LessonFeedbackComposer({ lessonId, lessonTitle, buttonLabel = "Feedback" }: { lessonId: string; lessonTitle: string; buttonLabel?: string }) {
   const [open, setOpen] = useState(false);
-  const [body, setBody] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [suggestions, setSuggestions] = useState("");
+  const [heaviness, setHeaviness] = useState("");
+  const [upcomingTopics, setUpcomingTopics] = useState("");
 
   const send = useMutation({
-    mutationFn: () => feedbackService.post(lessonId, body),
+    mutationFn: () => {
+      const parts = [];
+      if (feedback.trim()) parts.push(`**Feedback on this class:**\n${feedback}`);
+      if (suggestions.trim()) parts.push(`**Suggestions for improvement:**\n${suggestions}`);
+      if (heaviness) parts.push(`**Do you think classroom project that was given is very heavy?**\n${heaviness}`);
+      if (upcomingTopics.trim()) parts.push(`**What more topic do you want to take in upcoming sessions:**\n${upcomingTopics}`);
+      
+      const combinedBody = parts.length > 0 ? parts.join("\n\n") : "No feedback provided.";
+      
+      return feedbackService.post(lessonId, combinedBody);
+    },
     onSuccess: () => {
-      setBody("");
+      setFeedback("");
+      setSuggestions("");
+      setHeaviness("");
+      setUpcomingTopics("");
       setOpen(false);
       toast.success("Feedback sent — only your mentor can see it");
       // Page should probably be revalidated to show completion
@@ -26,6 +43,8 @@ export function LessonFeedbackComposer({ lessonId, lessonTitle, buttonLabel = "F
     },
     onError: (err: Error) => toast.error(err.message || "Couldn't send that — try again"),
   });
+
+  const isFormValid = feedback.trim() || suggestions.trim() || heaviness || upcomingTopics.trim();
 
   return (
     <>
@@ -39,7 +58,7 @@ export function LessonFeedbackComposer({ lessonId, lessonTitle, buttonLabel = "F
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Feedback on this class</DialogTitle>
             <DialogDescription>
@@ -47,20 +66,87 @@ export function LessonFeedbackComposer({ lessonId, lessonTitle, buttonLabel = "F
             </DialogDescription>
           </DialogHeader>
 
-          <Textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="How was this class? What worked, what didn't?"
-            rows={4}
-            autoFocus
-          />
+          <div className="space-y-6 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="feedback" className="text-base">Feedback on this class</Label>
+              <Textarea
+                id="feedback"
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                placeholder="Your answer"
+                rows={2}
+                autoFocus
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="suggestions" className="text-base">Suggestions for improvement</Label>
+              <Textarea
+                id="suggestions"
+                value={suggestions}
+                onChange={(e) => setSuggestions(e.target.value)}
+                placeholder="Your answer"
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-base">Do you think classroom project that was given is very heavy?</Label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="heaviness" 
+                    value="Yes, it is very heavy" 
+                    checked={heaviness === "Yes, it is very heavy"} 
+                    onChange={(e) => setHeaviness(e.target.value)} 
+                    className="size-4 text-primary focus:ring-primary" 
+                  />
+                  <span className="text-sm font-normal">Yes, it is very heavy</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="heaviness" 
+                    value="No, it is very easy." 
+                    checked={heaviness === "No, it is very easy."} 
+                    onChange={(e) => setHeaviness(e.target.value)} 
+                    className="size-4 text-primary focus:ring-primary" 
+                  />
+                  <span className="text-sm font-normal">No, it is very easy.</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="heaviness" 
+                    value="Yes, but will try to do whatever is feasible and continue to complete." 
+                    checked={heaviness === "Yes, but will try to do whatever is feasible and continue to complete."} 
+                    onChange={(e) => setHeaviness(e.target.value)} 
+                    className="size-4 text-primary focus:ring-primary" 
+                  />
+                  <span className="text-sm font-normal">Yes, but will try to do whatever is feasible and continue to complete.</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="upcomingTopics" className="text-base">What more topic do you want to take in upcoming sessions</Label>
+              <Textarea
+                id="upcomingTopics"
+                value={upcomingTopics}
+                onChange={(e) => setUpcomingTopics(e.target.value)}
+                placeholder="Your answer"
+                rows={2}
+              />
+            </div>
+          </div>
 
           <DialogFooter>
             <DialogClose nativeButton render={<Button variant="outline" />}>
               Cancel
             </DialogClose>
-            <Button onClick={() => send.mutate()} disabled={send.isPending || !body.trim()}>
-              Send feedback
+            <Button onClick={() => send.mutate()} disabled={send.isPending || !isFormValid}>
+              Submit
             </Button>
           </DialogFooter>
         </DialogContent>
