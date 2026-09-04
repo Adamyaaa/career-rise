@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MessageSquare, Trash2 } from "lucide-react";
+import { MessageSquare, Trash2, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,41 @@ export function CohortFeedback({ cohortId }: { cohortId: string }) {
     }
   };
 
+  const downloadCSV = () => {
+    if (!feedback || feedback.length === 0) return;
+    
+    // Get all unique questions from all feedback entries to form the headers
+    const allQuestions = new Set<string>();
+    feedback.forEach(entry => {
+      Object.keys(entry.responses || {}).forEach(q => allQuestions.add(q));
+    });
+    
+    const questionsArray = Array.from(allQuestions);
+    const headers = ["Student", "Date", "Module", "Lesson", ...questionsArray];
+    
+    const escapeCSV = (str: string) => `"${(str || "").replace(/"/g, '""')}"`;
+    
+    const rows = feedback.map(entry => {
+      const studentName = fullName(entry.student);
+      const date = new Date(entry.createdAt).toLocaleDateString();
+      const baseRow = [studentName, date, entry.moduleTitle, entry.lessonTitle];
+      
+      const responseRow = questionsArray.map(q => entry.responses?.[q] || "");
+      
+      return [...baseRow, ...responseRow].map(escapeCSV).join(",");
+    });
+    
+    const csvContent = [headers.map(escapeCSV).join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `cohort-${cohortId}-feedback.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col gap-3">
@@ -65,10 +100,16 @@ export function CohortFeedback({ cohortId }: { cohortId: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-muted-foreground">
-        {feedback.length} {feedback.length === 1 ? "message" : "messages"} across{" "}
-        {byLesson.size} {byLesson.size === 1 ? "class" : "classes"}. Students can&apos;t see these once sent.
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          {feedback.length} {feedback.length === 1 ? "message" : "messages"} across{" "}
+          {byLesson.size} {byLesson.size === 1 ? "class" : "classes"}. Students can&apos;t see these once sent.
+        </p>
+        <Button variant="outline" size="sm" onClick={downloadCSV}>
+          <Download className="mr-2 size-4" />
+          Export CSV
+        </Button>
+      </div>
 
       {Array.from(byLesson.values()).map((entries) => {
         const [first] = entries;
