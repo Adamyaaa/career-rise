@@ -35,7 +35,7 @@ export function LessonFeedbackComposer({ lessonId, lessonTitle, buttonLabel = "F
       setHeaviness("");
       setUpcomingTopics("");
       setOpen(false);
-      toast.success("Feedback sent — only your mentor can see it");
+      toast.success("Feedback forwarded!");
       // Page should probably be revalidated to show completion
       window.location.reload();
     },
@@ -60,7 +60,7 @@ export function LessonFeedbackComposer({ lessonId, lessonTitle, buttonLabel = "F
           <DialogHeader>
             <DialogTitle>Feedback on this class</DialogTitle>
             <DialogDescription>
-              {lessonTitle} — goes privately to your mentor. You won&apos;t see it again once sent.
+              {lessonTitle}
             </DialogDescription>
           </DialogHeader>
 
