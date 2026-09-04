@@ -547,7 +547,7 @@ export class CoursesService {
       where: { cohortId },
       select: {
         id: true,
-        body: true,
+        responses: true,
         createdAt: true,
         student: { select: { id: true, email: true, firstName: true, lastName: true } },
         lesson: {
@@ -563,7 +563,7 @@ export class CoursesService {
 
     return feedback.map((entry) => ({
       id: entry.id,
-      body: entry.body,
+      responses: entry.responses,
       createdAt: entry.createdAt,
       student: entry.student,
       lessonId: entry.lesson.id,
