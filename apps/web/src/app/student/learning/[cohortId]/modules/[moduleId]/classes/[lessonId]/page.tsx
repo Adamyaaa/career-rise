@@ -70,34 +70,37 @@ export default function ClassDetailPage({
       {lesson && (
         <div className="mx-auto flex max-w-3xl flex-col gap-5">
           <div className="flex flex-col gap-3 rounded-2xl bg-gradient-to-br from-primary/10 via-card to-card p-6 shadow-sm ring-1 ring-foreground/10 sm:p-8">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium tracking-wide text-primary uppercase">
-                Class {index >= 0 ? index + 1 : ""}
-              </span>
-              <span
-                className={cn(
-                  "flex items-center gap-1.5 text-xs font-medium",
-                  lesson.cancelled
-                    ? "text-destructive"
-                    : lesson.completed
-                      ? "text-primary"
-                      : "text-muted-foreground",
+            <div className="flex flex-wrap items-start justify-between gap-4 w-full">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-medium tracking-wide text-primary uppercase">
+                  Class {index >= 0 ? index + 1 : ""}
+                </span>
+                <span
+                  className={cn(
+                    "flex items-center gap-1.5 text-xs font-medium",
+                    lesson.cancelled
+                      ? "text-destructive"
+                      : lesson.completed
+                        ? "text-primary"
+                        : "text-muted-foreground",
+                  )}
+                >
+                  {lesson.cancelled ? (
+                    <XCircle className="size-3.5" />
+                  ) : lesson.completed ? (
+                    <CheckCircle2 className="size-3.5" />
+                  ) : (
+                    <Circle className="size-3.5" />
+                  )}
+                  {lesson.cancelled ? "Cancelled" : lesson.completed ? "Completed" : "Upcoming"}
+                </span>
+                {lesson.submissionRequired && (
+                  <Badge variant="outline" className="border-primary/40 text-[10px] text-primary">
+                    Submission required
+                  </Badge>
                 )}
-              >
-                {lesson.cancelled ? (
-                  <XCircle className="size-3.5" />
-                ) : lesson.completed ? (
-                  <CheckCircle2 className="size-3.5" />
-                ) : (
-                  <Circle className="size-3.5" />
-                )}
-              {lesson.cancelled ? "Cancelled" : lesson.completed ? "Completed" : "Upcoming"}
-              </span>
-              {lesson.submissionRequired && (
-                <Badge variant="outline" className="border-primary/40 text-[10px] text-primary">
-                  Submission required
-                </Badge>
-              )}
+              </div>
+              <LessonFeedbackComposer lessonId={lesson.id} lessonTitle={lesson.title} buttonLabel="Give Feedback" />
             </div>
 
             <h1 className="font-heading text-2xl font-medium text-foreground">{lesson.title}</h1>
@@ -189,18 +192,6 @@ export default function ClassDetailPage({
                 </div>
                 <SubmitWorkDialog cohortId={cohortId} lessonId={lesson.id} lessonTitle={lesson.title} />
               </div>
-            </div>
-          </section>
-
-          <section className="flex flex-col gap-3 rounded-2xl bg-card p-6 ring-1 ring-foreground/10">
-            <div className="flex flex-col gap-1">
-              <h2 className="font-heading text-sm font-semibold text-foreground">Feedback</h2>
-              <p className="text-xs text-muted-foreground">
-                You must provide feedback to mark this class as your progress (enter 'n/a' if you have none). Your mentor reads this privately.
-              </p>
-            </div>
-            <div className="w-fit">
-              <LessonFeedbackComposer lessonId={lesson.id} lessonTitle={lesson.title} buttonLabel="Feedback" />
             </div>
           </section>
         </div>
