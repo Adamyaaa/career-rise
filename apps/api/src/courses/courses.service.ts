@@ -105,6 +105,9 @@ export class CoursesService {
             endDate: true,
             course: { select: { id: true, title: true } },
             modules: { select: { lessons: { select: { id: true, scheduledAt: true, cancelled: true } } } },
+            mentorAssignments: {
+              select: { mentorProfile: { select: { user: { select: { firstName: true, lastName: true } } } } }
+            }
           },
         },
       },
@@ -131,6 +134,10 @@ export class CoursesService {
         endDate: cohort.endDate,
         firstClassDate: scheduled[0] ?? null,
         course: cohort.course,
+        moduleCount: cohort.modules.length,
+        mentors: cohort.mentorAssignments.map((ma) => ({
+          name: [ma.mentorProfile.user.firstName, ma.mentorProfile.user.lastName].filter(Boolean).join(" "),
+        })),
         progress: progressOf(completedLessons, lessons.length),
       };
     });

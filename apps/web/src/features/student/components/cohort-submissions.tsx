@@ -181,7 +181,7 @@ export function CohortSubmissions({ cohortId, canManage }: { cohortId: string; c
           <div className="grid gap-4 py-4">
             <FormField label="Which class is this for?" htmlFor="submissionLesson">
               <Select value={draft.lessonId} onValueChange={(value) => setDraft({ ...draft, lessonId: value ?? "" })}>
-                <SelectTrigger id="submissionLesson">
+                <SelectTrigger id="submissionLesson" className="w-full">
                   <SelectValue placeholder="Pick a class">
                     {(value: string | null) =>
                       classes.find((lesson) => lesson.id === value)?.title ?? "Pick a class"
@@ -209,7 +209,7 @@ export function CohortSubmissions({ cohortId, canManage }: { cohortId: string; c
 
             <FormField label="Link Type" htmlFor="linkType">
               <Select value={draft.linkType} onValueChange={(val: any) => setDraft({ ...draft, linkType: val })}>
-                <SelectTrigger id="linkType">
+                <SelectTrigger id="linkType" className="w-full">
                   <SelectValue placeholder="Select type of link" />
                 </SelectTrigger>
                 <SelectContent>

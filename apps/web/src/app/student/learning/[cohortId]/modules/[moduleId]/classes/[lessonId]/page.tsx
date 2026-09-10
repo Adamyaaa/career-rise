@@ -82,17 +82,15 @@ export default function ClassDetailPage({
                       ? "text-destructive"
                       : lesson.completed
                         ? "text-primary"
-                        : "text-muted-foreground",
+                        : "hidden",
                   )}
                 >
                   {lesson.cancelled ? (
                     <XCircle className="size-3.5" />
                   ) : lesson.completed ? (
                     <CheckCircle2 className="size-3.5" />
-                  ) : (
-                    <Circle className="size-3.5" />
-                  )}
-                  {lesson.cancelled ? "Cancelled" : lesson.completed ? "Completed" : "Upcoming"}
+                  ) : null}
+                  {lesson.cancelled ? "Cancelled" : lesson.completed ? "Completed" : null}
                 </span>
                 {lesson.submissionRequired && (
                   <Badge variant="outline" className="border-primary/40 text-[10px] text-primary">

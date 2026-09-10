@@ -14,6 +14,8 @@ export interface MyCohortSummary {
   // Earliest dated module — the real first class; falls back to startDate when null.
   firstClassDate: string | null;
   course: { id: string; title: string };
+  moduleCount?: number;
+  mentors?: { name: string }[];
   // Present for STUDENT (their own completion); absent for MENTOR, who has none.
   progress?: Progress;
 }

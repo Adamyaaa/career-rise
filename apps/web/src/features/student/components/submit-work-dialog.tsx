@@ -91,7 +91,7 @@ export function SubmitWorkDialog({
 
             <FormField label="Link Type" htmlFor="linkType">
               <Select value={linkType} onValueChange={(val: any) => setLinkType(val)}>
-                <SelectTrigger id="linkType">
+                <SelectTrigger id="linkType" className="w-full">
                   <SelectValue placeholder="Select type of link" />
                 </SelectTrigger>
                 <SelectContent>

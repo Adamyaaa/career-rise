@@ -37,7 +37,7 @@ export function ClassCard({ lesson, index, href }: { lesson: LessonProgress; ind
               ? "text-destructive"
               : completed
                 ? "text-primary"
-                : "text-muted-foreground",
+                : "hidden",
           )}
         >
           {cancelled ? (
@@ -50,12 +50,7 @@ export function ClassCard({ lesson, index, href }: { lesson: LessonProgress; ind
               <CheckCircle2 className="size-3.5" />
               Completed
             </>
-          ) : (
-            <>
-              <Circle className="size-3.5" />
-              Upcoming
-            </>
-          )}
+          ) : null}
         </span>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
