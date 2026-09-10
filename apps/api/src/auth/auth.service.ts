@@ -126,11 +126,17 @@ export class AuthService {
 
     const isDev = this.config.get<string>("NODE_ENV") !== "production";
 
-    // The response is identical whether or not the account exists, so this can't be
-    // used to discover which email addresses are registered.
-    if (!user || !user.isActive) {
-      this.logger.warn(`OTP requested for unknown or inactive account ${email} — not sent`);
-      return { success: true, delivered: this.mail.isConfigured };
+    // The response used to be identical whether or not the account existed (to prevent email
+    // enumeration). However, for better UX during MVP, we explicitly tell the user to register.
+    if (!user) {
+      throw new UnauthorizedException({
+        code: "ACCOUNT_NOT_FOUND",
+        message: "No account found for that email — please sign up first.",
+      });
+    }
+
+    if (!user.isActive) {
+      this.assertActive(false);
     }
 
     const code = randomInt(100000, 1000000).toString();

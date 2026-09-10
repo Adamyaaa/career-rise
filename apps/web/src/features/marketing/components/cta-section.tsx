@@ -1,9 +1,18 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/common/reveal";
+import { useAuthStore } from "@/stores/auth-store";
+import { useMounted } from "@/hooks/use-mounted";
+import { roleHome } from "@/hooks/use-require-auth";
 
 export function CtaSection() {
+  const mounted = useMounted();
+  const user = useAuthStore((s) => s.user);
+  const loggedIn = mounted && !!user;
+
   return (
     <section className="border-t border-border/60">
       <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
@@ -15,9 +24,15 @@ export function CtaSection() {
             Stop collecting courses and start building a portfolio you can actually show to employers. Do it with a mentor reviewing your work, not just a syllabus.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Button size="lg" render={<Link href="/register" />}>
-              Get started <ArrowRight className="size-4" />
-            </Button>
+            {loggedIn ? (
+              <Button size="lg" render={<Link href={roleHome(user!.role)} />}>
+                Dashboard <ArrowRight className="size-4" />
+              </Button>
+            ) : (
+              <Button size="lg" render={<Link href="/register" />}>
+                Get started <ArrowRight className="size-4" />
+              </Button>
+            )}
             <Button size="lg" variant="outline" render={<Link href="/contact" />}>
               Talk to us
             </Button>

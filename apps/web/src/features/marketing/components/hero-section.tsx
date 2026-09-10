@@ -1,10 +1,19 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProductPreview } from "./product-preview";
+import { useAuthStore } from "@/stores/auth-store";
+import { useMounted } from "@/hooks/use-mounted";
+import { roleHome } from "@/hooks/use-require-auth";
 
 export function HeroSection() {
+  const mounted = useMounted();
+  const user = useAuthStore((s) => s.user);
+  const loggedIn = mounted && !!user;
+
   return (
     <section className="relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 pt-20 pb-20 sm:px-6 lg:px-8 lg:pt-28 lg:pb-28">
@@ -23,9 +32,15 @@ export function HeroSection() {
           </p>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button size="lg" render={<Link href="/register" />}>
-              Get started <ArrowRight className="size-4" />
-            </Button>
+            {loggedIn ? (
+              <Button size="lg" render={<Link href={roleHome(user!.role)} />}>
+                Dashboard <ArrowRight className="size-4" />
+              </Button>
+            ) : (
+              <Button size="lg" render={<Link href="/register" />}>
+                Get started <ArrowRight className="size-4" />
+              </Button>
+            )}
             <Button size="lg" variant="outline" render={<Link href="#how-it-works" />}>
               See how it works
             </Button>
