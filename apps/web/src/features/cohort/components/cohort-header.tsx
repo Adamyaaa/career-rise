@@ -67,14 +67,6 @@ export function CohortHeader({ cohortId }: { cohortId: string }) {
           </div>
         </div>
 
-        {/* Mentors and admins get no ring — a cohort-wide average said little and the
-            counts above already cover teaching progress. */}
-        {isStudent && (
-          <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:gap-1.5">
-            <CircularProgress percent={cohort.myProgressPercent!} size={64} strokeWidth={5} />
-            <span className="text-xs text-muted-foreground">your progress</span>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

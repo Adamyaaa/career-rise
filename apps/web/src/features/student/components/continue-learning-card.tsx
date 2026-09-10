@@ -25,7 +25,7 @@ export function ContinueLearningCard({ cohort }: { cohort: MyCohortSummary }) {
           <h2 className="font-heading text-2xl font-medium text-foreground">{cohort.course.title}</h2>
 
           <p className="text-sm text-muted-foreground">
-            {cohort.moduleCount || 0} modules · Mentored by <span className="font-medium text-foreground">{mentorsList}</span>
+            {cohort.moduleCount || 0} modules · <span className="font-medium text-foreground">{mentorsList}</span>
           </p>
         </div>
 

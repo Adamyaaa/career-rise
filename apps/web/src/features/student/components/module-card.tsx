@@ -30,19 +30,11 @@ export function ModuleCard({
   return (
     <Link
       href={href}
-      className={cn(
-        "group flex flex-col gap-3 rounded-2xl bg-card p-5 ring-1 transition-shadow hover:shadow-md",
-        isComplete ? "ring-primary/25" : "ring-foreground/10",
-      )}
+      className="group flex flex-col gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10 transition-shadow hover:shadow-md"
     >
       <div className="flex items-start gap-3">
-        <span
-          className={cn(
-            "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full",
-            isComplete ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground",
-          )}
-        >
-          {isComplete ? <CheckCircle2 className="size-4" /> : <Layers className="size-4" />}
+        <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+          <Layers className="size-4" />
         </span>
 
         <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -50,11 +42,6 @@ export function ModuleCard({
             <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
               Module {index + 1}
             </span>
-            {isComplete && (
-              <Badge variant="secondary" className="text-[10px]">
-                Complete
-              </Badge>
-            )}
           </div>
 
           <p className="font-heading text-base leading-snug font-medium text-foreground">{module.title}</p>
@@ -77,12 +64,6 @@ export function ModuleCard({
         <ChevronRight className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
       </div>
 
-      <div className="mt-auto flex flex-col gap-1.5 border-t border-border/60 pt-3">
-        <Progress value={module.percent} />
-        <p className="text-xs text-muted-foreground">
-          {module.completedLessons} of {module.totalLessons} done · {module.percent}%
-        </p>
-      </div>
     </Link>
   );
 }
