@@ -81,10 +81,7 @@ export default function ModuleDetailPage({
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:gap-1.5">
-              <CircularProgress percent={module.percent} size={64} strokeWidth={5} />
-              <span className="text-xs text-muted-foreground">complete</span>
-            </div>
+
           </div>
 
           {module.lessons.length === 0 ? (
