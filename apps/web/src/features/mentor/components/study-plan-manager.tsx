@@ -34,6 +34,12 @@ import { cn } from "@/lib/utils";
 import { formatDate, formatTime } from "@/lib/format";
 import { toast } from "sonner";
 
+function getYouTubeId(url: string | null): string | null {
+  if (!url) return null;
+  const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+  return match ? match[1] : null;
+}
+
 type Editor =
   | { kind: "slides"; lessonId: string; value: { title: string; url: string }[] }
   | { kind: "assignments"; lessonId: string; value: string }
@@ -422,6 +428,29 @@ export function StudyPlanManager({ cohortId }: { cohortId: string }) {
                             {lesson.cancelled ? "Restore class" : "Cancel class"}
                           </Button>
                         </div>
+
+                        {lesson.slides && lesson.slides.some(s => getYouTubeId(s.url)) && (
+                          <div className="flex flex-col gap-3 border-t border-border/60 pt-4">
+                            {lesson.slides.map((slide, idx) => {
+                              const ytId = getYouTubeId(slide.url);
+                              if (ytId) {
+                                return (
+                                  <div key={idx} className="overflow-hidden rounded-lg border border-border/60">
+                                    <iframe
+                                      className="w-full aspect-video"
+                                      src={`https://www.youtube.com/embed/${ytId}`}
+                                      title={slide.title || "YouTube video"}
+                                      frameBorder="0"
+                                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                      allowFullScreen
+                                    />
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })}
+                          </div>
+                        )}
                       </div>
                     ))}
 
