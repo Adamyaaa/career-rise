@@ -48,7 +48,7 @@ const hasDate = (editor: Editor): editor is Extract<Editor, { date: string }> =>
   editor.kind === "lesson" || editor.kind === "new-lesson";
 
 const EDITOR_COPY: Record<Editor["kind"], { title: string; label: string; placeholder: string }> = {
-  slides: { title: "Slides links", label: "Slide links", placeholder: "" },
+  slides: { title: "Resources & Videos", label: "Resource links", placeholder: "" },
   assignments: { title: "Assignments link", label: "Google Drive link", placeholder: "https://drive.google.com/..." },
   module: { title: "Rename module", label: "Module title", placeholder: "e.g. Foundations" },
   lesson: { title: "Edit class", label: "Class title", placeholder: "e.g. What is an agent?" },
@@ -578,7 +578,7 @@ function SlidesButton({
     <div className="flex items-center gap-1">
       <Button variant="outline" size="sm" onClick={onEdit}>
         <Presentation className="size-3.5" />
-        {count > 0 ? `Edit slides (${count})` : `Add slides`}
+        {count > 0 ? `Edit resources (${count})` : `Add resources`}
       </Button>
     </div>
   );
