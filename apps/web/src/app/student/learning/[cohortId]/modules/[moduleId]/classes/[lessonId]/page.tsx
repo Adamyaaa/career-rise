@@ -15,6 +15,7 @@ import {
   Presentation,
   Upload,
   XCircle,
+  Link as LinkIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,6 +25,12 @@ import { SubmitWorkDialog } from "@/features/student/components/submit-work-dial
 import { learningService } from "@/services/learning.service";
 import { formatDate, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+function getYouTubeId(url: string | null): string | null {
+  if (!url) return null;
+  const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+  return match ? match[1] : null;
+}
 
 export default function ClassDetailPage({
   params,
@@ -135,21 +142,38 @@ export default function ClassDetailPage({
 
             <div className="flex flex-col gap-2">
               {lesson.slides.length > 0 ? (
-                lesson.slides.map((slide, idx) => (
-                  <MaterialRow
-                    key={idx}
-                    icon={Presentation}
-                    label={slide.title || `Slides ${idx + 1}`}
-                    url={slide.url}
-                    emptyHint=""
-                  />
-                ))
+                lesson.slides.map((slide, idx) => {
+                  const ytId = getYouTubeId(slide.url);
+                  if (ytId) {
+                    return (
+                      <div key={idx} className="overflow-hidden rounded-lg border border-border/60">
+                        <iframe
+                          className="w-full aspect-video"
+                          src={`https://www.youtube.com/embed/${ytId}`}
+                          title={slide.title || "YouTube video"}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                    );
+                  }
+                  return (
+                    <MaterialRow
+                      key={idx}
+                      icon={LinkIcon}
+                      label={slide.title || `Resource ${idx + 1}`}
+                      url={slide.url}
+                      emptyHint=""
+                    />
+                  );
+                })
               ) : (
                 <MaterialRow
-                  icon={Presentation}
-                  label="Slides"
+                  icon={LinkIcon}
+                  label="Resources"
                   url={null}
-                  emptyHint="No slides shared yet"
+                  emptyHint="No resources shared yet"
                 />
               )}
               <MaterialRow
