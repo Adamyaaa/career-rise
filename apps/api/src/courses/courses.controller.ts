@@ -77,11 +77,6 @@ export class CoursesController {
     return this.coursesService.enrollStudent(user, id, dto.email);
   }
 
-  @Post("cohorts/:id/enroll-me")
-  @Roles(Role.STUDENT)
-  enrollSelf(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
-    return this.coursesService.enrollSelf(user, id);
-  }
 
   @Delete("cohorts/:id/students/:studentId")
   @Roles(Role.MENTOR, Role.SUPER_ADMIN)

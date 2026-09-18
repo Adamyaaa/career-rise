@@ -398,37 +398,7 @@ export class CoursesService {
     return { studentId: student.id, email: student.email, status: "active" };
   }
 
-  async enrollSelf(user: AuthenticatedUser, cohortId: string) {
-    if (user.role !== Role.STUDENT) {
-      throw new ForbiddenException("Only students can self-enroll");
-    }
 
-    const cohort = await this.prisma.cohort.findUnique({ where: { id: cohortId } });
-    if (!cohort) {
-      throw new NotFoundException("Cohort not found");
-    }
-
-    const existing = await this.prisma.cohortEnrollment.findFirst({
-      where: { cohortId, studentId: user.id },
-      select: { id: true, status: true },
-    });
-
-    if (existing) {
-      if (existing.status === "active") {
-        throw new ConflictException("You are already in this cohort");
-      }
-      await this.prisma.cohortEnrollment.update({
-        where: { id: existing.id },
-        data: { status: "active" },
-      });
-    } else {
-      await this.prisma.cohortEnrollment.create({
-        data: { cohortId, studentId: user.id, status: "active" },
-      });
-    }
-
-    return { studentId: user.id, email: user.email, status: "active" };
-  }
 
   // Withdraw rather than delete: their lesson completions stay intact in case they return.
   async withdrawStudent(user: AuthenticatedUser, cohortId: string, studentId: string) {

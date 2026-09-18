@@ -1,41 +1,23 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { GraduationCap } from "lucide-react";
 import { PageHeading } from "@/components/common/page-heading";
 import { EmptyState } from "@/components/common/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CohortCard } from "@/features/student/components/cohort-card";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { learningService } from "@/services/learning.service";
 import { useAuthStore } from "@/stores/auth-store";
-import { displayName, formatDate } from "@/lib/format";
+import { displayName } from "@/lib/format";
 
 export default function MyLearningPage() {
   const user = useAuthStore((s) => s.user);
-  const queryClient = useQueryClient();
 
   const { data: cohorts, isLoading } = useQuery({
     queryKey: ["my-cohorts"],
     queryFn: learningService.listMyCohorts,
   });
 
-  const { data: allCohorts, isLoading: isLoadingAll } = useQuery({
-    queryKey: ["available-cohorts"],
-    queryFn: learningService.listCohorts,
-  });
-
-  const enrollMutation = useMutation({
-    mutationFn: learningService.enrollSelf,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["my-cohorts"] });
-      queryClient.invalidateQueries({ queryKey: ["available-cohorts"] });
-    },
-  });
-
-  const myCohortIds = new Set(cohorts?.map((c) => c.id) || []);
-  const availableCohorts = allCohorts?.filter((c) => !myCohortIds.has(c.id));
   const hasCohorts = cohorts && cohorts.length > 0;
 
   return (
@@ -51,7 +33,7 @@ export default function MyLearningPage() {
         </div>
       )}
 
-      {!isLoading && !hasCohorts && (!availableCohorts || availableCohorts.length === 0) && (
+      {!isLoading && !hasCohorts && (
         <EmptyState
           icon={GraduationCap}
           title="No active cohort yet"
@@ -63,34 +45,6 @@ export default function MyLearningPage() {
         <div className="flex flex-col gap-4">
           {cohorts.map((cohort) => (
             <CohortCard key={cohort.id} cohort={cohort} hrefBase="/student/learning" />
-          ))}
-        </div>
-      )}
-
-      {!isLoadingAll && availableCohorts && availableCohorts.length > 0 && (
-        <div className="mt-12 flex flex-col gap-4">
-          <h2 className="font-heading text-xl font-medium text-foreground">Available Cohorts</h2>
-          {availableCohorts.map((cohort) => (
-            <Card key={cohort.id}>
-              <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-col gap-1">
-                  <p className="text-xs font-medium tracking-wide text-primary uppercase">{cohort.name}</p>
-                  <p className="font-heading text-lg font-medium text-foreground">{cohort.course.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    starts {formatDate(cohort.firstClassDate ?? cohort.startDate)}
-                  </p>
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={enrollMutation.isPending}
-                  onClick={() => enrollMutation.mutate(cohort.id)}
-                >
-                  {enrollMutation.isPending && enrollMutation.variables === cohort.id ? "Enrolling..." : "Enroll"}
-                </Button>
-              </CardContent>
-            </Card>
           ))}
         </div>
       )}
