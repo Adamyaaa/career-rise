@@ -27,7 +27,10 @@ export function useRequireAuth(allowedRoles?: Role[]) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, user]);
 
-  return { user, ready: mounted && !!user };
+  return {
+    user,
+    ready: mounted && !!user && (!allowedRoles || allowedRoles.includes(user.role)),
+  };
 }
 
 export function roleHome(role: Role): string {
