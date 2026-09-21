@@ -13,11 +13,12 @@ export interface MyCohortSummary {
   endDate: string;
   // Earliest dated module — the real first class; falls back to startDate when null.
   firstClassDate: string | null;
-  course: { id: string; title: string };
+  course: { id: string; title: string; requiresApproval?: boolean };
   moduleCount?: number;
   mentors?: { name: string }[];
   // Present for STUDENT (their own completion); absent for MENTOR, who has none.
   progress?: Progress;
+  enrollmentStatus?: "active" | "pending" | "withdrawn" | "unenrolled";
 }
 
 export interface CohortOverview {
@@ -93,6 +94,7 @@ export const learningService = {
   getCohortOverview: (cohortId: string) => apiClient.get<CohortOverview>(`/cohorts/${cohortId}`),
   getCohortModules: (cohortId: string) => apiClient.get<ModuleProgress[]>(`/cohorts/${cohortId}/modules`),
   getCohortProgress: (cohortId: string) => apiClient.get<CohortProgress>(`/cohorts/${cohortId}/progress`),
+  selfEnroll: (cohortId: string) => apiClient.post<{ status: string }>(`/cohorts/${cohortId}/enroll`),
 };
 
 // Mentor/admin edits to a cohort's study plan. Students never call these — the API
@@ -166,6 +168,8 @@ export const rosterService = {
   list: (cohortId: string) => apiClient.get<RosterEntry[]>(`/cohorts/${cohortId}/students`),
   enroll: (cohortId: string, email: string) =>
     apiClient.post<{ studentId: string; email: string }>(`/cohorts/${cohortId}/students`, { email }),
+  approve: (cohortId: string, studentId: string) =>
+    apiClient.patch<{ studentId: string; status: string }>(`/cohorts/${cohortId}/students/${studentId}/approve`),
   withdraw: (cohortId: string, studentId: string) =>
     apiClient.delete<{ studentId: string }>(`/cohorts/${cohortId}/students/${studentId}`),
 };

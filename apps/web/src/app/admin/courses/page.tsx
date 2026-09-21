@@ -15,7 +15,7 @@ import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogT
 import { adminService } from "@/services/admin.service";
 import { toast } from "sonner";
 
-const emptyDraft = { title: "", description: "", category: "" };
+const emptyDraft = { title: "", description: "", category: "", requiresApproval: false };
 
 export default function AdminCoursesPage() {
   const queryClient = useQueryClient();
@@ -38,6 +38,7 @@ export default function AdminCoursesPage() {
           .split(",")
           .map((c) => c.trim())
           .filter(Boolean),
+        requiresApproval: draft.requiresApproval,
       }),
     onSuccess: () => {
       refresh();
@@ -112,6 +113,11 @@ export default function AdminCoursesPage() {
             </div>
 
             <div className="mt-auto flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-3">
+              {course.requiresApproval && (
+                <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-200 bg-amber-50">
+                  Approval Required
+                </Badge>
+              )}
               {course.category.map((c) => (
                 <Badge key={c} variant="secondary" className="text-[10px]">
                   {c}
@@ -158,6 +164,24 @@ export default function AdminCoursesPage() {
               placeholder="AI, Engineering"
             />
           </FormField>
+
+          <div className="flex items-start gap-2 pt-2">
+            <input
+              type="checkbox"
+              id="requiresApproval"
+              checked={draft.requiresApproval}
+              onChange={(e) => setDraft({ ...draft, requiresApproval: e.target.checked })}
+              className="mt-1 size-4 rounded border-input text-primary focus:ring-primary"
+            />
+            <div className="grid gap-1.5 leading-none">
+              <label htmlFor="requiresApproval" className="text-sm font-medium leading-none">
+                Requires mentor approval
+              </label>
+              <p className="text-[13px] text-muted-foreground">
+                Students will be "pending" until a mentor or admin approves them.
+              </p>
+            </div>
+          </div>
 
           <DialogFooter>
             <DialogClose nativeButton render={<Button variant="outline" />}>

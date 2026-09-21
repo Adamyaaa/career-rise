@@ -19,6 +19,7 @@ export interface AdminCourse {
   title: string;
   description: string;
   category: string[];
+  requiresApproval: boolean;
   _count: { cohorts: number };
 }
 
@@ -61,7 +62,7 @@ export const adminService = {
   deleteUser: (id: string) => apiClient.delete<{ id: string; deleted: true }>(`/admin/users/${id}`),
 
   listCourses: () => apiClient.get<AdminCourse[]>("/admin/courses"),
-  createCourse: (input: { title: string; description: string; category?: string[] }) =>
+  createCourse: (input: { title: string; description: string; category?: string[]; requiresApproval: boolean }) =>
     apiClient.post<AdminCourse>("/admin/courses", input),
   deleteCourse: (id: string) => apiClient.delete<{ id: string }>(`/admin/courses/${id}`),
 

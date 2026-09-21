@@ -77,6 +77,22 @@ export class CoursesController {
     return this.coursesService.enrollStudent(user, id, dto.email);
   }
 
+  @Post("cohorts/:id/enroll")
+  @Roles(Role.STUDENT)
+  selfEnroll(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.coursesService.selfEnroll(user, id);
+  }
+
+
+  @Patch("cohorts/:id/students/:studentId/approve")
+  @Roles(Role.MENTOR, Role.SUPER_ADMIN)
+  approveStudent(
+    @Param("id") id: string,
+    @Param("studentId") studentId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.coursesService.approveStudent(user, id, studentId);
+  }
 
   @Delete("cohorts/:id/students/:studentId")
   @Roles(Role.MENTOR, Role.SUPER_ADMIN)

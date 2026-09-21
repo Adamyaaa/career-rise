@@ -94,29 +94,28 @@ export class CoursesService {
       });
     }
 
-    const enrollments = await this.prisma.cohortEnrollment.findMany({
-      where: { studentId: user.id, status: "active" },
+    const allCohorts = await this.prisma.cohort.findMany({
       select: {
-        cohort: {
-          select: {
-            id: true,
-            name: true,
-            startDate: true,
-            endDate: true,
-            course: { select: { id: true, title: true } },
-            modules: { select: { lessons: { select: { id: true, scheduledAt: true, cancelled: true } } } },
-            mentorAssignments: {
-              select: { mentorProfile: { select: { user: { select: { firstName: true, lastName: true } } } } }
-            }
-          },
+        id: true,
+        name: true,
+        startDate: true,
+        endDate: true,
+        course: { select: { id: true, title: true, requiresApproval: true } },
+        modules: { select: { lessons: { select: { id: true, scheduledAt: true, cancelled: true } } } },
+        mentorAssignments: {
+          select: { mentorProfile: { select: { user: { select: { firstName: true, lastName: true } } } } }
         },
+        enrollments: {
+          where: { studentId: user.id },
+          select: { status: true }
+        }
       },
-      orderBy: { enrolledAt: "desc" },
+      orderBy: { startDate: "desc" },
     });
 
     const now = new Date();
 
-    return enrollments.map(({ cohort }) => {
+    return allCohorts.map((cohort) => {
       // Cancelled classes count for nothing on either side of the fraction.
       const lessons = cohort.modules.flatMap((m) => m.lessons).filter((l) => !l.cancelled);
       const completedLessons = lessons.filter((l) => hasHappened(l, now)).length;
@@ -126,6 +125,8 @@ export class CoursesService {
         .map((l) => l.scheduledAt)
         .filter((d): d is Date => d !== null)
         .sort((a, b) => a.getTime() - b.getTime());
+
+      const enrollmentStatus = cohort.enrollments[0]?.status ?? "unenrolled";
 
       return {
         id: cohort.id,
@@ -139,6 +140,7 @@ export class CoursesService {
           name: [ma.mentorProfile.user.firstName, ma.mentorProfile.user.lastName].filter(Boolean).join(" "),
         })),
         progress: progressOf(completedLessons, lessons.length),
+        enrollmentStatus,
       };
     });
   }
@@ -398,7 +400,64 @@ export class CoursesService {
     return { studentId: student.id, email: student.email, status: "active" };
   }
 
+  // Students self-enrolling. Honors the requiresApproval flag on the Course.
+  async selfEnroll(user: AuthenticatedUser, cohortId: string) {
+    const cohort = await this.prisma.cohort.findUnique({
+      where: { id: cohortId },
+      include: { course: true },
+    });
+    if (!cohort) {
+      throw new NotFoundException("Cohort not found");
+    }
 
+    const existing = await this.prisma.cohortEnrollment.findFirst({
+      where: { cohortId, studentId: user.id },
+    });
+
+    const targetStatus = cohort.course.requiresApproval ? "pending" : "active";
+
+    if (existing) {
+      if (existing.status === "active") throw new ConflictException("You are already active in this cohort");
+      if (existing.status === "pending" && targetStatus === "pending") {
+        throw new ConflictException("Your request is already pending mentor approval");
+      }
+      
+      await this.prisma.cohortEnrollment.update({
+        where: { id: existing.id },
+        data: { status: targetStatus },
+      });
+      return { status: targetStatus };
+    }
+
+    await this.prisma.cohortEnrollment.create({
+      data: { cohortId, studentId: user.id, status: targetStatus },
+    });
+    return { status: targetStatus };
+  }
+
+
+  async approveStudent(user: AuthenticatedUser, cohortId: string, studentId: string) {
+    await this.assertCanManageCohort(user, cohortId);
+
+    const enrollment = await this.prisma.cohortEnrollment.findFirst({
+      where: { cohortId, studentId },
+    });
+    
+    if (!enrollment) {
+      throw new NotFoundException("That student is not in this cohort");
+    }
+
+    if (enrollment.status === "active") {
+      throw new ConflictException("Student is already active");
+    }
+
+    await this.prisma.cohortEnrollment.update({
+      where: { id: enrollment.id },
+      data: { status: "active" },
+    });
+
+    return { studentId, status: "active" };
+  }
 
   // Withdraw rather than delete: their lesson completions stay intact in case they return.
   async withdrawStudent(user: AuthenticatedUser, cohortId: string, studentId: string) {

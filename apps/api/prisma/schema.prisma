@@ -84,12 +84,13 @@ model MentorProfile {
 }
 
 model Course {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  category    String[]
+  id               String   @id @default(cuid())
+  title            String
+  description      String
+  category         String[]
+  requiresApproval Boolean  @default(false)
 
-  cohorts Cohort[]
+  cohorts          Cohort[]
 
   @@map("courses")
 }
@@ -123,7 +124,7 @@ model CohortEnrollment {
   id         String   @id @default(cuid())
   studentId  String
   cohortId   String
-  status     String   @default("active") // active | withdrawn
+  status     String   @default("active") // active | withdrawn | pending
   enrolledAt DateTime @default(now())
 
   student User   @relation(fields: [studentId], references: [id], onDelete: Cascade)

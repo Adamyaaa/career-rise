@@ -173,6 +173,7 @@ export class AdminService {
         title: true,
         description: true,
         category: true,
+        requiresApproval: true,
         _count: { select: { cohorts: true } },
       },
       orderBy: { title: "asc" },
@@ -185,8 +186,9 @@ export class AdminService {
         title: dto.title.trim(),
         description: dto.description.trim(),
         category: dto.category ?? [],
+        requiresApproval: dto.requiresApproval ?? false,
       },
-      select: { id: true, title: true, description: true, category: true },
+      select: { id: true, title: true, description: true, category: true, requiresApproval: true },
     });
   }
 
@@ -198,8 +200,9 @@ export class AdminService {
         ...(dto.title !== undefined ? { title: dto.title.trim() } : {}),
         ...(dto.description !== undefined ? { description: dto.description.trim() } : {}),
         ...(dto.category !== undefined ? { category: dto.category } : {}),
+        ...(dto.requiresApproval !== undefined ? { requiresApproval: dto.requiresApproval } : {}),
       },
-      select: { id: true, title: true, description: true, category: true },
+      select: { id: true, title: true, description: true, category: true, requiresApproval: true },
     });
   }
 

@@ -96,7 +96,12 @@ export class CreateCourseDto {
   @IsString({ each: true })
   @ArrayMaxSize(20)
   category?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  requiresApproval?: boolean;
 }
+
 
 export class UpdateCourseDto {
   @IsOptional()
@@ -115,6 +120,10 @@ export class UpdateCourseDto {
   @IsString({ each: true })
   @ArrayMaxSize(20)
   category?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  requiresApproval?: boolean;
 }
 
 export class CreateCohortDto {

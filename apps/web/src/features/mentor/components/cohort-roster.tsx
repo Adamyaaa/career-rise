@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { User, UserPlus, UserMinus, Users } from "lucide-react";
+import { User, UserPlus, UserMinus, UserCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +41,15 @@ export function CohortRoster({ cohortId }: { cohortId: string }) {
     onError: (err: Error) => toast.error(err.message || "Couldn't add that student"),
   });
 
+  const approve = useMutation({
+    mutationFn: (studentId: string) => rosterService.approve(cohortId, studentId),
+    onSuccess: () => {
+      refresh();
+      toast.success("Student approved and activated");
+    },
+    onError: (err: Error) => toast.error(err.message || "Couldn't approve student"),
+  });
+
   const withdraw = useMutation({
     mutationFn: (studentId: string) => rosterService.withdraw(cohortId, studentId),
     onSuccess: () => {
@@ -74,7 +83,7 @@ export function CohortRoster({ cohortId }: { cohortId: string }) {
           would read identically for everyone. The cohort-wide figure lives in the header. */}
       <div className="mb-4 flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          {active.length} {active.length === 1 ? "student" : "students"} in this cohort
+          {active.length} {active.length === 1 ? "student" : "students"} active in this cohort
         </p>
         <Button onClick={() => setAdding(true)}>
           <UserPlus className="size-4" />
@@ -92,7 +101,9 @@ export function CohortRoster({ cohortId }: { cohortId: string }) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {roster?.map((entry) => {
-          const withdrawn = entry.status !== "active";
+          const withdrawn = entry.status === "withdrawn";
+          const pending = entry.status === "pending";
+          
           return (
             <div
               key={entry.studentId}
@@ -114,21 +125,41 @@ export function CohortRoster({ cohortId }: { cohortId: string }) {
                         Removed
                       </Badge>
                     )}
+                    {pending && (
+                      <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-200 bg-amber-50">
+                        Pending Approval
+                      </Badge>
+                    )}
                   </div>
                   <span className="truncate text-xs text-muted-foreground">{entry.email}</span>
                 </div>
 
-                {!withdrawn && (
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => handleWithdraw(entry.studentId, entry.email)}
-                    className="shrink-0 text-destructive hover:bg-destructive/10"
-                    aria-label={`Remove ${entry.email}`}
-                  >
-                    <UserMinus className="size-3.5" />
-                  </Button>
-                )}
+                <div className="flex gap-1 shrink-0">
+                  {pending && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => approve.mutate(entry.studentId)}
+                      className="text-emerald-600 hover:bg-emerald-50"
+                      aria-label={`Approve ${entry.email}`}
+                      disabled={approve.isPending}
+                    >
+                      <UserCheck className="size-3.5" />
+                    </Button>
+                  )}
+                  {!withdrawn && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => handleWithdraw(entry.studentId, entry.email)}
+                      className="text-destructive hover:bg-destructive/10"
+                      aria-label={`Remove ${entry.email}`}
+                      disabled={withdraw.isPending}
+                    >
+                      <UserMinus className="size-3.5" />
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <p className="mt-auto border-t border-border/60 pt-3 text-xs text-muted-foreground">
