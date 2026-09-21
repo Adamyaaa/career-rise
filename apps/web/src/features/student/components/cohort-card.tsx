@@ -74,9 +74,14 @@ export function CohortCard({ cohort, hrefBase }: { cohort: MyCohortSummary; href
               Pending Approval
             </Button>
           )}
-          {isUnenrolled && (
+          {isUnenrolled && !cohort.course.requiresApproval && (
             <Button size="xl" onClick={() => enroll.mutate()} disabled={enroll.isPending}>
-              {cohort.course.requiresApproval ? "Request Access" : "Enroll for Free"}
+              Enroll for Free
+            </Button>
+          )}
+          {isUnenrolled && cohort.course.requiresApproval && (
+            <Button size="xl" disabled variant="outline" className="cursor-not-allowed">
+              Mentor Access Required
             </Button>
           )}
         </div>
