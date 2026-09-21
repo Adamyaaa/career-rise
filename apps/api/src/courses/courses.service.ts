@@ -110,7 +110,7 @@ export class CoursesService {
           select: { status: true }
         }
       },
-      orderBy: { startDate: "desc" },
+      orderBy: { startDate: "asc" },
     });
 
     const now = new Date();

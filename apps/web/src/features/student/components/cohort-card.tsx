@@ -41,9 +41,9 @@ export function CohortCard({ cohort, hrefBase }: { cohort: MyCohortSummary; href
   const isUnenrolled = cohort.enrollmentStatus === "unenrolled" || cohort.enrollmentStatus === "withdrawn";
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-primary/10 p-6 shadow-sm ring-1 ring-foreground/10 sm:p-8">
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 flex-col gap-2 items-start">
+    <div className="relative flex flex-col h-full overflow-hidden rounded-2xl bg-primary/10 p-6 shadow-sm ring-1 ring-foreground/10">
+      <div className="flex flex-col gap-6 flex-1">
+        <div className="flex min-w-0 flex-col gap-2 items-start flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-xs font-medium tracking-wide text-primary uppercase">{cohort.name}</p>
             {cohort.course.requiresApproval && isUnenrolled && (
@@ -65,20 +65,20 @@ export function CohortCard({ cohort, hrefBase }: { cohort: MyCohortSummary; href
           </p>
 
           {isActive && cohort.progress && (
-            <div className="mt-2 w-full max-w-xs">
+            <div className="mt-auto pt-4 w-full">
               <Progress value={cohort.progress.percent} />
               <p className="mt-2 text-xs font-medium text-muted-foreground">{cohort.progress.percent}% complete</p>
             </div>
           )}
         </div>
 
-        <div className="flex shrink-0 items-center gap-5">
+        <div className="flex flex-col gap-3 shrink-0">
           {isActive && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 w-full">
               <Button 
                 size="xl" 
                 variant="ghost"
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground flex-1"
                 onClick={() => {
                   if (confirm("Are you sure you want to un-enroll? Your progress will be saved if you return.")) {
                     unenroll.mutate();
@@ -88,23 +88,23 @@ export function CohortCard({ cohort, hrefBase }: { cohort: MyCohortSummary; href
               >
                 Un-enroll
               </Button>
-              <Button size="xl" render={<Link href={`${hrefBase}/${cohort.id}`} />}>
+              <Button size="xl" className="flex-[2]" render={<Link href={`${hrefBase}/${cohort.id}`} />}>
                 Open cohort <ArrowRight className="size-4.5" />
               </Button>
             </div>
           )}
           {isPending && (
-            <Button size="xl" disabled variant="outline">
+            <Button size="xl" className="w-full" disabled variant="outline">
               Pending Approval
             </Button>
           )}
           {isUnenrolled && !cohort.course.requiresApproval && (
-            <Button size="xl" onClick={() => enroll.mutate()} disabled={enroll.isPending}>
+            <Button size="xl" className="w-full" onClick={() => enroll.mutate()} disabled={enroll.isPending}>
               Enroll for Free
             </Button>
           )}
           {isUnenrolled && cohort.course.requiresApproval && (
-            <Button size="xl" disabled variant="outline" className="cursor-not-allowed">
+            <Button size="xl" className="w-full cursor-not-allowed" disabled variant="outline">
               Mentor Access Required
             </Button>
           )}
