@@ -94,7 +94,8 @@ export const learningService = {
   getCohortOverview: (cohortId: string) => apiClient.get<CohortOverview>(`/cohorts/${cohortId}`),
   getCohortModules: (cohortId: string) => apiClient.get<ModuleProgress[]>(`/cohorts/${cohortId}/modules`),
   getCohortProgress: (cohortId: string) => apiClient.get<CohortProgress>(`/cohorts/${cohortId}/progress`),
-  selfEnroll: (cohortId: string) => apiClient.post<{ status: string }>(`/cohorts/${cohortId}/enroll`),
+  selfEnroll: (cohortId: string) => apiClient.post<{ status: string }>(`/cohorts/${cohortId}/enroll`, {}),
+  selfUnenroll: (cohortId: string) => apiClient.delete<{ status: string }>(`/cohorts/${cohortId}/enroll`),
 };
 
 // Mentor/admin edits to a cohort's study plan. Students never call these — the API

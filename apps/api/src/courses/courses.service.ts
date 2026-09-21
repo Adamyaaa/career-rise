@@ -435,6 +435,29 @@ export class CoursesService {
     return { status: targetStatus };
   }
 
+  // Students un-enrolling themselves
+  async selfUnenroll(user: AuthenticatedUser, cohortId: string) {
+    const enrollment = await this.prisma.cohortEnrollment.findFirst({
+      where: { cohortId, studentId: user.id },
+      select: { id: true, status: true },
+    });
+    
+    if (!enrollment) {
+      throw new NotFoundException("You are not enrolled in this cohort");
+    }
+
+    if (enrollment.status === "withdrawn") {
+      throw new ConflictException("You are already un-enrolled");
+    }
+
+    await this.prisma.cohortEnrollment.update({
+      where: { id: enrollment.id },
+      data: { status: "withdrawn" },
+    });
+
+    return { status: "withdrawn" };
+  }
+
 
   async approveStudent(user: AuthenticatedUser, cohortId: string, studentId: string) {
     await this.assertCanManageCohort(user, cohortId);

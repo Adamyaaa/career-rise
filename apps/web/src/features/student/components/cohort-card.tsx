@@ -27,6 +27,15 @@ export function CohortCard({ cohort, hrefBase }: { cohort: MyCohortSummary; href
     onError: (err: Error) => toast.error(err.message || "Enrollment failed")
   });
 
+  const unenroll = useMutation({
+    mutationFn: () => learningService.selfUnenroll(cohort.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-cohorts"] });
+      toast.success("Successfully un-enrolled");
+    },
+    onError: (err: Error) => toast.error(err.message || "Un-enrollment failed")
+  });
+
   const isActive = !cohort.enrollmentStatus || cohort.enrollmentStatus === "active";
   const isPending = cohort.enrollmentStatus === "pending";
   const isUnenrolled = cohort.enrollmentStatus === "unenrolled" || cohort.enrollmentStatus === "withdrawn";
@@ -65,9 +74,24 @@ export function CohortCard({ cohort, hrefBase }: { cohort: MyCohortSummary; href
 
         <div className="flex shrink-0 items-center gap-5">
           {isActive && (
-            <Button size="xl" render={<Link href={`${hrefBase}/${cohort.id}`} />}>
-              Open cohort <ArrowRight className="size-4.5" />
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button 
+                size="xl" 
+                variant="ghost"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  if (confirm("Are you sure you want to un-enroll? Your progress will be saved if you return.")) {
+                    unenroll.mutate();
+                  }
+                }} 
+                disabled={unenroll.isPending}
+              >
+                Un-enroll
+              </Button>
+              <Button size="xl" render={<Link href={`${hrefBase}/${cohort.id}`} />}>
+                Open cohort <ArrowRight className="size-4.5" />
+              </Button>
+            </div>
           )}
           {isPending && (
             <Button size="xl" disabled variant="outline">

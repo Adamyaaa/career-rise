@@ -83,6 +83,12 @@ export class CoursesController {
     return this.coursesService.selfEnroll(user, id);
   }
 
+  @Delete("cohorts/:id/enroll")
+  @Roles(Role.STUDENT)
+  selfUnenroll(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.coursesService.selfUnenroll(user, id);
+  }
+
 
   @Patch("cohorts/:id/students/:studentId/approve")
   @Roles(Role.MENTOR, Role.SUPER_ADMIN)
