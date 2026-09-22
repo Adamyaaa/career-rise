@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, ShieldAlert, Clock } from "lucide-react";
+import { ArrowRight, ShieldAlert, Clock, BookOpen, Calendar, CheckCircle2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +24,7 @@ export function CohortCard({ cohort, hrefBase }: { cohort: MyCohortSummary; href
         toast.success("Successfully enrolled!");
       }
     },
-    onError: (err: Error) => toast.error(err.message || "Enrollment failed")
+    onError: (err: Error) => toast.error(err.message || "Enrollment failed"),
   });
 
   const unenroll = useMutation({
@@ -33,82 +33,125 @@ export function CohortCard({ cohort, hrefBase }: { cohort: MyCohortSummary; href
       queryClient.invalidateQueries({ queryKey: ["my-cohorts"] });
       toast.success("Successfully un-enrolled");
     },
-    onError: (err: Error) => toast.error(err.message || "Un-enrollment failed")
+    onError: (err: Error) => toast.error(err.message || "Un-enrollment failed"),
   });
 
+  const isStudent = hrefBase.startsWith("/student");
   const isActive = !cohort.enrollmentStatus || cohort.enrollmentStatus === "active";
   const isPending = cohort.enrollmentStatus === "pending";
   const isUnenrolled = cohort.enrollmentStatus === "unenrolled" || cohort.enrollmentStatus === "withdrawn";
+  const isCompleted = Boolean(cohort.progress && cohort.progress.percent >= 100);
 
   return (
-    <div className="relative flex flex-col h-full overflow-hidden rounded-2xl bg-primary/10 p-6 shadow-sm ring-1 ring-foreground/10">
-      <div className="flex flex-col gap-6 flex-1">
-        <div className="flex min-w-0 flex-col gap-2 items-start flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="text-xs font-medium tracking-wide text-primary uppercase">{cohort.name}</p>
+    <div className="group relative flex flex-col justify-between rounded-2xl border border-border/70 bg-card p-6 shadow-xs transition-all duration-200 hover:border-border hover:shadow-md">
+      <div className="flex flex-1 flex-col">
+        {/* Header badges */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold tracking-wider text-primary uppercase">
+            {cohort.name}
+          </span>
+          <div className="flex items-center gap-1.5">
             {cohort.course.requiresApproval && isUnenrolled && (
-              <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-200 bg-amber-50">
-                <ShieldAlert className="size-3 mr-1" /> Mentor Approval Required
+              <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] text-amber-600">
+                <ShieldAlert className="mr-1 size-3" /> Approval Required
               </Badge>
             )}
             {isPending && (
-              <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-200 bg-amber-50">
-                <Clock className="size-3 mr-1" /> Pending Approval
+              <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] text-amber-600">
+                <Clock className="mr-1 size-3" /> Pending Approval
+              </Badge>
+            )}
+            {isActive && isCompleted && (
+              <Badge variant="secondary" className="border-emerald-200 bg-emerald-50 text-[10px] font-medium text-emerald-700">
+                <CheckCircle2 className="mr-1 size-3" /> Completed
               </Badge>
             )}
           </div>
-          <h2 className="font-heading text-2xl font-medium text-foreground">{cohort.course.title}</h2>
-          <p className="text-sm text-muted-foreground">
-            {cohort.progress ? `${cohort.progress.totalLessons} lessons · ` : ""}
-            {/* First scheduled module when there is one, so this matches the cohort header. */}
-            started {formatDate(cohort.firstClassDate ?? cohort.startDate)}
-          </p>
-
-          {isActive && cohort.progress && (
-            <div className="mt-auto pt-4 w-full">
-              <Progress value={cohort.progress.percent} />
-              <p className="mt-2 text-xs font-medium text-muted-foreground">{cohort.progress.percent}% complete</p>
-            </div>
-          )}
         </div>
 
-        <div className="flex flex-col gap-3 shrink-0">
-          {isActive && (
-            <div className="flex items-center gap-3 w-full">
-              <Button 
-                size="xl" 
+        {/* Title & metadata */}
+        <div className="mt-4 flex flex-col gap-1.5">
+          <h3 className="font-heading text-xl font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
+            {cohort.course.title}
+          </h3>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            {cohort.progress && (
+              <span className="flex items-center gap-1.5">
+                <BookOpen className="size-3.5 shrink-0 text-muted-foreground/70" />
+                {cohort.progress.totalLessons} {cohort.progress.totalLessons === 1 ? "lesson" : "lessons"}
+              </span>
+            )}
+            <span className="flex items-center gap-1.5">
+              <Calendar className="size-3.5 shrink-0 text-muted-foreground/70" />
+              Started {formatDate(cohort.firstClassDate ?? cohort.startDate)}
+            </span>
+          </div>
+        </div>
+
+        {/* Progress */}
+        {isActive && cohort.progress && (
+          <div className="mt-6 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium text-muted-foreground">Progress</span>
+              <span className="tabular-nums font-semibold text-foreground">
+                {cohort.progress.percent}%
+                {cohort.progress.totalLessons > 0 && (
+                  <span className="ml-1 text-[11px] font-normal text-muted-foreground">
+                    ({cohort.progress.completedLessons}/{cohort.progress.totalLessons} lessons)
+                  </span>
+                )}
+              </span>
+            </div>
+            <Progress value={cohort.progress.percent} className="[&_[data-slot=progress-track]]:h-1.5" />
+          </div>
+        )}
+      </div>
+
+      {/* Footer / Actions */}
+      <div className="mt-6 flex items-center justify-between gap-3 border-t border-border/60 pt-4">
+        {isActive && (
+          <>
+            {isStudent ? (
+              <Button
+                size="sm"
                 variant="ghost"
-                className="text-muted-foreground hover:text-foreground flex-1"
+                className="h-9 px-3 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                 onClick={() => {
                   if (confirm("Are you sure you want to un-enroll? Your progress will be saved if you return.")) {
                     unenroll.mutate();
                   }
-                }} 
+                }}
                 disabled={unenroll.isPending}
               >
                 Un-enroll
               </Button>
-              <Button size="xl" className="flex-[2]" render={<Link href={`${hrefBase}/${cohort.id}`} />}>
-                Open cohort <ArrowRight className="size-4.5" />
-              </Button>
-            </div>
-          )}
-          {isPending && (
-            <Button size="xl" className="w-full" disabled variant="outline">
-              Pending Approval
+            ) : (
+              <div />
+            )}
+            <Button
+              size="sm"
+              className="ml-auto h-9 gap-2 px-4 font-medium shadow-xs"
+              render={<Link href={`${hrefBase}/${cohort.id}`} />}
+            >
+              Open cohort <ArrowRight className="size-4" />
             </Button>
-          )}
-          {isUnenrolled && !cohort.course.requiresApproval && (
-            <Button size="xl" className="w-full" onClick={() => enroll.mutate()} disabled={enroll.isPending}>
-              Enroll for Free
-            </Button>
-          )}
-          {isUnenrolled && cohort.course.requiresApproval && (
-            <Button size="xl" className="w-full cursor-not-allowed" disabled variant="outline">
-              Mentor Access Required
-            </Button>
-          )}
-        </div>
+          </>
+        )}
+        {isPending && (
+          <Button size="default" className="h-9 w-full" disabled variant="outline">
+            Pending Approval
+          </Button>
+        )}
+        {isUnenrolled && !cohort.course.requiresApproval && (
+          <Button size="default" className="h-9 w-full" onClick={() => enroll.mutate()} disabled={enroll.isPending}>
+            Enroll for Free
+          </Button>
+        )}
+        {isUnenrolled && cohort.course.requiresApproval && (
+          <Button size="default" className="h-9 w-full cursor-not-allowed" disabled variant="outline">
+            Mentor Access Required
+          </Button>
+        )}
       </div>
     </div>
   );
