@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, ShieldAlert, Clock, BookOpen, Calendar, CheckCircle2 } from "lucide-react";
+import { ArrowRight, ShieldAlert, Clock, BookOpen, Calendar } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,7 +40,6 @@ export function CohortCard({ cohort, hrefBase }: { cohort: MyCohortSummary; href
   const isActive = !cohort.enrollmentStatus || cohort.enrollmentStatus === "active";
   const isPending = cohort.enrollmentStatus === "pending";
   const isUnenrolled = cohort.enrollmentStatus === "unenrolled" || cohort.enrollmentStatus === "withdrawn";
-  const isCompleted = Boolean(cohort.progress && cohort.progress.percent >= 100);
 
   return (
     <div className="group relative flex flex-col justify-between rounded-2xl border border-border/70 bg-card p-6 shadow-xs transition-all duration-200 hover:border-border hover:shadow-md">
@@ -59,11 +58,6 @@ export function CohortCard({ cohort, hrefBase }: { cohort: MyCohortSummary; href
             {isPending && (
               <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] text-amber-600">
                 <Clock className="mr-1 size-3" /> Pending Approval
-              </Badge>
-            )}
-            {isActive && isCompleted && (
-              <Badge variant="secondary" className="border-emerald-200 bg-emerald-50 text-[10px] font-medium text-emerald-700">
-                <CheckCircle2 className="mr-1 size-3" /> Completed
               </Badge>
             )}
           </div>
