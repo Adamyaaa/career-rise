@@ -16,7 +16,7 @@ export default function MyCohortsPage() {
   const isAdmin = user?.role === "SUPER_ADMIN";
 
   const { data: cohorts, isLoading } = useQuery({
-    queryKey: ["my-cohorts"],
+    queryKey: ["mentor-cohorts", user?.id],
     queryFn: learningService.listMyCohorts,
   });
 

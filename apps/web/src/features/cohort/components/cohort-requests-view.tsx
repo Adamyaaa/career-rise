@@ -27,6 +27,7 @@ export function CohortRequestsView() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cohort-requests"] });
       queryClient.invalidateQueries({ queryKey: ["my-cohorts"] });
+      queryClient.invalidateQueries({ queryKey: ["mentor-cohorts"] });
       toast.success("Student approved and activated in cohort!");
     },
     onError: (err: Error) => toast.error(err.message || "Failed to approve student"),
@@ -38,6 +39,7 @@ export function CohortRequestsView() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cohort-requests"] });
       queryClient.invalidateQueries({ queryKey: ["my-cohorts"] });
+      queryClient.invalidateQueries({ queryKey: ["mentor-cohorts"] });
       toast.success("Request declined and withdrawn");
     },
     onError: (err: Error) => toast.error(err.message || "Failed to decline request"),
