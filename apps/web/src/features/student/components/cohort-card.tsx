@@ -37,9 +37,9 @@ export function CohortCard({ cohort, hrefBase }: { cohort: MyCohortSummary; href
   });
 
   const isStudent = hrefBase.startsWith("/student");
-  const isActive = !cohort.enrollmentStatus || cohort.enrollmentStatus === "active";
-  const isPending = cohort.enrollmentStatus === "pending";
-  const isUnenrolled = cohort.enrollmentStatus === "unenrolled" || cohort.enrollmentStatus === "withdrawn";
+  const isActive = isStudent ? (!cohort.enrollmentStatus || cohort.enrollmentStatus === "active") : true;
+  const isPending = isStudent && cohort.enrollmentStatus === "pending";
+  const isUnenrolled = isStudent && (cohort.enrollmentStatus === "unenrolled" || cohort.enrollmentStatus === "withdrawn");
 
   return (
     <div className="group relative flex flex-col justify-between rounded-2xl border border-border/70 bg-card p-6 shadow-xs transition-all duration-200 hover:border-border hover:shadow-md">
@@ -49,18 +49,20 @@ export function CohortCard({ cohort, hrefBase }: { cohort: MyCohortSummary; href
           <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold tracking-wider text-primary uppercase">
             {cohort.name}
           </span>
-          <div className="flex items-center gap-1.5">
-            {cohort.course.requiresApproval && isUnenrolled && (
-              <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] text-amber-600">
-                <ShieldAlert className="mr-1 size-3" /> Approval Required
-              </Badge>
-            )}
-            {isPending && (
-              <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] text-amber-600">
-                <Clock className="mr-1 size-3" /> Pending Approval
-              </Badge>
-            )}
-          </div>
+          {isStudent && (
+            <div className="flex items-center gap-1.5">
+              {cohort.course.requiresApproval && isUnenrolled && (
+                <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] text-amber-600">
+                  <ShieldAlert className="mr-1 size-3" /> Approval Required
+                </Badge>
+              )}
+              {isPending && (
+                <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] text-amber-600">
+                  <Clock className="mr-1 size-3" /> Pending Approval
+                </Badge>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Title & metadata */}
@@ -142,8 +144,13 @@ export function CohortCard({ cohort, hrefBase }: { cohort: MyCohortSummary; href
           </Button>
         )}
         {isUnenrolled && cohort.course.requiresApproval && (
-          <Button size="default" className="h-9 w-full cursor-not-allowed" disabled variant="outline">
-            Mentor Access Required
+          <Button
+            size="default"
+            className="h-9 w-full"
+            onClick={() => enroll.mutate()}
+            disabled={enroll.isPending}
+          >
+            Request Access
           </Button>
         )}
       </div>

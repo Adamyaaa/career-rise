@@ -89,6 +89,18 @@ export interface ModuleProgress extends Progress {
   lessons: LessonProgress[];
 }
 
+export interface CohortRequest {
+  id: string;
+  cohortId: string;
+  cohortName: string;
+  courseTitle: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  status: "pending" | "active" | "withdrawn";
+  requestedAt: string;
+}
+
 export const learningService = {
   listMyCohorts: () => apiClient.get<MyCohortSummary[]>("/cohorts/my"),
   getCohortOverview: (cohortId: string) => apiClient.get<CohortOverview>(`/cohorts/${cohortId}`),
@@ -96,6 +108,8 @@ export const learningService = {
   getCohortProgress: (cohortId: string) => apiClient.get<CohortProgress>(`/cohorts/${cohortId}/progress`),
   selfEnroll: (cohortId: string) => apiClient.post<{ status: string }>(`/cohorts/${cohortId}/enroll`, {}),
   selfUnenroll: (cohortId: string) => apiClient.delete<{ status: string }>(`/cohorts/${cohortId}/enroll`),
+  listCohortRequests: (status?: string) =>
+    apiClient.get<CohortRequest[]>(status && status !== "all" ? `/cohorts/requests?status=${status}` : "/cohorts/requests"),
 };
 
 // Mentor/admin edits to a cohort's study plan. Students never call these — the API

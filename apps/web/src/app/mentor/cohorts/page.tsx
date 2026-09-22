@@ -24,11 +24,7 @@ export default function MyCohortsPage() {
     <>
       <PageHeading
         title={`Hi, ${user ? displayName(user) : "there"}`}
-        description={
-          isAdmin
-            ? "Every cohort — study plan, students, feedback, and announcements."
-            : "Cohorts you mentor — study plan, students, feedback, and announcements."
-        }
+        description="Every cohort — study plan, students, feedback, and announcements."
       />
 
       {isLoading && (
@@ -40,16 +36,12 @@ export default function MyCohortsPage() {
       {!isLoading && (!cohorts || cohorts.length === 0) && (
         <EmptyState
           icon={GraduationCap}
-          title={isAdmin ? "No cohorts yet" : "No assigned cohorts yet"}
-          description={
-            isAdmin
-              ? "Create one under Cohorts in the admin area."
-              : "Once you're assigned to a cohort, it'll show up here."
-          }
+          title="No cohorts yet"
+          description="Once cohorts are created, they will show up here."
         />
       )}
 
-      <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {cohorts?.map((cohort) => <CohortCard key={cohort.id} cohort={cohort} hrefBase="/mentor/cohorts" />)}
       </div>
     </>

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { Role } from "@prisma/client";
 import { Roles } from "../common/decorators/roles.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
@@ -32,12 +32,21 @@ export class CoursesController {
     return this.coursesService.listMyCohorts(user);
   }
 
+  @Get("cohorts/requests")
+  @Roles(Role.MENTOR, Role.SUPER_ADMIN)
+  listCohortRequests(
+    @Query("status") status: string | undefined,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.coursesService.listCohortRequests(user, status);
+  }
+
   @Get("cohorts/:id/modules")
   listModules(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.coursesService.listModulesWithLessons(id, user);
   }
 
-  // Declared after "cohorts/my" on purpose — ":id" would otherwise capture "my".
+  // Declared after "cohorts/my" and "cohorts/requests" on purpose — ":id" would otherwise capture them.
   @Get("cohorts/:id")
   getCohort(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.coursesService.getCohortOverview(id, user);

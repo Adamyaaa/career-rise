@@ -33,14 +33,14 @@ export class CoursesService {
   async listMyCohorts(user: AuthenticatedUser) {
     // An admin isn't enrolled in or assigned to anything, but manages everything —
     // without this they'd land on an empty "My Cohorts" page.
-    if (user.role === Role.SUPER_ADMIN) {
+    if (user.role === Role.SUPER_ADMIN || user.role === Role.MENTOR) {
       const cohorts = await this.prisma.cohort.findMany({
         select: {
           id: true,
           name: true,
           startDate: true,
           endDate: true,
-          course: { select: { id: true, title: true } },
+          course: { select: { id: true, title: true, requiresApproval: true } },
           modules: {
             select: {
               lessons: {
@@ -56,42 +56,9 @@ export class CoursesService {
       });
       return cohorts.map(({ modules, ...cohort }) => ({
         ...cohort,
+        moduleCount: modules.length,
         firstClassDate: earliestScheduledAt(modules),
       }));
-    }
-
-    if (user.role === Role.MENTOR) {
-      const assignments = await this.prisma.cohortMentorAssignment.findMany({
-        where: { mentorProfile: { userId: user.id } },
-        select: {
-          cohort: {
-            select: {
-              id: true,
-              name: true,
-              startDate: true,
-              endDate: true,
-              course: { select: { id: true, title: true } },
-              modules: {
-                select: {
-                  lessons: {
-                    where: { scheduledAt: { not: null } },
-                    orderBy: { scheduledAt: "asc" },
-                    take: 1,
-                    select: { scheduledAt: true },
-                  },
-                },
-              },
-            },
-          },
-        },
-        orderBy: { cohort: { startDate: "desc" } },
-      });
-      // A mentor has no personal progress, so no `progress` field here — the frontend
-      // CohortCard renders without a progress bar when it's absent.
-      return assignments.map(({ cohort }) => {
-        const { modules, ...rest } = cohort;
-        return { ...rest, firstClassDate: earliestScheduledAt(modules) };
-      });
     }
 
     const allCohorts = await this.prisma.cohort.findMany({
@@ -500,6 +467,45 @@ export class CoursesService {
     });
 
     return { studentId, status: "withdrawn" };
+  }
+
+  async listCohortRequests(user: AuthenticatedUser, status?: string) {
+    const where: any = {};
+    if (status && status !== "all") {
+      where.status = status;
+    } else if (!status) {
+      where.status = "pending";
+    }
+
+    const requests = await this.prisma.cohortEnrollment.findMany({
+      where,
+      include: {
+        student: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
+        cohort: {
+          select: {
+            id: true,
+            name: true,
+            startDate: true,
+            course: { select: { id: true, title: true } },
+          },
+        },
+      },
+      orderBy: { enrolledAt: "desc" },
+    });
+
+    return requests.map((r) => ({
+      id: r.id,
+      cohortId: r.cohort.id,
+      cohortName: r.cohort.name,
+      courseTitle: r.cohort.course.title,
+      studentId: r.student.id,
+      studentName: [r.student.firstName, r.student.lastName].filter(Boolean).join(" ") || r.student.email,
+      studentEmail: r.student.email,
+      status: r.status,
+      requestedAt: r.enrolledAt,
+    }));
   }
 
   async createModule(user: AuthenticatedUser, cohortId: string, title: string) {
@@ -925,24 +931,17 @@ export class CoursesService {
     return lesson;
   }
 
-  // SUPER_ADMIN manages any cohort; a MENTOR only the ones they're assigned to, so one
-  // mentor can't edit another's study plan. The route guard already excludes STUDENT.
+  // Mentors and Admins have full access to manage cohorts.
   private async assertCanManageCohort(user: AuthenticatedUser, cohortId: string) {
     const cohort = await this.prisma.cohort.findUnique({ where: { id: cohortId }, select: { id: true } });
     if (!cohort) {
       throw new NotFoundException("Cohort not found");
     }
-    if (user.role === Role.SUPER_ADMIN) {
+    if (user.role === Role.SUPER_ADMIN || user.role === Role.MENTOR) {
       return;
     }
 
-    const assigned = await this.prisma.cohortMentorAssignment.findFirst({
-      where: { cohortId, mentorProfile: { userId: user.id } },
-      select: { id: true },
-    });
-    if (!assigned) {
-      throw new ForbiddenException("You are not assigned to this cohort");
-    }
+    throw new ForbiddenException("You are not authorized to manage this cohort");
   }
 
 }
