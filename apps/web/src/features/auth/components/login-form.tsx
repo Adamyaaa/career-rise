@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, KeyRound, Mail, ArrowLeft } from "lucide-react";
+import { Loader2, KeyRound, Mail, ArrowLeft, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -24,7 +24,21 @@ export function LoginForm() {
   const [code, setCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [timer, setTimer] = useState(0);
   const [errors, setErrors] = useState<{ email?: string; password?: string; code?: string }>({});
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (otpSent && timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [otpSent, timer]);
 
   const validateEmail = (val: string) => {
     if (!val) return "Email is required";
@@ -43,6 +57,7 @@ export function LoginForm() {
     try {
       const res = await authService.sendOtp(email);
       setOtpSent(true);
+      setTimer(59);
       toast.success(
         res.delivered ? `Verification code sent to ${email}` : "Verification code generated",
       );
@@ -57,6 +72,27 @@ export function LoginForm() {
       toast.error(message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (timer > 0 || resending) return;
+    setResending(true);
+    try {
+      const res = await authService.sendOtp(email);
+      setTimer(59);
+      toast.success(
+        res.delivered ? `New verification code sent to ${email}` : "New verification code generated",
+      );
+      if (res.otp) {
+        toast.info(`Dev mode — no mail provider configured. Code: ${res.otp}`, { duration: 8000 });
+        setCode(res.otp);
+      }
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : "Failed to resend OTP.";
+      toast.error(message);
+    } finally {
+      setResending(false);
     }
   };
 
@@ -161,17 +197,42 @@ export function LoginForm() {
           )}
 
           {method === "otp" && otpSent && (
-            <FormField label="Verification Code" htmlFor="code" error={errors.code}>
-              <Input
-                id="code"
-                type="text"
-                maxLength={6}
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                placeholder="123456"
-                className="text-center text-lg font-mono tracking-widest"
-              />
-            </FormField>
+            <>
+              <FormField label="Verification Code" htmlFor="code" error={errors.code}>
+                <Input
+                  id="code"
+                  type="text"
+                  maxLength={6}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                  placeholder="123456"
+                  className="text-center text-lg font-mono tracking-widest"
+                />
+              </FormField>
+
+              <div className="flex items-center justify-between text-xs px-0.5 -mt-2">
+                <span className="text-muted-foreground">Didn&apos;t receive code?</span>
+                {timer > 0 ? (
+                  <span className="text-muted-foreground font-medium">
+                    Resend in <span className="font-mono text-foreground font-semibold">{timer}s</span>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={resending}
+                    className="font-medium text-primary hover:underline disabled:opacity-50 inline-flex items-center gap-1"
+                  >
+                    {resending ? (
+                      <Loader2 className="size-3 animate-spin" />
+                    ) : (
+                      <RefreshCw className="size-3" />
+                    )}
+                    Resend code
+                  </button>
+                )}
+              </div>
+            </>
           )}
 
           {method === "otp" && !otpSent ? (
@@ -189,7 +250,7 @@ export function LoginForm() {
           {otpSent && (
             <button
               type="button"
-              onClick={() => { setOtpSent(false); setCode(""); }}
+              onClick={() => { setOtpSent(false); setCode(""); setTimer(0); }}
               className="mt-2 flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="size-3" />
