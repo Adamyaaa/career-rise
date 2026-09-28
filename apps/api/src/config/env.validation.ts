@@ -32,7 +32,7 @@ export const envValidationSchema = Joi.object({
   CORS_ORIGIN: Joi.string().required(),
 
   DATABASE_URL: Joi.string().uri().required(),
-  REDIS_URL: Joi.string().uri({ scheme: ["redis"] }).required(),
+  REDIS_URL: Joi.string().uri({ scheme: ["redis", "rediss"] }).required(),
 
   JWT_ACCESS_SECRET: jwtSecret,
   JWT_REFRESH_SECRET: jwtSecret,
