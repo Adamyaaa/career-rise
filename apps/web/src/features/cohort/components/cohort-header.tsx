@@ -2,10 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, CalendarDays, GraduationCap, Layers } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CircularProgress } from "@/components/common/circular-progress";
 import { learningService } from "@/services/learning.service";
 import { formatDate } from "@/lib/format";
 
@@ -23,11 +21,8 @@ export function CohortHeader({ cohortId }: { cohortId: string }) {
   });
 
   if (isLoading || !cohort) {
-    return <Skeleton className="h-32 rounded-xl" />;
+    return <Skeleton className="h-32 rounded-2xl mb-6" />;
   }
-
-  // Only students have personal progress; mentors and admins see none.
-  const isStudent = cohort.myProgressPercent !== null;
 
   // Prefer the first scheduled module — that's the real first class. The cohort's own
   // startDate is a fallback for cohorts whose modules aren't dated yet.
@@ -42,32 +37,33 @@ export function CohortHeader({ cohortId }: { cohortId: string }) {
   ];
 
   return (
-    <Card className="border-l-4 border-l-primary">
-      <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 flex-col gap-2">
+    <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-card via-card to-primary/5 p-6 shadow-xs ring-1 ring-foreground/5 mb-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 flex-1 flex-col gap-2.5">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary" className="text-[10px] tracking-wide uppercase">
+            <span className="inline-flex items-center rounded-full bg-primary/90 px-2.5 py-0.5 text-[11px] font-bold text-primary-foreground tracking-wider uppercase shadow-2xs">
               {cohort.name}
-            </Badge>
-            <Badge variant="outline" className="text-[10px]">
+            </span>
+            <Badge variant="outline" className="text-[11px] font-medium border-border/80">
               {scheduleStatus(start, cohort.endDate)}
             </Badge>
           </div>
 
-          <h2 className="font-heading text-xl font-medium text-foreground">{cohort.course.title}</h2>
-          <p className="max-w-prose text-sm text-muted-foreground">{cohort.course.description}</p>
+          <h2 className="font-heading text-2xl font-bold tracking-tight text-foreground">{cohort.course.title}</h2>
+          {cohort.course.description && (
+            <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{cohort.course.description}</p>
+          )}
 
-          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-medium text-muted-foreground">
             {meta.map((item) => (
-              <span key={item.label} className="flex items-center gap-1.5">
-                <item.icon className="size-3.5 shrink-0" />
+              <span key={item.label} className="inline-flex items-center gap-1.5 rounded-md bg-muted/60 px-2.5 py-1">
+                <item.icon className="size-3.5 shrink-0 text-foreground/70" />
                 {item.label}
               </span>
             ))}
           </div>
         </div>
-
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

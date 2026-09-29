@@ -12,25 +12,61 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { submissionsService } from "@/services/submissions.service";
 import { toast } from "sonner";
 
+import type { Submission } from "@/services/submissions.service";
+
 // Submitting from a single class page: the class is already known, so unlike the
 // Submissions tab there is no class picker here.
 export function SubmitWorkDialog({
   cohortId,
   lessonId,
   lessonTitle,
+  existingSubmission,
+  buttonLabel,
+  buttonVariant = "outline",
+  buttonSize = "sm",
+  buttonClassName,
 }: {
   cohortId: string;
   lessonId: string;
   lessonTitle: string;
+  existingSubmission?: Submission;
+  buttonLabel?: string;
+  buttonVariant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+  buttonSize?: "default" | "sm" | "lg" | "icon";
+  buttonClassName?: string;
 }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [linkType, setLinkType] = useState<"drive" | "github" | "both">("both");
-  const [projectName, setProjectName] = useState("");
-  const [driveUrl, setDriveUrl] = useState("");
-  const [githubUrl, setGithubUrl] = useState("");
-  const [projectSummary, setProjectSummary] = useState("");
-  const [note, setNote] = useState("");
+  const [linkType, setLinkType] = useState<"drive" | "github" | "both">(
+    existingSubmission?.githubUrl && !existingSubmission?.driveUrl
+      ? "github"
+      : existingSubmission?.driveUrl && !existingSubmission?.githubUrl
+        ? "drive"
+        : "both"
+  );
+  const [projectName, setProjectName] = useState(existingSubmission?.projectName ?? "");
+  const [driveUrl, setDriveUrl] = useState(existingSubmission?.driveUrl ?? "");
+  const [githubUrl, setGithubUrl] = useState(existingSubmission?.githubUrl ?? "");
+  const [projectSummary, setProjectSummary] = useState(existingSubmission?.projectSummary ?? "");
+  const [note, setNote] = useState(existingSubmission?.note ?? "");
+
+  const handleOpen = (nextOpen: boolean) => {
+    if (nextOpen && existingSubmission) {
+      setProjectName(existingSubmission.projectName ?? "");
+      setDriveUrl(existingSubmission.driveUrl ?? "");
+      setGithubUrl(existingSubmission.githubUrl ?? "");
+      setProjectSummary(existingSubmission.projectSummary ?? "");
+      setNote(existingSubmission.note ?? "");
+      setLinkType(
+        existingSubmission.githubUrl && !existingSubmission.driveUrl
+          ? "github"
+          : existingSubmission.driveUrl && !existingSubmission.githubUrl
+            ? "drive"
+            : "both"
+      );
+    }
+    setOpen(nextOpen);
+  };
 
   const isLinkValid = () => {
     if (linkType === "drive") return driveUrl.trim().length > 0;
@@ -64,15 +100,20 @@ export function SubmitWorkDialog({
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+      <Button
+        variant={buttonVariant}
+        size={buttonSize}
+        className={buttonClassName}
+        onClick={() => handleOpen(true)}
+      >
         <Upload className="size-3.5" />
-        Submit work
+        {buttonLabel || (existingSubmission ? "Update work" : "Submit work")}
       </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Submit your work</DialogTitle>
+            <DialogTitle>{existingSubmission ? "Update your submission" : "Submit your work"}</DialogTitle>
           </DialogHeader>
 
           <p className="text-sm text-muted-foreground">

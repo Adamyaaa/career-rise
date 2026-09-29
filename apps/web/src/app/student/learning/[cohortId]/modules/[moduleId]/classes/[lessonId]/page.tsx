@@ -23,6 +23,7 @@ import { EmptyState } from "@/components/common/empty-state";
 import { LessonFeedbackComposer } from "@/features/cohort/components/lesson-feedback-composer";
 import { SubmitWorkDialog } from "@/features/student/components/submit-work-dialog";
 import { learningService } from "@/services/learning.service";
+import { submissionsService } from "@/services/submissions.service";
 import { formatDate, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +45,14 @@ export default function ClassDetailPage({
     queryKey: ["cohort-modules", cohortId],
     queryFn: () => learningService.getCohortModules(cohortId),
   });
+
+  const { data: submissions } = useQuery({
+    queryKey: ["cohort-submissions", cohortId],
+    queryFn: () => submissionsService.list(cohortId),
+  });
+
+  const submission = submissions?.find((s) => s.lessonId === lessonId);
+  const isSubmitted = !!submission;
 
   const module = modules?.find((m) => m.id === moduleId);
   const lesson = module?.lessons.find((l) => l.id === lessonId);
@@ -87,23 +96,32 @@ export default function ClassDetailPage({
                     "flex items-center gap-1.5 text-xs font-medium",
                     lesson.cancelled
                       ? "text-destructive"
-                      : lesson.completed
-                        ? "text-primary"
-                        : "hidden",
+                      : isSubmitted
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : lesson.completed
+                          ? "text-primary"
+                          : "hidden",
                   )}
                 >
                   {lesson.cancelled ? (
                     <XCircle className="size-3.5" />
+                  ) : isSubmitted ? (
+                    <CheckCircle2 className="size-3.5" />
                   ) : lesson.completed ? (
                     <CheckCircle2 className="size-3.5" />
                   ) : null}
-                  {lesson.cancelled ? "Cancelled" : lesson.completed ? "Completed" : null}
+                  {lesson.cancelled ? "Cancelled" : isSubmitted ? "Submitted" : lesson.completed ? "Completed" : null}
                 </span>
-                {lesson.submissionRequired && (
-                  <Badge variant="outline" className="border-primary/40 text-[10px] text-primary">
+                {isSubmitted ? (
+                  <Badge className="border-emerald-500/30 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 text-[10px] font-medium flex items-center gap-1">
+                    <CheckCircle2 className="size-3 text-emerald-600 dark:text-emerald-400" />
+                    Submitted
+                  </Badge>
+                ) : lesson.submissionRequired ? (
+                  <Badge variant="outline" className="border-amber-500/40 bg-amber-50/50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800 text-[10px]">
                     Submission required
                   </Badge>
-                )}
+                ) : null}
               </div>
               <LessonFeedbackComposer lessonId={lesson.id} lessonTitle={lesson.title} buttonLabel="Give Feedback" />
             </div>
@@ -185,35 +203,109 @@ export default function ClassDetailPage({
 
               {/* Sits with slides and assignments so everything to do with this class is
                   in one place, rather than only in the cohort-wide Submissions tab. */}
-              <div
-                className={cn(
-                  "flex items-center gap-2.5 rounded-lg border px-3 py-2.5",
-                  lesson.submissionRequired ? "border-primary/40 bg-primary/5" : "border-border/60 border-dashed",
-                )}
-              >
-                <Upload
-                  className={cn(
-                    "size-4 shrink-0",
-                    lesson.submissionRequired ? "text-primary" : "text-muted-foreground/50",
+              {isSubmitted && submission ? (
+                <div className="flex flex-col gap-3 rounded-lg border border-emerald-500/30 bg-emerald-50/30 dark:bg-emerald-950/20 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">
+                        <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-foreground">
+                            {submission.projectName || "Work submitted"}
+                          </span>
+                          <Badge className="border-emerald-500/30 bg-emerald-100/70 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 text-[10px] uppercase tracking-wide">
+                            {submission.status || "Submitted"}
+                          </Badge>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          Submitted on {formatDate(submission.submittedAt)}
+                        </span>
+                      </div>
+                    </div>
+                    <SubmitWorkDialog
+                      cohortId={cohortId}
+                      lessonId={lesson.id}
+                      lessonTitle={lesson.title}
+                      existingSubmission={submission}
+                      buttonLabel="Update work"
+                      buttonVariant="outline"
+                      buttonClassName="border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-xs"
+                    />
+                  </div>
+
+                  {(submission.githubUrl || submission.driveUrl || submission.projectSummary || submission.note) && (
+                    <div className="flex flex-col gap-2 border-t border-emerald-500/20 pt-3 text-xs">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {submission.githubUrl && (
+                          <a
+                            href={submission.githubUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 rounded-md border border-border/80 bg-background px-2.5 py-1.5 font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                          >
+                            <LinkIcon className="size-3.5 text-primary" />
+                            GitHub Repository
+                            <ExternalLink className="size-3 text-muted-foreground" />
+                          </a>
+                        )}
+                        {submission.driveUrl && (
+                          <a
+                            href={submission.driveUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 rounded-md border border-border/80 bg-background px-2.5 py-1.5 font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                          >
+                            <ExternalLink className="size-3.5 text-primary" />
+                            Google Drive
+                          </a>
+                        )}
+                      </div>
+                      {submission.projectSummary && (
+                        <p className="text-xs text-foreground/80 leading-relaxed bg-background/60 rounded p-2 border border-border/40">
+                          <span className="font-medium text-foreground">Summary:</span> {submission.projectSummary}
+                        </p>
+                      )}
+                      {submission.note && (
+                        <p className="text-xs text-muted-foreground italic">
+                          <span className="font-medium not-italic text-foreground/70">Note to mentor:</span> {submission.note}
+                        </p>
+                      )}
+                    </div>
                   )}
-                />
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span
-                    className={cn(
-                      "text-sm font-medium",
-                      lesson.submissionRequired ? "text-foreground" : "text-muted-foreground/70",
-                    )}
-                  >
-                    Your work
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {lesson.submissionRequired
-                      ? "This class expects work to be handed in."
-                      : "Optional for this class — submit anyway if you'd like feedback."}
-                  </span>
                 </div>
-                <SubmitWorkDialog cohortId={cohortId} lessonId={lesson.id} lessonTitle={lesson.title} />
-              </div>
+              ) : (
+                <div
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-lg border px-3 py-2.5",
+                    lesson.submissionRequired ? "border-amber-500/40 bg-amber-500/5" : "border-border/60 border-dashed",
+                  )}
+                >
+                  <Upload
+                    className={cn(
+                      "size-4 shrink-0",
+                      lesson.submissionRequired ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground/50",
+                    )}
+                  />
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span
+                      className={cn(
+                        "text-sm font-medium",
+                        lesson.submissionRequired ? "text-foreground" : "text-muted-foreground/70",
+                      )}
+                    >
+                      Your work
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {lesson.submissionRequired
+                        ? "This class expects work to be handed in."
+                        : "Optional for this class — submit anyway if you'd like feedback."}
+                    </span>
+                  </div>
+                  <SubmitWorkDialog cohortId={cohortId} lessonId={lesson.id} lessonTitle={lesson.title} />
+                </div>
+              )}
             </div>
           </section>
         </div>

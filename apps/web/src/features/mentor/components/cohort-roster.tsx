@@ -99,27 +99,28 @@ export function CohortRoster({ cohortId }: { cohortId: string }) {
         />
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
         {roster?.map((entry) => {
           const withdrawn = entry.status === "withdrawn";
           const pending = entry.status === "pending";
+          const initials = `${entry.firstName?.[0] || ""}${entry.lastName?.[0] || ""}`.toUpperCase() || "ST";
           
           return (
             <div
               key={entry.studentId}
               className={cn(
-                "flex flex-col gap-3 rounded-2xl bg-card p-5 ring-1 transition-shadow hover:shadow-md",
-                withdrawn ? "opacity-60 ring-foreground/5" : "ring-foreground/10",
+                "flex flex-col justify-between gap-3 rounded-2xl border bg-card p-5 shadow-xs transition-all hover:shadow-md",
+                withdrawn ? "opacity-60 border-border/40" : "border-border/70 hover:border-primary/40",
               )}
             >
               <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                  <User className="size-4" />
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 font-mono text-xs font-bold text-primary">
+                  {initials}
                 </span>
 
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-heading text-sm font-medium text-foreground">{fullName(entry)}</p>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <p className="font-heading text-sm font-semibold text-foreground truncate">{fullName(entry)}</p>
                     {withdrawn && (
                       <Badge variant="outline" className="text-[10px]">
                         Removed
@@ -127,7 +128,7 @@ export function CohortRoster({ cohortId }: { cohortId: string }) {
                     )}
                     {pending && (
                       <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-200 bg-amber-50">
-                        Pending Approval
+                        Pending
                       </Badge>
                     )}
                   </div>
@@ -162,7 +163,7 @@ export function CohortRoster({ cohortId }: { cohortId: string }) {
                 </div>
               </div>
 
-              <p className="mt-auto border-t border-border/60 pt-3 text-xs text-muted-foreground">
+              <p className="mt-auto border-t border-border/50 pt-2.5 text-[11px] text-muted-foreground">
                 Joined {formatDate(entry.enrolledAt)}
               </p>
             </div>

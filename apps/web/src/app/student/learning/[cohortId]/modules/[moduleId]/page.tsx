@@ -9,6 +9,7 @@ import { CircularProgress } from "@/components/common/circular-progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { learningService } from "@/services/learning.service";
+import { submissionsService } from "@/services/submissions.service";
 import { formatDate } from "@/lib/format";
 
 export default function ModuleDetailPage({
@@ -23,6 +24,15 @@ export default function ModuleDetailPage({
     queryKey: ["cohort-modules", cohortId],
     queryFn: () => learningService.getCohortModules(cohortId),
   });
+
+  const { data: submissions } = useQuery({
+    queryKey: ["cohort-submissions", cohortId],
+    queryFn: () => submissionsService.list(cohortId),
+  });
+
+  const submittedLessonIds = new Set(
+    submissions?.map((s) => s.lessonId).filter(Boolean) ?? []
+  );
 
   const module = modules?.find((m) => m.id === moduleId);
   const index = modules?.findIndex((m) => m.id === moduleId) ?? -1;
@@ -97,6 +107,7 @@ export default function ModuleDetailPage({
                   key={lesson.id}
                   lesson={lesson}
                   index={i}
+                  isSubmitted={submittedLessonIds.has(lesson.id)}
                   href={`/student/learning/${cohortId}/modules/${moduleId}/classes/${lesson.id}`}
                 />
               ))}

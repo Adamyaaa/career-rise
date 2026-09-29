@@ -144,6 +144,12 @@ export class CoursesController {
     return this.coursesService.postFeedback(user, id, dto.responses);
   }
 
+  @Post("lessons/:id/toggle-complete")
+  @Roles(Role.STUDENT, Role.MENTOR, Role.SUPER_ADMIN)
+  toggleLessonComplete(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.coursesService.toggleLessonCompletion(user, id);
+  }
+
   @Get("cohorts/:id/progress")
   getCohortProgress(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.coursesService.getCohortProgress(id, user);

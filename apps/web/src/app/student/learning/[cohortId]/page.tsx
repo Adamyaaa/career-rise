@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Layers } from "lucide-react";
 import { CohortHeader } from "@/features/cohort/components/cohort-header";
 import { CohortAnnouncements } from "@/features/cohort/components/cohort-announcements";
-import { CohortSubmissions } from "@/features/student/components/cohort-submissions";
 import { CohortProgressPanel } from "@/features/student/components/cohort-progress";
 import { ModuleCard } from "@/features/student/components/module-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,7 +36,6 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
         <Tabs defaultValue="learnings">
           <TabsList variant="line">
             <TabsTrigger value="learnings">Your learnings</TabsTrigger>
-            <TabsTrigger value="submissions">Submissions</TabsTrigger>
             <TabsTrigger value="announcements">Announcements</TabsTrigger>
             <TabsTrigger value="progress">Progress</TabsTrigger>
           </TabsList>
@@ -63,10 +61,6 @@ export default function CohortDetailPage({ params }: { params: Promise<{ cohortI
                 ))}
               </div>
             )}
-          </TabsContent>
-
-          <TabsContent value="submissions" className="mt-6">
-            <CohortSubmissions cohortId={cohortId} canManage={false} />
           </TabsContent>
 
           <TabsContent value="announcements" className="mt-6">

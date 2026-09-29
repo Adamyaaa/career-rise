@@ -39,7 +39,7 @@ export class UpdateLessonDto {
   // What the class covers, shown to students on the class page. "" clears it.
   @IsOptional()
   @IsString()
-  @MaxLength(5000)
+  @MaxLength(500000)
   content?: string;
 
   // Whether this class expects work to be handed in.

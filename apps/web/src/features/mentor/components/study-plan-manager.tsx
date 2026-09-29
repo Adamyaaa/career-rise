@@ -1,9 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   AlignLeft,
+  BookOpen,
   CalendarDays,
   CheckCircle2,
   ChevronDown,
@@ -71,6 +75,7 @@ export function StudyPlanManager({ cohortId }: { cohortId: string }) {
   const queryClient = useQueryClient();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editor, setEditor] = useState<Editor | null>(null);
+  const [markdownTab, setMarkdownTab] = useState<"write" | "preview">("write");
 
   const { data: modules, isLoading } = useQuery({
     queryKey: ["cohort-study-plan", cohortId],
@@ -161,7 +166,7 @@ export function StudyPlanManager({ cohortId }: { cohortId: string }) {
 
   return (
     <>
-      <div className="mx-auto flex max-w-5xl flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <div className="flex flex-col gap-2 rounded-2xl bg-gradient-to-br from-primary/10 via-card to-card p-6 shadow-sm ring-1 ring-foreground/10">
           <div className="flex items-baseline justify-between">
             <p className="font-heading text-sm font-medium text-foreground">
@@ -393,7 +398,17 @@ export function StudyPlanManager({ cohortId }: { cohortId: string }) {
                             }
                           >
                             <AlignLeft className="size-3.5" />
-                            {lesson.content ? "Edit summary" : "Add summary"}
+                            {lesson.content ? "Edit content / notes" : "Add content / notes"}
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            render={<Link href={`/student/learning/${cohortId}/modules/${module.id}/classes/${lesson.id}`} target="_blank" />}
+                            className="text-xs text-primary hover:bg-primary/10"
+                          >
+                            <BookOpen className="size-3.5" />
+                            Preview class
                           </Button>
 
                           {/* Drives the student's "work submitted" progress signal, so the
@@ -471,7 +486,7 @@ export function StudyPlanManager({ cohortId }: { cohortId: string }) {
       </div>
 
       <Dialog open={editor !== null} onOpenChange={(open) => !open && setEditor(null)}>
-        <DialogContent>
+        <DialogContent className={cn(editor?.kind === "summary" && "sm:max-w-3xl")}>
           <DialogHeader>
             <DialogTitle>{copy?.title}</DialogTitle>
           </DialogHeader>
@@ -517,25 +532,101 @@ export function StudyPlanManager({ cohortId }: { cohortId: string }) {
                 Add link
               </Button>
             </div>
-          ) : (
-            <FormField label={copy?.label ?? ""} htmlFor="editorValue">
-              {editor?.kind === "summary" ? (
+          ) : editor?.kind === "summary" ? (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => setMarkdownTab("write")}
+                    className={cn(
+                      "px-3 py-1 rounded-md text-xs font-medium transition-colors",
+                      markdownTab === "write"
+                        ? "bg-card text-foreground shadow-xs"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    Write Markdown
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMarkdownTab("preview")}
+                    className={cn(
+                      "px-3 py-1 rounded-md text-xs font-medium transition-colors",
+                      markdownTab === "preview"
+                        ? "bg-card text-foreground shadow-xs"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    Live Preview
+                  </button>
+                </div>
+
+                {markdownTab === "write" && (
+                  <div className="hidden sm:flex items-center gap-1 text-[11px] text-muted-foreground">
+                    <span>Supports GitHub Markdown (`##`, `**bold**`, `- list`, ```code```)</span>
+                  </div>
+                )}
+              </div>
+
+              {markdownTab === "write" ? (
                 <Textarea
                   id="editorValue"
-                  rows={6}
+                  rows={14}
                   value={editor.value}
                   onChange={(e) => setEditor({ ...editor, value: e.target.value })}
-                  placeholder={copy?.placeholder}
+                  placeholder="## Key terms&#10;- Term 1: definition...&#10;&#10;## Intuition&#10;Explain the concepts here in rich markdown..."
+                  className="font-mono text-xs leading-relaxed"
                 />
               ) : (
-                <Input
-                  id="editorValue"
-                  type="text"
-                  value={editor?.value ?? ""}
-                  onChange={(e) => setEditor(editor && { ...editor, value: e.target.value })}
-                  placeholder={copy?.placeholder}
-                />
+                <div className="max-h-[350px] overflow-y-auto rounded-xl border border-border/60 bg-background p-4 text-xs leading-relaxed">
+                  {editor.value ? (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        h1: ({ children }) => <h2 className="font-heading text-base font-bold text-foreground mt-4 mb-2">{children}</h2>,
+                        h2: ({ children }) => <h2 className="font-heading text-sm font-bold text-foreground mt-4 mb-2">{children}</h2>,
+                        h3: ({ children }) => <h3 className="font-heading text-xs font-semibold text-foreground mt-3 mb-1.5">{children}</h3>,
+                        p: ({ children }) => <p className="text-xs text-foreground/90 my-2">{children}</p>,
+                        ul: ({ children }) => <ul className="list-disc pl-4 space-y-1 my-2 text-xs">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal pl-4 space-y-1 my-2 text-xs">{children}</ol>,
+                        li: ({ children }) => <li className="text-xs text-foreground/90">{children}</li>,
+                        blockquote: ({ children }) => (
+                          <blockquote className="border-l-2 border-primary bg-primary/5 px-3 py-2 italic text-xs my-2">
+                            {children}
+                          </blockquote>
+                        ),
+                        code: ({ className, children, ...props }) => {
+                          const isInline = !className;
+                          return isInline ? (
+                            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px] text-primary" {...props}>
+                              {children}
+                            </code>
+                          ) : (
+                            <pre className="overflow-x-auto rounded-lg bg-muted p-3 font-mono text-[11px] my-2">
+                              <code>{children}</code>
+                            </pre>
+                          );
+                        },
+                      }}
+                    >
+                      {editor.value}
+                    </ReactMarkdown>
+                  ) : (
+                    <span className="text-muted-foreground italic">Nothing to preview yet.</span>
+                  )}
+                </div>
               )}
+            </div>
+          ) : (
+            <FormField label={copy?.label ?? ""} htmlFor="editorValue">
+              <Input
+                id="editorValue"
+                type="text"
+                value={editor?.value ?? ""}
+                onChange={(e) => setEditor(editor && { ...editor, value: e.target.value })}
+                placeholder={copy?.placeholder}
+              />
             </FormField>
           )}
 

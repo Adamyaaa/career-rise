@@ -234,16 +234,25 @@ export class CoursesService {
       throw new ForbiddenException("You are not enrolled in this cohort");
     }
 
-    const feedbacks = await this.prisma.lessonFeedback.findMany({
-      where: { studentId: user.id, cohortId },
-      select: { lessonId: true },
-    });
-    const feedbackSet = new Set(feedbacks.map((f) => f.lessonId));
+    const [feedbacks, completions] = await Promise.all([
+      this.prisma.lessonFeedback.findMany({
+        where: { studentId: user.id, cohortId },
+        select: { lessonId: true },
+      }),
+      this.prisma.lessonCompletion.findMany({
+        where: { studentId: user.id, cohortId },
+        select: { lessonId: true },
+      }),
+    ]);
+    const completedSet = new Set([
+      ...feedbacks.map((f) => f.lessonId),
+      ...completions.map((c) => c.lessonId),
+    ]);
 
     return modules.map((module) => {
       const lessons = module.lessons.map((lesson) => ({
         ...lesson,
-        completed: feedbackSet.has(lesson.id), // A class is complete once feedback is provided
+        completed: completedSet.has(lesson.id),
       }));
       // Cancelled classes drop out of the denominator too — a student can't be behind on
       // something that never ran.
@@ -252,6 +261,43 @@ export class CoursesService {
 
       return { ...module, lessons, ...progressOf(completedLessons, counted.length) };
     });
+  }
+
+  async toggleLessonCompletion(user: AuthenticatedUser, lessonId: string) {
+    const lesson = await this.prisma.lesson.findUnique({
+      where: { id: lessonId },
+      include: { module: { select: { cohortId: true } } },
+    });
+    if (!lesson) {
+      throw new NotFoundException("Lesson not found");
+    }
+
+    const cohortId = lesson.module.cohortId;
+
+    const existing = await this.prisma.lessonCompletion.findUnique({
+      where: {
+        studentId_lessonId: {
+          studentId: user.id,
+          lessonId,
+        },
+      },
+    });
+
+    if (existing) {
+      await this.prisma.lessonCompletion.delete({
+        where: { id: existing.id },
+      });
+      return { completed: false, lessonId };
+    } else {
+      await this.prisma.lessonCompletion.create({
+        data: {
+          studentId: user.id,
+          lessonId,
+          cohortId,
+        },
+      });
+      return { completed: true, lessonId };
+    }
   }
 
   async updateLessonSlides(user: AuthenticatedUser, lessonId: string, slides?: { title: string; url: string }[]) {

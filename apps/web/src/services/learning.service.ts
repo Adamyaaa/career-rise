@@ -89,6 +89,9 @@ export interface ModuleProgress extends Progress {
   lessons: LessonProgress[];
 }
 
+export type Module = ModuleProgress;
+export type Lesson = LessonProgress;
+
 export interface CohortRequest {
   id: string;
   cohortId: string;
@@ -108,6 +111,8 @@ export const learningService = {
   getCohortProgress: (cohortId: string) => apiClient.get<CohortProgress>(`/cohorts/${cohortId}/progress`),
   selfEnroll: (cohortId: string) => apiClient.post<{ status: string }>(`/cohorts/${cohortId}/enroll`, {}),
   selfUnenroll: (cohortId: string) => apiClient.delete<{ status: string }>(`/cohorts/${cohortId}/enroll`),
+  toggleLessonComplete: (lessonId: string) =>
+    apiClient.post<{ completed: boolean; lessonId: string }>(`/lessons/${lessonId}/toggle-complete`, {}),
   listCohortRequests: (status?: string) =>
     apiClient.get<CohortRequest[]>(status && status !== "all" ? `/cohorts/requests?status=${status}` : "/cohorts/requests"),
 };
