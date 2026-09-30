@@ -23,19 +23,19 @@ export function Logo({
         <Image
           src="/logo-full.png"
           alt="Career Rise"
-          width={150}
-          height={40}
-          className="h-8 sm:h-8.5 w-auto object-contain"
+          width={165}
+          height={45}
+          className="h-9 sm:h-9.5 md:h-10 w-auto object-contain"
           priority
         />
       ) : (
-        <div className="relative flex size-8 shrink-0 items-center justify-center">
+        <div className="relative flex size-9 shrink-0 items-center justify-center">
           <Image
             src="/logo-icon.png"
             alt="Career Rise"
-            width={32}
-            height={32}
-            className="size-8 object-contain"
+            width={36}
+            height={36}
+            className="size-9 object-contain"
             priority
           />
         </div>
