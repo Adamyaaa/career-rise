@@ -18,18 +18,18 @@ export function Logo({
         className,
       )}
     >
-      <div className="relative flex size-7 shrink-0 items-center justify-center">
+      <div className="relative flex size-8 shrink-0 items-center justify-center">
         <Image
           src="/logo-icon.png"
-          alt="Career Rise"
-          width={28}
-          height={28}
-          className="size-7 object-contain"
+          alt="Career Rise Logo"
+          width={32}
+          height={32}
+          className="size-8 object-contain"
           priority
         />
       </div>
       {showText && (
-        <span className="font-heading text-base font-medium tracking-tight text-foreground">
+        <span className="font-heading text-base font-semibold tracking-tight text-foreground">
           {siteConfig.name}
         </span>
       )}
