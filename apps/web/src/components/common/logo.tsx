@@ -1,21 +1,38 @@
 import Link from "next/link";
-import { Sparkle } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/constants/site";
 
-export function Logo({ className }: { className?: string }) {
+export function Logo({
+  className,
+  showText = true,
+}: {
+  className?: string;
+  showText?: boolean;
+}) {
   return (
     <Link
       href="/"
       className={cn(
-        "flex items-center gap-2 text-sm font-semibold tracking-tight",
+        "flex items-center gap-2.5 text-sm font-semibold tracking-tight transition-opacity hover:opacity-90",
         className,
       )}
     >
-      <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-        <Sparkle className="size-4" strokeWidth={2.25} />
-      </span>
-      <span className="font-heading text-base font-medium">{siteConfig.name}</span>
+      <div className="relative flex size-7 shrink-0 items-center justify-center">
+        <Image
+          src="/logo-icon.png"
+          alt="Career Rise"
+          width={28}
+          height={28}
+          className="size-7 object-contain"
+          priority
+        />
+      </div>
+      {showText && (
+        <span className="font-heading text-base font-medium tracking-tight text-foreground">
+          {siteConfig.name}
+        </span>
+      )}
     </Link>
   );
 }
