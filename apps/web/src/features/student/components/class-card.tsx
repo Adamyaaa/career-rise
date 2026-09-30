@@ -91,7 +91,7 @@ export function ClassCard({
                 Submitted
               </Badge>
             ) : lesson.submissionRequired ? (
-              <Badge variant="outline" className="border-amber-500/40 bg-amber-50/50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800 text-[10px]">
+              <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary text-[10px] font-medium">
                 Submission required
               </Badge>
             ) : null}
@@ -154,7 +154,7 @@ export function ClassCard({
           <span
             className={cn(
               "flex items-center gap-1.5",
-              lesson.submissionRequired ? "text-amber-600 dark:text-amber-400 font-medium" : "text-muted-foreground/50",
+              lesson.submissionRequired ? "text-primary font-medium" : "text-muted-foreground/50",
             )}
           >
             <Upload className="size-3.5" />

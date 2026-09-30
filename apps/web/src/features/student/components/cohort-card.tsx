@@ -27,12 +27,12 @@ function getCourseThumbnailMeta(title: string, category?: string[]) {
   const t = title.toLowerCase();
   if (t.includes("agent") || t.includes("ai") || t.includes("llm") || t.includes("genai")) {
     return {
-      gradient: "from-amber-500/20 via-orange-500/15 to-primary/30",
+      gradient: "from-blue-500/20 via-sky-500/15 to-primary/30",
       accentBorder: "border-primary/30",
       icon: Sparkles,
       iconBg: "bg-primary/20 text-primary",
       tag: "AI & Engineering",
-      pattern: "radial-gradient(circle at 20% 30%, rgba(249, 115, 22, 0.15) 0%, transparent 70%)",
+      pattern: "radial-gradient(circle at 20% 30%, rgba(37, 99, 235, 0.15) 0%, transparent 70%)",
     };
   }
   if (t.includes("product") || t.includes("management") || t.includes("pm")) {

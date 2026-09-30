@@ -118,7 +118,7 @@ export default function ClassDetailPage({
                     Submitted
                   </Badge>
                 ) : lesson.submissionRequired ? (
-                  <Badge variant="outline" className="border-amber-500/40 bg-amber-50/50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800 text-[10px]">
+                  <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary text-[10px] font-medium">
                     Submission required
                   </Badge>
                 ) : null}
@@ -279,13 +279,13 @@ export default function ClassDetailPage({
                 <div
                   className={cn(
                     "flex items-center gap-2.5 rounded-lg border px-3 py-2.5",
-                    lesson.submissionRequired ? "border-amber-500/40 bg-amber-500/5" : "border-border/60 border-dashed",
+                    lesson.submissionRequired ? "border-primary/30 bg-primary/5" : "border-border/60 border-dashed",
                   )}
                 >
                   <Upload
                     className={cn(
                       "size-4 shrink-0",
-                      lesson.submissionRequired ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground/50",
+                      lesson.submissionRequired ? "text-primary" : "text-muted-foreground/50",
                     )}
                   />
                   <div className="flex min-w-0 flex-1 flex-col">
