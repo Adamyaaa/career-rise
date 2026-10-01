@@ -1,35 +1,30 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+"use client";
+
+import { useAuth } from "@/providers/auth-provider";
 import type { User } from "@/types/user";
 
-interface Session {
-  user: User;
-  accessToken: string;
-  refreshToken: string;
-}
-
-interface AuthState {
+interface AuthStateCompat {
   user: User | null;
   accessToken: string | null;
   refreshToken: string | null;
-  setSession: (session: Session) => void;
-  setUser: (user: User) => void;
+  setSession: (session: { user: User }) => void;
+  setUser: (user: User | null) => void;
   clearSession: () => void;
 }
 
-// Persisted to localStorage, so any component reading this store during SSR/first
-// paint sees the un-rehydrated default (all null) — consumers that redirect based on
-// auth state must gate on a client-mounted flag first (see useRequireAuth).
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      accessToken: null,
-      refreshToken: null,
-      setSession: ({ user, accessToken, refreshToken }) => set({ user, accessToken, refreshToken }),
-      setUser: (user) => set({ user }),
-      clearSession: () => set({ user: null, accessToken: null, refreshToken: null }),
-    }),
-    { name: "career-rise-auth" },
-  ),
-);
+export function useAuthStore<T = AuthStateCompat>(
+  selector?: (state: AuthStateCompat) => T,
+): T {
+  const auth = useAuth();
+
+  const state: AuthStateCompat = {
+    user: auth.user,
+    accessToken: null,
+    refreshToken: null,
+    setSession: auth.setSession,
+    setUser: auth.setUser,
+    clearSession: auth.logout,
+  };
+
+  return selector ? selector(state) : (state as unknown as T);
+}

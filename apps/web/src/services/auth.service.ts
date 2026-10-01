@@ -1,33 +1,69 @@
-import { apiClient } from "@/lib/api-client";
 import type { User } from "@/types/user";
 
-interface TokenPair {
-  accessToken: string;
-  refreshToken: string;
+export interface AuthResponse {
+  user: User;
 }
 
-type AuthResponse = TokenPair & { user: User };
-
-// Backed by the real Career Rise API (apps/api) — see Phase 4: /auth/register,
-// /auth/login, /auth/refresh, /auth/logout are all implemented.
 export const authService = {
-  register: (input: { email: string; password: string; firstName: string; lastName: string; phone?: string }) =>
-    apiClient.post<AuthResponse>("/auth/register", input),
+  register: async (input: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phone?: string;
+  }) => {
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || "Registration failed");
+    return data as AuthResponse;
+  },
 
-  login: (input: { email: string; password: string }) =>
-    apiClient.post<AuthResponse>("/auth/login", input),
+  login: async (input: { email: string; password: string }) => {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || "Login failed");
+    return data as AuthResponse;
+  },
 
-  refresh: (refreshToken: string) =>
-    apiClient.post<TokenPair>("/auth/refresh", { refreshToken }),
+  logout: async () => {
+    const res = await fetch("/api/auth/logout", { method: "POST" });
+    if (!res.ok) throw new Error("Logout failed");
+    return { success: true };
+  },
 
-  logout: (refreshToken: string) =>
-    apiClient.post<{ success: true }>("/auth/logout", { refreshToken }),
+  sendOtp: async (email: string) => {
+    const res = await fetch("/api/auth/otp/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || "Failed to send OTP");
+    return data as { success: true; delivered: boolean; otp?: string };
+  },
 
-  // `otp` is only present on a dev machine with no mail provider configured; when
-  // `delivered` is true the code went out by email and is never returned here.
-  sendOtp: (email: string) =>
-    apiClient.post<{ success: true; delivered: boolean; otp?: string }>("/auth/otp/send", { email }),
+  loginOtp: async (email: string, code: string) => {
+    const res = await fetch("/api/auth/otp/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, code }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || "Invalid OTP code");
+    return data as AuthResponse;
+  },
 
-  loginOtp: (email: string, code: string) =>
-    apiClient.post<AuthResponse>("/auth/otp/verify", { email, code }),
+  me: async () => {
+    const res = await fetch("/api/auth/me");
+    if (!res.ok) return { user: null };
+    return res.json() as Promise<{ user: User | null }>;
+  },
 };

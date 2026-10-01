@@ -13,8 +13,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { useAuthStore } from "@/stores/auth-store";
-import { authService } from "@/services/auth.service";
+import { useAuth } from "@/providers/auth-provider";
 import { fullName } from "@/lib/format";
 
 function initialsFor(user: { firstName: string | null; lastName: string | null; email: string }) {
@@ -23,17 +22,12 @@ function initialsFor(user: { firstName: string | null; lastName: string | null; 
 }
 
 export function ProfileDropdown() {
-  const router = useRouter();
-  const user = useAuthStore((s) => s.user);
-  const refreshToken = useAuthStore((s) => s.refreshToken);
-  const clearSession = useAuthStore((s) => s.clearSession);
+  const { user, logout } = useAuth();
 
   if (!user) return null;
 
   async function handleLogout() {
-    if (refreshToken) await authService.logout(refreshToken).catch(() => {});
-    clearSession();
-    router.push("/login");
+    await logout();
   }
 
   return (
