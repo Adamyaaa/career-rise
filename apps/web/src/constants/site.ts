@@ -30,6 +30,7 @@ export const footerLinkGroups: { title: string; links: NavLink[] }[] = [
     links: [
       { label: "About", href: "/about" },
       { label: "Contact", href: "/contact" },
+      { label: "Privacy Policy", href: "/privacy" },
     ],
   },
   {

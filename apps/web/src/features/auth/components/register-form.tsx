@@ -104,6 +104,14 @@ export function RegisterForm() {
             {isSubmitting && <Loader2 className="size-4 animate-spin" />}
             Create account
           </Button>
+
+          <p className="text-center text-xs text-muted-foreground">
+            By continuing, you agree to our{" "}
+            <Link href="/privacy" className="underline hover:text-foreground">
+              Privacy Policy
+            </Link>
+            .
+          </p>
         </form>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
