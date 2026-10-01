@@ -1,14 +1,14 @@
-import { MentorshipApplicationsView } from "@/features/mentorship/components/mentorship-applications-view";
+import { AdminMentorshipView } from "@/features/mentorship/components/admin-mentorship-view";
 import { PageHeading } from "@/components/common/page-heading";
 
 export default function AdminMentorshipPage() {
   return (
     <div className="space-y-6">
       <PageHeading
-        title="Mentorship Applications"
-        description="Review candidates who have applied for 1:1 mentorship"
+        title="1:1 Pro Mentorship Management"
+        description="Review applicants, assign senior mentors, and track 12-week personal records"
       />
-      <MentorshipApplicationsView />
+      <AdminMentorshipView />
     </div>
   );
 }

@@ -10,7 +10,7 @@ export interface NavItem {
 export const studentNav: NavItem[] = [
   { label: "Learn", href: "/student/learn", icon: BookOpen },
   { label: "My Cohorts", href: "/student/learning", icon: Layers },
-  { label: "Mentorship", href: "/mentorship", icon: Users },
+  { label: "1:1 Mentorship", href: "/student/mentorship", icon: Users },
 ];
 
 export const mentorNav: NavItem[] = [
