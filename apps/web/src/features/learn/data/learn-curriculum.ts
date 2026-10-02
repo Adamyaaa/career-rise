@@ -575,50 +575,12 @@ When humans solve difficult problems, they do not just execute blindly; they tal
   ],
 };
 
-export const PRODUCT_MGMT_TRACK: LearnTrack = {
-  id: "product-management",
-  slug: "product-management",
-  title: "Product Management & AI Strategy",
-  description: "Master product discovery, customer interview synthesis, PRD execution, AI feature scoping, and metrics instrumentation.",
-  category: ["Product", "Strategy", "Leadership"],
-  modules: [
-    {
-      id: "pm-mod-1",
-      slug: "product-discovery",
-      title: "1.1 Modern Product Discovery",
-      order: 1,
-      lessons: [
-        {
-          id: "pm-1-1",
-          slug: "problem-framing",
-          title: "1.1.1 Problem Framing & Opportunity Trees",
-          order: 1,
-          readTime: "5m",
-          content: `# Problem Framing & Opportunity Solution Trees
-
-Great product management begins with clear, evidence-backed problem statements rather than jumping directly to solutions.
-
-## The Problem Statement Canvas
-A rigorous problem statement articulates:
-1. **Who** is experiencing the pain (target persona).
-2. **What** is the quantified friction or bottleneck.
-3. **Why** existing alternatives fail.
-4. **What** is the business outcome if solved.
-
-## Opportunity Solution Trees
-Created by Teresa Torres, Opportunity Solution Trees structure discovery:
-- **Desired Outcome** (e.g., Increase 30-day retention by 15%)
-  - **Opportunity / Pain point** (e.g., Users don't understand how to setup integrations)
-    - **Solution hypothesis A** (Interactive setup wizard)
-    - **Solution hypothesis B** (1-click prebuilt templates)`,
-        },
-      ],
-    },
-  ],
-};
+export { PRODUCT_MGMT_TRACK } from "./pm-track.data";
+import { PRODUCT_MGMT_TRACK } from "./pm-track.data";
 
 export const LEARN_TRACKS: LearnTrack[] = [
   GENAI_FOUNDATIONS_TRACK,
   AGENTIC_AI_TRACK,
   PRODUCT_MGMT_TRACK,
 ];
+

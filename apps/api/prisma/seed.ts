@@ -3,6 +3,7 @@ process.loadEnvFile(path.resolve(__dirname, "../../../.env"));
 
 import { PrismaClient, Role } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
+import { PM_MODULES_DATA } from "./pm-curriculum.data";
 
 const prisma = new PrismaClient();
 const BCRYPT_ROUNDS = 10;
@@ -12,9 +13,6 @@ if (!SEED_PASSWORD) {
   process.exit(1);
 }
 
-// Minimal sample data so the mentor lesson-material feature (and anything else
-// that needs a real cohort/lesson to point at) is actually testable — course/cohort
-// creation itself is a later phase, this is not that.
 async function main() {
   const passwordHash = await bcrypt.hash(SEED_PASSWORD, BCRYPT_ROUNDS);
 
@@ -25,7 +23,7 @@ async function main() {
       email: "mentor@careerrise.dev",
       passwordHash,
       role: Role.MENTOR,
-      mentorProfile: { create: { specializations: ["Agentic AI"], capacity: 20 } },
+      mentorProfile: { create: { specializations: ["Product Management", "Agentic AI"], capacity: 20 } },
     },
   });
 
@@ -40,9 +38,6 @@ async function main() {
     },
   });
 
-  // SUPER_ADMIN has no profile model — self-registration only ever creates
-  // STUDENT (see auth.service.ts), and POST /admin/users to provision
-  // mentor/admin accounts isn't built yet, so this seed is the only way in.
   await prisma.user.upsert({
     where: { email: "admin@careerrise.dev" },
     update: { passwordHash },
@@ -53,9 +48,12 @@ async function main() {
     },
   });
 
-  let course = await prisma.course.findFirst({ where: { title: "Agentic AI" } });
-  if (!course) {
-    course = await prisma.course.create({
+  const mentorProfile = await prisma.mentorProfile.findUniqueOrThrow({ where: { userId: mentorUser.id } });
+
+  // 1. Agentic AI Course & Cohort
+  let aiCourse = await prisma.course.findFirst({ where: { title: "Agentic AI" } });
+  if (!aiCourse) {
+    aiCourse = await prisma.course.create({
       data: {
         title: "Agentic AI",
         description: "Build and ship agentic AI applications end to end.",
@@ -64,72 +62,128 @@ async function main() {
     });
   }
 
-  let cohort = await prisma.cohort.findFirst({ where: { courseId: course.id } });
-  if (!cohort) {
-    cohort = await prisma.cohort.create({
+  let aiCohort = await prisma.cohort.findFirst({ where: { courseId: aiCourse.id } });
+  if (!aiCohort) {
+    aiCohort = await prisma.cohort.create({
       data: {
-        courseId: course.id,
+        courseId: aiCourse.id,
         name: "Cohort 1",
         startDate: new Date("2026-07-14"),
         endDate: new Date("2026-10-06"),
       },
     });
-  } else if (cohort.name !== "Cohort 1") {
-    cohort = await prisma.cohort.update({ where: { id: cohort.id }, data: { name: "Cohort 1" } });
   }
 
   await prisma.cohortMentorAssignment.upsert({
-    where: { cohortId_mentorProfileId: { cohortId: cohort.id, mentorProfileId: (await prisma.mentorProfile.findUniqueOrThrow({ where: { userId: mentorUser.id } })).id } },
+    where: { cohortId_mentorProfileId: { cohortId: aiCohort.id, mentorProfileId: mentorProfile.id } },
     update: {},
     create: {
-      cohortId: cohort.id,
-      mentorProfileId: (await prisma.mentorProfile.findUniqueOrThrow({ where: { userId: mentorUser.id } })).id,
+      cohortId: aiCohort.id,
+      mentorProfileId: mentorProfile.id,
     },
   });
 
-  const existingEnrollment = await prisma.cohortEnrollment.findFirst({
-    where: { studentId: studentUser.id, cohortId: cohort.id },
+  const existingAiEnrollment = await prisma.cohortEnrollment.findFirst({
+    where: { studentId: studentUser.id, cohortId: aiCohort.id },
   });
-  if (!existingEnrollment) {
+  if (!existingAiEnrollment) {
     await prisma.cohortEnrollment.create({
-      data: { studentId: studentUser.id, cohortId: cohort.id, status: "active" },
+      data: { studentId: studentUser.id, cohortId: aiCohort.id, status: "active" },
     });
   }
 
-  const moduleSpecs = [
-    { title: "Foundations", lessons: ["What is an agent?", "Tool use & memory"] },
-    { title: "Building your first agent", lessons: ["Planning & reasoning loops", "Shipping to production"] },
-  ];
-
-  for (let i = 3; i <= 12; i++) {
-    moduleSpecs.push({
-      title: `Module ${i}`,
-      lessons: [`Class 1`, `Class 2`],
+  // 2. Product Management Course & Cohort
+  let pmCourse = await prisma.course.findFirst({ where: { title: "Product Management" } });
+  if (!pmCourse) {
+    pmCourse = await prisma.course.create({
+      data: {
+        title: "Product Management",
+        description: "Comprehensive 50-day Product Management cohort with masterclasses, PRD templates, teardowns, case studies, SQL, analytics, and interview prep.",
+        category: ["Product Management", "Strategy", "Analytics", "Interviews"],
+      },
     });
   }
 
-  for (let i = 0; i < moduleSpecs.length; i++) {
-    const spec = moduleSpecs[i];
-    let mod = await prisma.module.findFirst({ where: { cohortId: cohort.id, title: spec.title } });
+  let pmCohort = await prisma.cohort.findFirst({ where: { courseId: pmCourse.id } });
+  if (!pmCohort) {
+    pmCohort = await prisma.cohort.create({
+      data: {
+        courseId: pmCourse.id,
+        name: "Product Management Cohort 1",
+        startDate: new Date("2026-07-14"),
+        endDate: new Date("2026-10-30"),
+      },
+    });
+  }
+
+  await prisma.cohortMentorAssignment.upsert({
+    where: { cohortId_mentorProfileId: { cohortId: pmCohort.id, mentorProfileId: mentorProfile.id } },
+    update: {},
+    create: {
+      cohortId: pmCohort.id,
+      mentorProfileId: mentorProfile.id,
+    },
+  });
+
+  const existingPmEnrollment = await prisma.cohortEnrollment.findFirst({
+    where: { studentId: studentUser.id, cohortId: pmCohort.id },
+  });
+  if (!existingPmEnrollment) {
+    await prisma.cohortEnrollment.create({
+      data: { studentId: studentUser.id, cohortId: pmCohort.id, status: "active" },
+    });
+  }
+
+  // Seed / Update PM Modules & Lessons
+  console.log(`Seeding ${PM_MODULES_DATA.length} Product Management modules & lessons...`);
+  const baseDate = new Date("2026-07-14T10:00:00.000Z");
+
+  for (let i = 0; i < PM_MODULES_DATA.length; i++) {
+    const spec = PM_MODULES_DATA[i];
+    let mod = await prisma.module.findFirst({ where: { cohortId: pmCohort.id, order: spec.order } });
     if (!mod) {
       mod = await prisma.module.create({
-        data: { cohortId: cohort.id, title: spec.title, order: i + 1 },
+        data: { cohortId: pmCohort.id, title: spec.title, order: spec.order },
+      });
+    } else {
+      mod = await prisma.module.update({
+        where: { id: mod.id },
+        data: { title: spec.title },
       });
     }
 
-    for (let j = 0; j < spec.lessons.length; j++) {
-      const lessonTitle = spec.lessons[j];
-      const existingLesson = await prisma.lesson.findFirst({ where: { moduleId: mod.id, title: lessonTitle } });
-      if (!existingLesson) {
-        await prisma.lesson.create({
-          data: {
-            moduleId: mod.id,
-            title: lessonTitle,
-            content: `Lesson content for "${lessonTitle}" goes here.`,
-            order: j + 1,
-          },
-        });
-      }
+    // Schedule dates spaced across cohort days
+    const lessonDate = new Date(baseDate);
+    lessonDate.setDate(baseDate.getDate() + (i * 2));
+
+    const lessonTitle = `${spec.title.replace(/^Module \d+:\s*/, "")} — Class & Materials`;
+    const existingLesson = await prisma.lesson.findFirst({ where: { moduleId: mod.id } });
+
+    if (!existingLesson) {
+      await prisma.lesson.create({
+        data: {
+          moduleId: mod.id,
+          title: lessonTitle,
+          content: spec.content,
+          order: 1,
+          slides: spec.slides,
+          assignmentsUrl: spec.assignmentsUrl,
+          submissionRequired: spec.submissionRequired,
+          scheduledAt: lessonDate,
+        },
+      });
+    } else {
+      await prisma.lesson.update({
+        where: { id: existingLesson.id },
+        data: {
+          title: lessonTitle,
+          content: spec.content,
+          slides: spec.slides,
+          assignmentsUrl: spec.assignmentsUrl,
+          submissionRequired: spec.submissionRequired,
+          scheduledAt: lessonDate,
+        },
+      });
     }
   }
 
@@ -137,7 +191,7 @@ async function main() {
   console.log(`  Mentor login:  mentor@careerrise.dev / ${SEED_PASSWORD}`);
   console.log(`  Student login: student@careerrise.dev / ${SEED_PASSWORD}`);
   console.log(`  Admin login:   admin@careerrise.dev / ${SEED_PASSWORD}`);
-  console.log(`  Cohort: ${cohort.name} (${cohort.id})`);
+  console.log(`  PM Cohort:     ${pmCohort.name} (${pmCohort.id})`);
 }
 
 main()
