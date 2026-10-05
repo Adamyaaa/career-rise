@@ -60,8 +60,8 @@ export function RegisterForm() {
       setSession(res);
       toast.success("Account created");
       router.push(roleHome(res.user.role));
-    } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Something went wrong. Please try again.";
+    } catch (err: any) {
+      const message = err?.message || "Something went wrong. Please try again.";
       toast.error(message);
     }
   }

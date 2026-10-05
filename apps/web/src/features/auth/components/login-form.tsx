@@ -67,8 +67,8 @@ export function LoginForm() {
         toast.info(`Dev mode — no mail provider configured. Code: ${res.otp}`, { duration: 8000 });
         setCode(res.otp);
       }
-    } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Failed to send OTP.";
+    } catch (err: any) {
+      const message = err?.message || "Failed to send OTP.";
       toast.error(message);
     } finally {
       setLoading(false);
@@ -88,8 +88,8 @@ export function LoginForm() {
         toast.info(`Dev mode — no mail provider configured. Code: ${res.otp}`, { duration: 8000 });
         setCode(res.otp);
       }
-    } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Failed to resend OTP.";
+    } catch (err: any) {
+      const message = err?.message || "Failed to resend OTP.";
       toast.error(message);
     } finally {
       setResending(false);
@@ -129,8 +129,8 @@ export function LoginForm() {
         toast.success("Successfully logged in");
         router.push(roleHome(res.user.role));
       }
-    } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Authentication failed.";
+    } catch (err: any) {
+      const message = err?.message || "Authentication failed.";
       toast.error(message);
     } finally {
       setLoading(false);

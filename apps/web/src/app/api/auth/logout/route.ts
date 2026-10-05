@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-
-const API_BASE_URL = process.env.INTERNAL_API_URL ?? "http://localhost:3001/api/v1";
+import { API_BASE_URL } from "@/lib/server-config";
 
 export async function POST(req: NextRequest) {
   try {

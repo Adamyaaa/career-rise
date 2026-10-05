@@ -17,8 +17,8 @@ export const authService = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.error?.message || "Registration failed");
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(data?.error?.message || data?.message || "Registration failed");
     return data as AuthResponse;
   },
 
@@ -28,8 +28,8 @@ export const authService = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.error?.message || "Login failed");
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(data?.error?.message || data?.message || "Login failed");
     return data as AuthResponse;
   },
 
@@ -45,8 +45,8 @@ export const authService = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.error?.message || "Failed to send OTP");
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(data?.error?.message || data?.message || "Failed to send OTP");
     return data as { success: true; delivered: boolean; otp?: string };
   },
 
@@ -56,8 +56,8 @@ export const authService = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, code }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.error?.message || "Invalid OTP code");
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(data?.error?.message || data?.message || "Invalid OTP code");
     return data as AuthResponse;
   },
 
