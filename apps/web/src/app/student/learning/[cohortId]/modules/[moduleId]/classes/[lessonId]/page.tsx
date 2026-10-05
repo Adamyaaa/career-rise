@@ -20,6 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/common/empty-state";
+import { MarkdownContent } from "@/components/common/markdown-content";
 import { LessonFeedbackComposer } from "@/features/cohort/components/lesson-feedback-composer";
 import { SubmitWorkDialog } from "@/features/student/components/submit-work-dialog";
 import { learningService } from "@/services/learning.service";
@@ -144,10 +145,10 @@ export default function ClassDetailPage({
             )}
           </div>
 
-          <section className="flex flex-col gap-2 rounded-2xl bg-card p-6 ring-1 ring-foreground/10">
+          <section className="flex flex-col gap-3 rounded-2xl bg-card p-6 ring-1 ring-foreground/10">
             <h2 className="font-heading text-sm font-semibold text-foreground">What this class covers</h2>
             {lesson.content ? (
-              <p className="text-sm leading-relaxed whitespace-pre-line text-foreground">{lesson.content}</p>
+              <MarkdownContent content={lesson.content} />
             ) : (
               <p className="text-sm text-muted-foreground">
                 Your mentor hasn&apos;t added a summary for this class yet.

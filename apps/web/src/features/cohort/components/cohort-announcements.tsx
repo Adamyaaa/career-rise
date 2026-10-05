@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FormField } from "@/components/common/form-field";
 import { EmptyState } from "@/components/common/empty-state";
+import { MarkdownContent } from "@/components/common/markdown-content";
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { announcementsService, type Announcement } from "@/services/announcements.service";
 import { fullName, formatRelativeTime } from "@/lib/format";
@@ -150,8 +151,7 @@ export function CohortAnnouncements({ cohortId, canManage }: { cohortId: string;
                 )}
               </div>
 
-              {/* Preserves the line breaks the author typed. */}
-              <p className="text-sm whitespace-pre-line text-foreground">{announcement.content}</p>
+              <MarkdownContent content={announcement.content} />
 
               {announcement.link && (
                 <a
