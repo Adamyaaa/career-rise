@@ -2,7 +2,6 @@
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
-import { EventPromoModal } from "@/components/common/event-promo-modal";
 import { QueryProvider } from "./query-provider";
 import { AuthProvider } from "./auth-provider";
 
@@ -13,7 +12,6 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         <TooltipProvider delay={200}>
           {children}
           <Toaster position="bottom-right" />
-          <EventPromoModal />
         </TooltipProvider>
       </AuthProvider>
     </QueryProvider>
