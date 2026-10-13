@@ -16,7 +16,7 @@ export function ProductPreview() {
         </span>
       </div>
 
-      <div className="grid grid-cols-[minmax(0,180px)_1fr] gap-0">
+      <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,180px)_1fr] gap-0">
         <div className="hidden flex-col gap-1 border-r border-border/60 p-4 sm:flex">
           {["Dashboard", "Courses", "Assignments", "Progress", "Roadmap"].map(
             (item, i) => (
@@ -35,7 +35,7 @@ export function ProductPreview() {
           )}
         </div>
 
-        <div className="flex flex-col gap-4 p-5">
+        <div className="flex flex-col gap-4 p-4 sm:p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-foreground">
@@ -46,24 +46,24 @@ export function ProductPreview() {
             <Badge variant="secondary">On track</Badge>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-lg border border-border/60 p-3">
-              <p className="text-xs text-muted-foreground">Progress</p>
-              <p className="mt-1 text-lg font-semibold text-foreground">68%</p>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="rounded-lg border border-border/60 p-2 sm:p-3">
+              <p className="text-[11px] sm:text-xs text-muted-foreground">Progress</p>
+              <p className="mt-1 text-base sm:text-lg font-semibold text-foreground">68%</p>
               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                 <div className="h-full w-[68%] rounded-full bg-primary" />
               </div>
             </div>
-            <div className="rounded-lg border border-border/60 p-3">
-              <p className="text-xs text-muted-foreground">Attendance</p>
-              <p className="mt-1 text-lg font-semibold text-foreground">92%</p>
+            <div className="rounded-lg border border-border/60 p-2 sm:p-3">
+              <p className="text-[11px] sm:text-xs text-muted-foreground">Attendance</p>
+              <p className="mt-1 text-base sm:text-lg font-semibold text-foreground">92%</p>
               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                 <div className="h-full w-[92%] rounded-full bg-emerald-500" />
               </div>
             </div>
-            <div className="rounded-lg border border-border/60 p-3">
-              <p className="text-xs text-muted-foreground">Evidence</p>
-              <p className="mt-1 text-lg font-semibold text-foreground">9/12</p>
+            <div className="rounded-lg border border-border/60 p-2 sm:p-3">
+              <p className="text-[11px] sm:text-xs text-muted-foreground">Evidence</p>
+              <p className="mt-1 text-base sm:text-lg font-semibold text-foreground">9/12</p>
               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                 <div className="h-full w-[75%] rounded-full bg-primary" />
               </div>

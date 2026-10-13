@@ -153,7 +153,33 @@ export function LearnShell({ cohortId: trackSlug, activeLessonId }: LearnShellPr
         )}
 
         {/* Pane 2: Center Reading Area / Track Overview */}
-        <main className="flex-1 min-w-0 max-w-full rounded-2xl bg-card ring-1 ring-foreground/10 shadow-xs p-5 sm:p-8 lg:p-10 transition-all overflow-hidden">
+        <main className="flex-1 min-w-0 max-w-full rounded-2xl bg-card ring-1 ring-foreground/10 shadow-xs p-4 sm:p-8 lg:p-10 transition-all overflow-hidden">
+          {/* Mobile Curriculum Trigger Bar */}
+          <div className="flex lg:hidden items-center justify-between gap-3 mb-5 pb-4 border-b border-border/60">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setMobileDrawerOpen(true)}
+              className="gap-2 text-xs font-semibold rounded-xl cursor-pointer shadow-xs"
+            >
+              <Menu className="size-4 text-primary" />
+              <span>Browse Curriculum</span>
+            </Button>
+
+            {activeLesson ? (
+              <Link
+                href={`/student/learn`}
+                className="text-xs text-muted-foreground hover:text-foreground font-medium flex items-center gap-1"
+              >
+                <span>Track overview</span>
+              </Link>
+            ) : (
+              <span className="text-xs text-muted-foreground font-medium">
+                {track.modules.length} modules
+              </span>
+            )}
+          </div>
+
           {activeLesson && activeModule ? (
             <LearnReader
               track={track}

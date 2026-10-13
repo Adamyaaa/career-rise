@@ -29,7 +29,7 @@ export function Sidebar({ navItems }: { navItems: NavItem[] }) {
   return (
     <aside
       className={cn(
-        "sticky top-14 flex h-[calc(100vh-3.5rem)] shrink-0 flex-col gap-1 border-r border-border/60 bg-background p-3 transition-all duration-300 ease-in-out",
+        "sticky top-14 hidden md:flex h-[calc(100vh-3.5rem)] shrink-0 flex-col gap-1 border-r border-border/60 bg-background p-3 transition-all duration-300 ease-in-out",
         collapsed ? "w-16 items-center" : "w-56",
       )}
     >

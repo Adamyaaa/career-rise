@@ -19,7 +19,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Topbar navItems={[]} />
+      <Topbar navItems={studentNav} />
       <div className="flex flex-1 min-w-0">
         <Sidebar navItems={studentNav} />
         <main className="mx-auto w-full min-w-0 flex-1 px-3 py-5 sm:px-6 lg:px-8 max-w-[1600px]">{children}</main>

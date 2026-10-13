@@ -66,7 +66,7 @@ export function PersonalTrackView({
   return (
     <div className="space-y-6">
       {/* 1. Cohort-style Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-card via-card to-primary/5 p-6 shadow-xs ring-1 ring-foreground/5">
+      <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-card via-card to-primary/5 p-4 sm:p-6 shadow-xs ring-1 ring-foreground/5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 flex-1 flex-col gap-2.5">
             <div className="flex flex-wrap items-center gap-2">

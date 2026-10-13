@@ -41,11 +41,11 @@ export default function MentorshipPage() {
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground text-balance">
             A structured 1:1 mentorship program for students and professionals who are done with generic advice — and ready for a plan they can actually execute.
           </p>
-          <div className="mt-8 flex justify-center gap-4">
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full">
             <ApplyMentorshipDialog>
-              <Button size="lg">Apply for Mentorship</Button>
+              <Button size="lg" className="w-full sm:w-auto">Apply for Mentorship</Button>
             </ApplyMentorshipDialog>
-            <Button render={<Link href="#how-it-works" />} variant="outline" size="lg">
+            <Button render={<Link href="#how-it-works" />} variant="outline" size="lg" className="w-full sm:w-auto">
               See how it works
             </Button>
           </div>

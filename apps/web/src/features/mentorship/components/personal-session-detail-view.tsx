@@ -212,7 +212,7 @@ export function PersonalSessionDetailView({
           {session.meetingUrl && (
             <Button
               render={<a href={session.meetingUrl} target="_blank" rel="noopener noreferrer" />}
-              className="rounded-xl px-5 font-semibold gap-2 shadow-xs"
+              className="rounded-xl px-5 font-semibold gap-2 shadow-xs w-full sm:w-auto"
             >
               <Video className="size-4" />
               <span>Join 1:1 Video Call</span>
