@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from "@nestjs/common";
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, Logger } from "@nestjs/common";
+import * as crypto from "crypto";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateMentorshipApplicationDto } from "./dto/create-application.dto";
 import { ApproveMentorshipApplicationDto } from "./dto/approve-application.dto";
@@ -120,7 +121,14 @@ export class MentorshipService {
       include: {
         sessions: { orderBy: { weekNumber: "asc" } },
         seniorMentor: {
-          select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            mentorProfile: { select: { calendlyUrl: true } },
+          },
         },
       },
     });
@@ -154,7 +162,14 @@ export class MentorshipService {
           select: { id: true, firstName: true, lastName: true, email: true, phone: true },
         },
         seniorMentor: {
-          select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            mentorProfile: { select: { calendlyUrl: true } },
+          },
         },
       },
     });
@@ -217,7 +232,14 @@ export class MentorshipService {
               select: { id: true, firstName: true, lastName: true, email: true, phone: true },
             },
             seniorMentor: {
-              select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+                mentorProfile: { select: { calendlyUrl: true } },
+              },
             },
             sessions: {
               orderBy: { weekNumber: "asc" },
@@ -292,4 +314,237 @@ export class MentorshipService {
       data,
     });
   }
+
+  async updateMentorCalendlyUrl(userId: string, calendlyUrl: string) {
+    const profile = await this.prisma.mentorProfile.findUnique({
+      where: { userId },
+    });
+
+    if (profile) {
+      return this.prisma.mentorProfile.update({
+        where: { userId },
+        data: { calendlyUrl: calendlyUrl.trim() || null },
+      });
+    }
+
+    return this.prisma.mentorProfile.create({
+      data: {
+        userId,
+        specializations: [],
+        capacity: 10,
+        calendlyUrl: calendlyUrl.trim() || null,
+      },
+    });
+  }
+
+  async getMentorCalendlyUrl(userId: string) {
+    const profile = await this.prisma.mentorProfile.findUnique({
+      where: { userId },
+      select: { calendlyUrl: true },
+    });
+    return { calendlyUrl: profile?.calendlyUrl || null };
+  }
+
+  async handleCalendlyWebhook(body: any, signatureHeader?: string) {
+    const signingKey = process.env.CALENDLY_WEBHOOK_SIGNING_KEY;
+    if (signingKey && signatureHeader) {
+      this.verifyCalendlySignature(body, signatureHeader, signingKey);
+    }
+
+    const eventType = body?.event;
+    const payload = body?.payload;
+
+    if (!payload) {
+      return { status: "ignored", reason: "missing payload" };
+    }
+
+    if (eventType === "invitee.created") {
+      return this.handleCalendlyInviteeCreated(payload);
+    }
+
+    if (eventType === "invitee.canceled") {
+      return this.handleCalendlyInviteeCanceled(payload);
+    }
+
+    return { status: "ignored", eventType };
+  }
+
+  private async handleCalendlyInviteeCreated(payload: any) {
+    // 1. Session ID passed via tracking parameters or custom questions
+    let sessionId: string | null = null;
+
+    if (payload.tracking) {
+      sessionId =
+        payload.tracking.utm_term ||
+        payload.tracking.utm_content ||
+        payload.tracking.utm_campaign ||
+        payload.tracking.salesforce_uuid ||
+        null;
+    }
+
+    if (!sessionId && Array.isArray(payload.questions_and_answers)) {
+      const q = payload.questions_and_answers.find(
+        (qa: any) =>
+          qa.question?.toLowerCase().includes("session") ||
+          qa.question?.toLowerCase().includes("id"),
+      );
+      if (q && q.answer) sessionId = q.answer.trim();
+    }
+
+    const studentEmail = payload.email?.toLowerCase().trim();
+    let session = null;
+
+    if (sessionId) {
+      session = await this.prisma.personalMentorshipSession.findUnique({
+        where: { id: sessionId },
+        include: { track: true },
+      });
+    }
+
+    // Fallback: match by student email -> first upcoming unscheduled session
+    if (!session && studentEmail) {
+      const studentUser = await this.prisma.user.findUnique({
+        where: { email: studentEmail },
+      });
+      if (studentUser) {
+        const track = await this.prisma.proMentorshipTrack.findUnique({
+          where: { studentId: studentUser.id },
+          include: {
+            sessions: {
+              where: { status: "not_scheduled" },
+              orderBy: { weekNumber: "asc" },
+              take: 1,
+            },
+          },
+        });
+        if (track && track.sessions.length > 0) {
+          session = track.sessions[0];
+        }
+      }
+    }
+
+    if (!session) {
+      return { status: "unmatched", message: "Could not match session to booking" };
+    }
+
+    const scheduledEvent = payload.scheduled_event || {};
+    const startTimeStr =
+      scheduledEvent.start_time || payload.event_start_time || payload.start_time;
+    const scheduledAt = startTimeStr ? new Date(startTimeStr) : new Date();
+
+    // Meeting link (Google Meet / Zoom / Microsoft Teams or custom location)
+    let meetingUrl: string | null = null;
+    if (scheduledEvent.location) {
+      meetingUrl =
+        scheduledEvent.location.join_url ||
+        (scheduledEvent.location.location?.startsWith("http")
+          ? scheduledEvent.location.location
+          : null);
+    }
+    if (!meetingUrl && payload.meeting_url) {
+      meetingUrl = payload.meeting_url;
+    }
+
+    let durationMins = session.durationMins || 75;
+    if (scheduledEvent.start_time && scheduledEvent.end_time) {
+      const diffMs =
+        new Date(scheduledEvent.end_time).getTime() -
+        new Date(scheduledEvent.start_time).getTime();
+      const diffMins = Math.round(diffMs / (60 * 1000));
+      if (diffMins > 0) durationMins = diffMins;
+    }
+
+    const updated = await this.prisma.personalMentorshipSession.update({
+      where: { id: session.id },
+      data: {
+        scheduledAt,
+        durationMins,
+        meetingUrl: meetingUrl || session.meetingUrl,
+        status: "scheduled",
+        calendlyEventUri: scheduledEvent.uri || payload.event || null,
+        calendlyInviteeUri: payload.uri || null,
+      },
+    });
+
+    return { status: "success", sessionId: updated.id, scheduledAt };
+  }
+
+  private async handleCalendlyInviteeCanceled(payload: any) {
+    const inviteeUri = payload.uri;
+    const eventUri = payload.event || payload.scheduled_event?.uri;
+
+    let session = null;
+    if (inviteeUri) {
+      session = await this.prisma.personalMentorshipSession.findFirst({
+        where: { calendlyInviteeUri: inviteeUri },
+      });
+    }
+    if (!session && eventUri) {
+      session = await this.prisma.personalMentorshipSession.findFirst({
+        where: { calendlyEventUri: eventUri },
+      });
+    }
+
+    if (!session && payload.tracking?.utm_term) {
+      session = await this.prisma.personalMentorshipSession.findUnique({
+        where: { id: payload.tracking.utm_term },
+      });
+    }
+
+    if (session) {
+      await this.prisma.personalMentorshipSession.update({
+        where: { id: session.id },
+        data: {
+          status: "not_scheduled",
+          scheduledAt: null,
+          meetingUrl: null,
+          calendlyEventUri: null,
+          calendlyInviteeUri: null,
+        },
+      });
+      return { status: "success", action: "cancelled", sessionId: session.id };
+    }
+
+    return { status: "unmatched", message: "No matching session found for cancellation" };
+  }
+
+  private verifyCalendlySignature(body: any, header: string, signingKey: string) {
+    try {
+      const parts = header.split(",").reduce((acc: any, part: string) => {
+        const [k, v] = part.split("=");
+        if (k && v) acc[k.trim()] = v.trim();
+        return acc;
+      }, {});
+
+      const timestamp = parts["t"];
+      const signature = parts["v1"];
+
+      if (!timestamp || !signature) {
+        throw new BadRequestException("Invalid Calendly signature header");
+      }
+
+      const tolerance = 300000;
+      const timeDiff = Math.abs(Date.now() - Number(timestamp) * 1000);
+      if (timeDiff > tolerance) {
+        throw new BadRequestException("Calendly signature timestamp expired");
+      }
+
+      const payloadString = typeof body === "string" ? body : JSON.stringify(body);
+      const dataToSign = `${timestamp}.${payloadString}`;
+      const expectedSignature = crypto
+        .createHmac("sha256", signingKey)
+        .update(dataToSign)
+        .digest("hex");
+
+      if (signature !== expectedSignature) {
+        throw new BadRequestException("Calendly webhook signature verification failed");
+      }
+    } catch (err: any) {
+      if (process.env.NODE_ENV === "production") {
+        throw new BadRequestException(err?.message || "Calendly signature verification failed");
+      }
+      console.warn("Calendly signature verification bypassed in non-production:", err?.message);
+    }
+  }
+
 }

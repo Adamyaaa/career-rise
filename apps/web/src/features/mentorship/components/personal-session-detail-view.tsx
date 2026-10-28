@@ -34,6 +34,7 @@ import {
   type ProMentorshipTrack,
 } from "@/services/mentorship.service";
 import { toast } from "sonner";
+import { ScheduleCalendlyDialog } from "./schedule-calendly-dialog";
 
 interface PersonalSessionDetailViewProps {
   session: PersonalMentorshipSession & { track: ProMentorshipTrack };
@@ -209,7 +210,7 @@ export function PersonalSessionDetailView({
             <span className="text-xs text-muted-foreground ml-1">{session.format}</span>
           </div>
 
-          {session.meetingUrl && (
+          {session.meetingUrl ? (
             <Button
               render={<a href={session.meetingUrl} target="_blank" rel="noopener noreferrer" />}
               className="rounded-xl px-5 font-semibold gap-2 shadow-xs w-full sm:w-auto"
@@ -218,7 +219,23 @@ export function PersonalSessionDetailView({
               <span>Join 1:1 Video Call</span>
               <ExternalLink className="size-3.5 opacity-70" />
             </Button>
-          )}
+          ) : !canManage ? (
+            <ScheduleCalendlyDialog
+              session={session}
+              mentorName={
+                session.track?.seniorMentor
+                  ? `${session.track.seniorMentor.firstName || ""} ${session.track.seniorMentor.lastName || ""}`.trim()
+                  : undefined
+              }
+              calendlyUrl={session.track?.seniorMentor?.mentorProfile?.calendlyUrl}
+              studentName={
+                session.track?.student
+                  ? `${session.track.student.firstName || ""} ${session.track.student.lastName || ""}`.trim()
+                  : undefined
+              }
+              studentEmail={session.track?.student?.email}
+            />
+          ) : null}
         </div>
 
         <h1 className="font-heading text-2xl font-bold text-foreground sm:text-3xl">

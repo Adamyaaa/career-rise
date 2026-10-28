@@ -5,11 +5,13 @@ import {
   Patch,
   Body,
   Param,
+  Headers,
 } from "@nestjs/common";
 import { MentorshipService } from "./mentorship.service";
 import { CreateMentorshipApplicationDto } from "./dto/create-application.dto";
 import { ApproveMentorshipApplicationDto } from "./dto/approve-application.dto";
 import { UpdateMentorshipSessionDto } from "./dto/update-session.dto";
+import { UpdateMentorCalendlyDto } from "./dto/update-mentor-calendly.dto";
 import { Public } from "../common/decorators/public.decorator";
 import { Roles } from "../common/decorators/roles.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
@@ -87,5 +89,30 @@ export class MentorshipController {
     @Body() body: UpdateMentorshipSessionDto,
   ) {
     return this.mentorshipService.updateSession(sessionId, user, body);
+  }
+
+  // Calendly Webhook & Mentor Setup
+  @Public()
+  @Post("calendly/webhook")
+  async calendlyWebhook(
+    @Body() body: any,
+    @Headers("calendly-webhook-signature") signature?: string,
+  ) {
+    return this.mentorshipService.handleCalendlyWebhook(body, signature);
+  }
+
+  @Roles("MENTOR", "SUPER_ADMIN")
+  @Get("mentor/calendly-url")
+  async getMentorCalendlyUrl(@CurrentUser() user: AuthenticatedUser) {
+    return this.mentorshipService.getMentorCalendlyUrl(user.id);
+  }
+
+  @Roles("MENTOR", "SUPER_ADMIN")
+  @Patch("mentor/calendly-url")
+  async updateMentorCalendlyUrl(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: UpdateMentorCalendlyDto,
+  ) {
+    return this.mentorshipService.updateMentorCalendlyUrl(user.id, body.calendlyUrl);
   }
 }

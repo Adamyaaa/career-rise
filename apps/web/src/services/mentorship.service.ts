@@ -61,6 +61,9 @@ export interface ProMentorshipTrack {
     lastName: string | null;
     email: string;
     phone?: string | null;
+    mentorProfile?: {
+      calendlyUrl?: string | null;
+    } | null;
   };
 }
 
@@ -118,5 +121,15 @@ export const mentorshipService = {
       `/mentorship/pro/sessions/${sessionId}`,
       payload,
     );
+  },
+
+  getMentorCalendlyUrl: async () => {
+    return apiClient.get<{ calendlyUrl: string | null }>("/mentorship/mentor/calendly-url");
+  },
+
+  updateMentorCalendlyUrl: async (calendlyUrl: string) => {
+    return apiClient.patch<{ calendlyUrl: string | null }>("/mentorship/mentor/calendly-url", {
+      calendlyUrl,
+    });
   },
 };

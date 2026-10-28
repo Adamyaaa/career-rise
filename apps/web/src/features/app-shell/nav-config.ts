@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { User, GraduationCap, Users, BookOpen, Layers, UserCheck } from "lucide-react";
+import { User, GraduationCap, Users, BookOpen, Layers, UserCheck, MessagesSquare } from "lucide-react";
 
 export interface NavItem {
   label: string;
@@ -15,6 +15,7 @@ export const studentNav: NavItem[] = [
 
 export const mentorNav: NavItem[] = [
   { label: "My Cohorts", href: "/mentor/cohorts", icon: GraduationCap },
+  { label: "Student Doubts", href: "/mentor/doubts", icon: MessagesSquare },
   { label: "Cohort Requests", href: "/mentor/requests", icon: UserCheck },
   { label: "Mentorship", href: "/mentor/mentorship", icon: Users },
 ];

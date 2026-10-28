@@ -43,6 +43,7 @@ export const envValidationSchema = Joi.object({
   // instead of emailing them, so local dev works with no mail account.
   BREVO_API_KEY: Joi.string().allow('').optional(),
   MAIL_FROM: Joi.string().allow('').optional(),
+  CALENDLY_WEBHOOK_SIGNING_KEY: Joi.string().allow('').optional(),
 })
   // Checked across the whole object rather than per-field, so the message says what is
   // actually wrong instead of inheriting the placeholder wording. If these matched, an

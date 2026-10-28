@@ -23,7 +23,13 @@ async function main() {
       email: "mentor@careerrise.dev",
       passwordHash,
       role: Role.MENTOR,
-      mentorProfile: { create: { specializations: ["Product Management", "Agentic AI"], capacity: 20 } },
+      mentorProfile: {
+        create: {
+          specializations: ["Product Management", "Agentic AI"],
+          capacity: 20,
+          calendlyUrl: "https://calendly.com/mentor-careerrise/1on1",
+        },
+      },
     },
   });
 
