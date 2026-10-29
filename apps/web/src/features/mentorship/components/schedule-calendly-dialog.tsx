@@ -90,13 +90,20 @@ export function ScheduleCalendlyDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger nativeButton={true} render={children as React.ReactElement}>
-        <Button className="rounded-xl px-4 font-semibold gap-2 shadow-xs text-xs">
-          <CalendarDays className="size-3.5" />
-          <span>Book Session via Calendly</span>
-          <Sparkles className="size-3" />
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger
+        nativeButton={true}
+        render={
+          children ? (
+            children as React.ReactElement
+          ) : (
+            <Button className="rounded-xl px-4 font-semibold gap-2 shadow-xs text-xs">
+              <CalendarDays className="size-3.5" />
+              <span>Book Session via Calendly</span>
+              <Sparkles className="size-3" />
+            </Button>
+          )
+        }
+      />
 
       <DialogContent className="sm:max-w-[750px] p-0 overflow-hidden rounded-2xl">
         <DialogHeader className="p-4 sm:p-5 pb-2 border-b">
@@ -106,7 +113,7 @@ export function ScheduleCalendlyDialog({
                 Schedule Week {session.weekNumber}: {session.title}
               </DialogTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Select a time slot with {mentorName ? `mentor ${mentorName}` : "your mentor"}.
+                Select a time slot with {mentorName ? `mentor ${mentorName}` : "your mentor"}. A Google Meet call and calendar invite will automatically be created.
               </p>
             </div>
             <a
