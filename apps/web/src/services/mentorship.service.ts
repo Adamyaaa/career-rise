@@ -28,7 +28,7 @@ export interface PersonalMentorshipSession {
   mentorType: "senior_mentor" | "senior_specialist";
   scheduledAt: string | null;
   durationMins: number | null;
-  status: "not_scheduled" | "scheduled" | "completed" | "cancelled";
+  status: "not_scheduled" | "requested" | "scheduled" | "completed" | "cancelled";
   meetingUrl: string | null;
   recordingUrl: string | null;
   deliverables: Array<{ title: string; url: string; type?: string }>;

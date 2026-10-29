@@ -285,10 +285,16 @@ export class MentorshipService {
 
     const data: any = {};
 
-    // Student can only update their own notes and action items checklist
+    // Student can update their own notes, action items, or place/cancel a 1:1 session request
     if (isStudentOwner && !isSuperAdmin && !isAssignedMentor) {
       if (dto.studentNotes !== undefined) data.studentNotes = dto.studentNotes;
       if (dto.actionItems !== undefined) data.actionItems = dto.actionItems;
+      if (dto.status === "requested" || dto.status === "not_scheduled") {
+        data.status = dto.status;
+        if (dto.scheduledAt !== undefined) {
+          data.scheduledAt = dto.scheduledAt ? new Date(dto.scheduledAt) : null;
+        }
+      }
     } else {
       // Mentor & Super Admin can update everything
       if (dto.scheduledAt !== undefined) data.scheduledAt = dto.scheduledAt ? new Date(dto.scheduledAt) : null;
