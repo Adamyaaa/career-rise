@@ -36,6 +36,7 @@ import {
 import { toast } from "sonner";
 import { ScheduleCalendlyDialog } from "./schedule-calendly-dialog";
 import { RequestSessionDialog } from "./request-session-dialog";
+import { InlineBookingCard } from "./inline-booking-card";
 
 interface PersonalSessionDetailViewProps {
   session: PersonalMentorshipSession & { track: ProMentorshipTrack };
@@ -190,7 +191,7 @@ export function PersonalSessionDetailView({
   const mentorCalendlyUrl = session.track?.seniorMentor?.mentorProfile?.calendlyUrl;
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6 pb-12">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 pb-12">
       {/* Back link */}
       <Link
         href={backHref}
@@ -199,6 +200,11 @@ export function PersonalSessionDetailView({
         <ArrowLeft className="size-4" />
         Back to 1:1 Mentorship Roadmap
       </Link>
+
+      {/* Main 2-Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column: Details, Deliverables, Feedback, Notes */}
+        <div className="lg:col-span-7 flex flex-col gap-6">
 
       {/* 1. Header Card (Matching ClassDetailPage format) */}
       <div className="flex flex-col gap-4 rounded-2xl border border-border/70 bg-gradient-to-br from-card via-card to-primary/5 p-6 shadow-xs ring-1 ring-foreground/5 sm:p-8">
@@ -244,23 +250,6 @@ export function PersonalSessionDetailView({
               <span>Join Google Meet</span>
               <ExternalLink className="size-3.5 opacity-70" />
             </Button>
-          ) : !canManage ? (
-            isRequested ? (
-              <RequestSessionDialog
-                session={session}
-                mentorName={mentorFullName}
-              >
-                <Button variant="outline" className="rounded-xl px-5 font-semibold gap-2 shadow-xs w-full sm:w-auto border-amber-500/40 text-amber-600 dark:text-amber-400">
-                  <Clock className="size-4" />
-                  <span>Call Requested (Modify)</span>
-                </Button>
-              </RequestSessionDialog>
-            ) : (
-              <RequestSessionDialog
-                session={session}
-                mentorName={mentorFullName}
-              />
-            )
           ) : null}
         </div>
 
@@ -292,155 +281,6 @@ export function PersonalSessionDetailView({
           </span>
         </div>
       </div>
-
-      {/* 1:1 Live Call & Scheduling Card (For Students) */}
-      {!canManage && (
-        <section className="rounded-2xl border border-border/80 bg-card p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <Video className="size-5" />
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-foreground">
-                  1:1 Live Mentorship Session
-                </h2>
-                <p className="text-xs text-muted-foreground">
-                  Conducted live via Google Meet • {session.durationMins || 75} mins deep dive
-                </p>
-              </div>
-            </div>
-
-            {isCompleted ? (
-              <span className="inline-flex items-center gap-1 rounded border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
-                <CheckCircle2 className="size-3.5" /> Call Completed
-              </span>
-            ) : session.meetingUrl ? (
-              <span className="inline-flex items-center gap-1.5 rounded border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                Google Meet Ready
-              </span>
-            ) : isRequested ? (
-              <span className="inline-flex items-center gap-1.5 rounded border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
-                <Clock className="size-3.5" /> Pending Mentor Acceptance
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 rounded border border-blue-500/25 bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-700 dark:text-blue-300">
-                <CalendarDays className="size-3.5" /> Ready to Book
-              </span>
-            )}
-          </div>
-
-          {session.meetingUrl ? (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl bg-gradient-to-r from-emerald-500/5 via-primary/5 to-transparent p-4 border border-emerald-500/20">
-              <div className="space-y-1">
-                <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-                  Upcoming Google Meet Call
-                </p>
-                <p className="text-sm font-bold text-foreground">
-                  {session.scheduledAt
-                    ? `${formatDate(session.scheduledAt)} at ${formatTime(session.scheduledAt)}`
-                    : "Scheduled with your mentor"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  With {mentorFullName ? `Mentor ${mentorFullName}` : "your senior mentor"}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  render={<a href={session.meetingUrl} target="_blank" rel="noopener noreferrer" />}
-                  className="rounded-xl px-5 font-semibold gap-2 shadow-sm bg-[#1a73e8] hover:bg-[#1557b0] text-white"
-                >
-                  <Video className="size-4" />
-                  <span>Join Google Meet</span>
-                  <ExternalLink className="size-3.5 opacity-70" />
-                </Button>
-
-                {!canManage && (
-                  <RequestSessionDialog
-                    session={session}
-                    mentorName={mentorFullName}
-                  >
-                    <Button variant="outline" size="sm" className="rounded-xl text-xs">
-                      Reschedule
-                    </Button>
-                  </RequestSessionDialog>
-                )}
-              </div>
-            </div>
-          ) : isRequested ? (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl bg-amber-500/5 p-4 border border-amber-500/30">
-              <div className="space-y-1.5 max-w-md">
-                <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Clock className="size-3.5" />
-                  Call Requested • Awaiting Mentor Acceptance
-                </p>
-                <p className="text-sm font-bold text-foreground">
-                  {session.scheduledAt
-                    ? `${formatDate(session.scheduledAt)} at ${formatTime(session.scheduledAt)}`
-                    : "Preferred time submitted"}
-                </p>
-                {session.studentNotes && (
-                  <p className="text-xs text-muted-foreground line-clamp-2">
-                    <span className="font-semibold text-foreground">Topic:</span> {session.studentNotes}
-                  </p>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Your mentor will accept this request and provide the Google Meet link.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                {!canManage && (
-                  <RequestSessionDialog
-                    session={session}
-                    mentorName={mentorFullName}
-                  >
-                    <Button variant="outline" size="sm" className="rounded-xl text-xs border-amber-500/40 text-amber-600 dark:text-amber-400">
-                      Change Requested Time
-                    </Button>
-                  </RequestSessionDialog>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl bg-muted/30 p-4 border border-border/70">
-              <div className="space-y-1 max-w-md">
-                <p className="text-sm font-semibold text-foreground">
-                  Request your 1:1 mentorship call slot
-                </p>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Choose your preferred date and time for this week's 75-minute live mentoring call. Your mentor will confirm and attach the Google Meet link.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 shrink-0">
-                {!canManage && (
-                  <RequestSessionDialog
-                    session={session}
-                    mentorName={mentorFullName}
-                  />
-                )}
-
-                {mentorCalendlyUrl && (
-                  <ScheduleCalendlyDialog
-                    session={session}
-                    mentorName={mentorFullName}
-                    calendlyUrl={mentorCalendlyUrl}
-                    studentName={studentFullName}
-                    studentEmail={session.track?.student?.email}
-                  >
-                    <Button variant="outline" size="sm" className="rounded-xl text-xs">
-                      Or Book via Calendly
-                    </Button>
-                  </ScheduleCalendlyDialog>
-                )}
-              </div>
-            </div>
-          )}
-        </section>
-      )}
 
       {/* Mentor Controls Panel (if canManage) */}
       {canManage && (
@@ -759,6 +599,18 @@ export function PersonalSessionDetailView({
           </Button>
         </div>
       </section>
+        </div>
+
+        {/* Right Column: Interactive Inline Booking Calendar */}
+        <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-6">
+          <InlineBookingCard
+            session={session}
+            mentorName={mentorFullName}
+            mentorCalendlyUrl={mentorCalendlyUrl}
+            canManage={canManage}
+          />
+        </div>
+      </div>
     </div>
   );
 }
