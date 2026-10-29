@@ -463,11 +463,12 @@ export function InlineBookingCard({
 
       {/* Status banner if already requested */}
       {isRequested && (
-        <div className="rounded-lg bg-blue-50/80 border border-blue-200/90 p-3 text-xs text-blue-950 dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-200">
-          <p className="font-semibold flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
-            <Clock className="size-3.5" /> Request Pending Mentor Acceptance
+        <div className="rounded-lg bg-muted/40 border border-border p-3 text-xs">
+          <p className="font-semibold flex items-center gap-1.5 text-foreground">
+            <Clock className="size-3.5 text-muted-foreground" />
+            <span>Request Pending Mentor Acceptance</span>
           </p>
-          <p className="text-[11px] text-blue-800/80 dark:text-blue-300/80 mt-1">
+          <p className="text-[11px] text-muted-foreground mt-1">
             You can change your selected slot above and click Confirm session below to update it.
           </p>
         </div>

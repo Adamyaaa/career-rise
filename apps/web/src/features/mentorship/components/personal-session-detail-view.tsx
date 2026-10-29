@@ -228,9 +228,9 @@ export function PersonalSessionDetailView({
             ) : isRequested ? (
               <Badge
                 variant="secondary"
-                className="bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border-sky-200 text-xs gap-1 rounded-md"
+                className="bg-muted text-foreground border-border text-xs gap-1 rounded-md"
               >
-                <Clock className="size-3" /> Call Requested
+                <Clock className="size-3 text-muted-foreground" /> Call Requested
               </Badge>
             ) : (
               <Badge variant="outline" className="text-xs rounded-md">
@@ -292,9 +292,9 @@ export function PersonalSessionDetailView({
           </div>
 
           {session.status === "requested" && (
-            <div className="rounded-lg border border-blue-200 bg-blue-50/70 dark:border-blue-800 dark:bg-blue-950/30 p-4 space-y-3">
-              <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300 font-semibold text-sm">
-                <Clock className="size-4" />
+            <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-3">
+              <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
+                <Clock className="size-4 text-muted-foreground" />
                 <span>Student Requested a 1:1 Call Slot</span>
               </div>
               <div className="text-xs space-y-1 text-foreground/90">
