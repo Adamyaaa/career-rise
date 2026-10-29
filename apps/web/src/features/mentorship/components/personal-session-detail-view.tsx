@@ -207,33 +207,33 @@ export function PersonalSessionDetailView({
         <div className="lg:col-span-7 flex flex-col gap-6">
 
       {/* 1. Header Card (Matching ClassDetailPage format) */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-border/70 bg-gradient-to-br from-card via-card to-primary/5 p-6 shadow-xs ring-1 ring-foreground/5 sm:p-8">
+      <div className="flex flex-col gap-4 rounded-lg border border-border/70 bg-gradient-to-br from-card via-card to-primary/5 p-6 shadow-xs ring-1 ring-foreground/5 sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4 w-full">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center rounded-full bg-primary/90 px-2.5 py-0.5 text-[11px] font-bold text-primary-foreground tracking-wider uppercase shadow-2xs">
+            <span className="inline-flex items-center rounded-md bg-primary/90 px-2.5 py-0.5 text-[11px] font-bold text-primary-foreground tracking-wider uppercase shadow-2xs">
               Week {session.weekNumber}
             </span>
 
             {isCompleted ? (
-              <Badge className="bg-primary text-primary-foreground text-xs gap-1">
+              <Badge className="bg-primary text-primary-foreground text-xs gap-1 rounded-md">
                 <CheckCircle2 className="size-3" /> Completed
               </Badge>
             ) : isScheduled ? (
               <Badge
                 variant="secondary"
-                className="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-200 text-xs gap-1"
+                className="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-200 text-xs gap-1 rounded-md"
               >
                 <CalendarDays className="size-3" /> Scheduled
               </Badge>
             ) : isRequested ? (
               <Badge
                 variant="secondary"
-                className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200 text-xs gap-1"
+                className="bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border-sky-200 text-xs gap-1 rounded-md"
               >
                 <Clock className="size-3" /> Call Requested
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs rounded-md">
                 Not scheduled
               </Badge>
             )}
@@ -244,7 +244,7 @@ export function PersonalSessionDetailView({
           {session.meetingUrl ? (
             <Button
               render={<a href={session.meetingUrl} target="_blank" rel="noopener noreferrer" />}
-              className="rounded-xl px-5 font-semibold gap-2 shadow-xs w-full sm:w-auto bg-[#1a73e8] hover:bg-[#1557b0] text-white"
+              className="rounded-lg px-5 font-semibold gap-2 shadow-xs w-full sm:w-auto bg-[#1a73e8] hover:bg-[#1557b0] text-white"
             >
               <Video className="size-4" />
               <span>Join Google Meet</span>
@@ -284,7 +284,7 @@ export function PersonalSessionDetailView({
 
       {/* Mentor Controls Panel (if canManage) */}
       {canManage && (
-        <section className="flex flex-col gap-4 rounded-2xl border border-primary/30 bg-primary/5 p-6 ring-1 ring-primary/20">
+        <section className="flex flex-col gap-4 rounded-lg border border-primary/30 bg-primary/5 p-6 ring-1 ring-primary/20">
           <div className="flex items-center justify-between border-b border-primary/20 pb-2">
             <h2 className="font-heading text-sm font-bold uppercase tracking-wider text-primary flex items-center gap-2">
               <Sparkles className="size-4" /> Mentor / Admin Management Controls
@@ -292,8 +292,8 @@ export function PersonalSessionDetailView({
           </div>
 
           {session.status === "requested" && (
-            <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 space-y-3">
-              <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-semibold text-sm">
+            <div className="rounded-lg border border-blue-200 bg-blue-50/70 dark:border-blue-800 dark:bg-blue-950/30 p-4 space-y-3">
+              <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300 font-semibold text-sm">
                 <Clock className="size-4" />
                 <span>Student Requested a 1:1 Call Slot</span>
               </div>
@@ -313,7 +313,7 @@ export function PersonalSessionDetailView({
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <Button
                   size="sm"
-                  className="rounded-xl text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  className="rounded-lg text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
                   onClick={() => {
                     setStatus("scheduled");
                     if (!meetingUrl) {
@@ -389,7 +389,7 @@ export function PersonalSessionDetailView({
       )}
 
       {/* 2. Deliverables & Material Section */}
-      <section className="flex flex-col gap-4 rounded-2xl bg-card p-6 ring-1 ring-foreground/10">
+      <section className="flex flex-col gap-4 rounded-lg bg-card p-6 ring-1 ring-foreground/10">
         <div className="flex items-center justify-between">
           <h2 className="font-heading text-base font-semibold text-foreground flex items-center gap-2">
             <FileText className="size-4 text-primary" /> Deliverables & Documents
@@ -397,7 +397,7 @@ export function PersonalSessionDetailView({
         </div>
 
         {deliverables.length === 0 ? (
-          <p className="text-sm text-muted-foreground italic rounded-xl bg-muted/20 p-4 border border-dashed">
+          <p className="text-sm text-muted-foreground italic rounded-lg bg-muted/20 p-4 border border-dashed">
             No deliverables or documents attached for this session yet.
           </p>
         ) : (
@@ -405,7 +405,7 @@ export function PersonalSessionDetailView({
             {deliverables.map((deliv, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between rounded-xl border bg-muted/20 p-3.5 text-sm transition-colors hover:bg-muted/40"
+                className="flex items-center justify-between rounded-lg border bg-muted/20 p-3.5 text-sm transition-colors hover:bg-muted/40"
               >
                 <div className="flex items-center gap-3">
                   <div className="rounded-lg bg-primary/10 p-2 text-primary">
@@ -422,7 +422,7 @@ export function PersonalSessionDetailView({
                     size="sm"
                     variant="outline"
                     render={<a href={deliv.url} target="_blank" rel="noopener noreferrer" />}
-                    className="gap-1.5 text-xs font-semibold rounded-xl"
+                    className="gap-1.5 text-xs font-semibold rounded-lg"
                   >
                     <span>Open</span>
                     <ExternalLink className="size-3" />
@@ -466,7 +466,7 @@ export function PersonalSessionDetailView({
       </section>
 
       {/* 3. Mentor Written Feedback Section */}
-      <section className="flex flex-col gap-3 rounded-2xl bg-card p-6 ring-1 ring-foreground/10">
+      <section className="flex flex-col gap-3 rounded-lg bg-card p-6 ring-1 ring-foreground/10">
         <h2 className="font-heading text-base font-semibold text-foreground flex items-center gap-2">
           <MessageSquare className="size-4 text-primary" /> Mentor Written Feedback & Takeaways
         </h2>
@@ -487,18 +487,18 @@ export function PersonalSessionDetailView({
             </div>
           </div>
         ) : mentorFeedback ? (
-          <div className="rounded-xl border bg-primary/[0.03] border-primary/20 p-5 text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+          <div className="rounded-lg border bg-primary/[0.03] border-primary/20 p-5 text-sm leading-relaxed text-foreground whitespace-pre-wrap">
             {mentorFeedback}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground italic rounded-xl bg-muted/20 p-4 border border-dashed">
+          <p className="text-sm text-muted-foreground italic rounded-lg bg-muted/20 p-4 border border-dashed">
             Your mentor will publish detailed evaluation and takeaway feedback here after your 1:1 call.
           </p>
         )}
       </section>
 
       {/* 4. Action Items Checklist */}
-      <section className="flex flex-col gap-4 rounded-2xl bg-card p-6 ring-1 ring-foreground/10">
+      <section className="flex flex-col gap-4 rounded-lg bg-card p-6 ring-1 ring-foreground/10">
         <div className="flex items-center justify-between">
           <h2 className="font-heading text-base font-semibold text-foreground flex items-center gap-2">
             <CheckSquare className="size-4 text-primary" /> Action Items & Next Steps
@@ -509,7 +509,7 @@ export function PersonalSessionDetailView({
         </div>
 
         {actionItems.length === 0 ? (
-          <p className="text-sm text-muted-foreground italic rounded-xl bg-muted/20 p-4 border border-dashed">
+          <p className="text-sm text-muted-foreground italic rounded-lg bg-muted/20 p-4 border border-dashed">
             No action items added yet. Add tasks you need to complete before the next session.
           </p>
         ) : (
@@ -518,7 +518,7 @@ export function PersonalSessionDetailView({
               <div
                 key={item.id}
                 className={cn(
-                  "flex items-center justify-between rounded-xl border p-3 text-sm transition-all",
+                  "flex items-center justify-between rounded-lg border p-3 text-sm transition-all",
                   item.completed ? "bg-muted/30 opacity-70" : "bg-card shadow-2xs",
                 )}
               >
@@ -572,7 +572,7 @@ export function PersonalSessionDetailView({
       </section>
 
       {/* 5. Student Personal Notes */}
-      <section className="flex flex-col gap-3 rounded-2xl bg-card p-6 ring-1 ring-foreground/10">
+      <section className="flex flex-col gap-3 rounded-lg bg-card p-6 ring-1 ring-foreground/10">
         <div className="flex items-center justify-between">
           <h2 className="font-heading text-base font-semibold text-foreground flex items-center gap-2">
             <BookOpen className="size-4 text-primary" /> Your Private Takeaway Notes

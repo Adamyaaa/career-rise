@@ -221,9 +221,9 @@ export function InlineBookingCard({
   // Render Confirmed State if scheduled and not rescheduling
   if ((hasMeetingUrl || isScheduled) && !isRescheduling) {
     return (
-      <div className="flex flex-col gap-5 rounded-2xl border border-emerald-500/30 bg-gradient-to-b from-card via-card to-emerald-500/5 p-6 shadow-xs ring-1 ring-emerald-500/20">
+      <div className="flex flex-col gap-5 rounded-lg border border-emerald-500/30 bg-gradient-to-b from-card via-card to-emerald-500/5 p-6 shadow-xs ring-1 ring-emerald-500/20">
         <div className="flex items-center gap-3 border-b border-border/60 pb-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
             <Video className="size-4" />
           </div>
           <div>
@@ -238,7 +238,7 @@ export function InlineBookingCard({
           </Badge>
         </div>
 
-        <div className="space-y-3 rounded-xl bg-muted/40 p-4 border border-border/60 text-xs">
+        <div className="space-y-3 rounded-lg bg-muted/40 p-4 border border-border/60 text-xs">
           <div>
             <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Confirmed Time
@@ -273,7 +273,7 @@ export function InlineBookingCard({
           {session.meetingUrl && (
             <Button
               render={<a href={session.meetingUrl} target="_blank" rel="noopener noreferrer" />}
-              className="w-full rounded-xl py-2.5 font-semibold gap-2 shadow-xs bg-[#1a73e8] hover:bg-[#1557b0] text-white"
+              className="w-full rounded-lg py-2.5 font-semibold gap-2 shadow-xs bg-[#1a73e8] hover:bg-[#1557b0] text-white"
             >
               <Video className="size-4" />
               <span>Join Google Meet</span>
@@ -286,7 +286,7 @@ export function InlineBookingCard({
               variant="outline"
               size="sm"
               onClick={() => setIsRescheduling(true)}
-              className="w-full rounded-xl text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+              className="w-full rounded-lg text-xs gap-1.5 text-muted-foreground hover:text-foreground"
             >
               <RotateCcw className="size-3" />
               <span>Reschedule Session</span>
@@ -299,11 +299,11 @@ export function InlineBookingCard({
 
   // Render Booking / Rescheduling View (matching Image 2)
   return (
-    <div className="flex flex-col gap-5 rounded-2xl border border-border/70 bg-card p-6 shadow-xs ring-1 ring-foreground/5">
+    <div className="flex flex-col gap-5 rounded-lg border border-border/70 bg-card p-6 shadow-xs ring-1 ring-foreground/5">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border/60 pb-3">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
             <CalendarIcon className="size-4 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
@@ -433,7 +433,7 @@ export function InlineBookingCard({
                 type="button"
                 onClick={() => setSelectedSlot(slot)}
                 className={cn(
-                  "rounded-xl border py-2 text-xs font-medium transition-all text-center",
+                  "rounded-lg border py-2 text-xs font-medium transition-all text-center",
                   active
                     ? "border-blue-600 bg-blue-600 text-white shadow-xs font-semibold"
                     : "border-border/80 bg-background text-foreground hover:bg-muted/50",
@@ -463,11 +463,11 @@ export function InlineBookingCard({
 
       {/* Status banner if already requested */}
       {isRequested && (
-        <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-2.5 text-xs text-amber-700 dark:text-amber-300">
-          <p className="font-semibold flex items-center gap-1">
-            <Sparkles className="size-3.5" /> Request Pending Mentor Acceptance
+        <div className="rounded-lg bg-blue-50/80 border border-blue-200/90 p-3 text-xs text-blue-950 dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-200">
+          <p className="font-semibold flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
+            <Clock className="size-3.5" /> Request Pending Mentor Acceptance
           </p>
-          <p className="text-[11px] opacity-90 mt-0.5">
+          <p className="text-[11px] text-blue-800/80 dark:text-blue-300/80 mt-1">
             You can change your selected slot above and click Confirm session below to update it.
           </p>
         </div>
@@ -491,7 +491,7 @@ export function InlineBookingCard({
       <Button
         onClick={handleConfirm}
         disabled={confirmMutation.isPending || !selectedDate || !selectedSlot}
-        className="w-full rounded-xl py-2.5 font-semibold shadow-xs bg-blue-600 hover:bg-blue-700 text-white"
+        className="w-full rounded-lg py-2.5 font-semibold shadow-xs bg-blue-600 hover:bg-blue-700 text-white"
       >
         {confirmMutation.isPending ? (
           <>
