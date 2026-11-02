@@ -18,7 +18,7 @@ export function LoginForm() {
   const router = useRouter();
   const setSession = useAuthStore((s) => s.setSession);
 
-  const [method, setMethod] = useState<"otp" | "password">("otp");
+  const [method, setMethod] = useState<"otp" | "password">("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
@@ -149,16 +149,6 @@ export function LoginForm() {
           <div className="mb-6 grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
             <button
               type="button"
-              onClick={() => { setMethod("otp"); setErrors({}); }}
-              className={`flex items-center justify-center gap-1.5 rounded-md py-1.5 text-sm font-medium transition-all ${
-                method === "otp" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <KeyRound className="size-4" />
-              OTP Code
-            </button>
-            <button
-              type="button"
               onClick={() => { setMethod("password"); setErrors({}); }}
               className={`flex items-center justify-center gap-1.5 rounded-md py-1.5 text-sm font-medium transition-all ${
                 method === "password" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
@@ -166,6 +156,16 @@ export function LoginForm() {
             >
               <Mail className="size-4" />
               Password
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMethod("otp"); setErrors({}); }}
+              className={`flex items-center justify-center gap-1.5 rounded-md py-1.5 text-sm font-medium transition-all ${
+                method === "otp" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <KeyRound className="size-4" />
+              OTP Code
             </button>
           </div>
         )}
@@ -240,10 +240,15 @@ export function LoginForm() {
               {loading && <Loader2 className="size-4 animate-spin mr-2" />}
               Send verification code
             </Button>
-          ) : (
+          ) : method === "otp" && otpSent ? (
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="size-4 animate-spin mr-2" />}
               Verify & Log in
+            </Button>
+          ) : (
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading && <Loader2 className="size-4 animate-spin mr-2" />}
+              Log in
             </Button>
           )}
 
