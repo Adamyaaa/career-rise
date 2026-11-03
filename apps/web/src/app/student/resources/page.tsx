@@ -233,10 +233,10 @@ export default function StudentResourcesPage() {
                     activeCategory.colorScheme.badge,
                   )}
                 >
-                  {activeCategory.numberPrefix} · {activeCategory.label}
+                  {activeCategory.label}
                 </Badge>
                 <span className="text-xs text-muted-foreground hidden md:inline">
-                  {activeCategory.folderName}
+                  Handwritten Notes & Diagrams
                 </span>
               </div>
             </div>
@@ -301,7 +301,7 @@ export default function StudentResourcesPage() {
               <div className="flex items-center justify-between px-2">
                 <span className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <FolderTree className="size-4 text-primary" />
-                  <span>Google Drive Folder: {activeCategory.folderName}</span>
+                  <span>Google Drive Folder: {activeCategory.label}</span>
                 </span>
               </div>
               <div className="h-[75vh] w-full rounded-xl overflow-hidden border border-border/60 bg-background">
@@ -509,10 +509,6 @@ export default function StudentResourcesPage() {
                       <span className="inline-flex items-center rounded-full bg-background/85 px-2.5 py-1 text-[11px] font-semibold text-foreground backdrop-blur-md shadow-2xs">
                         {meta.tag}
                       </span>
-
-                      <span className="inline-flex items-center rounded-full bg-primary/90 px-2.5 py-1 text-[11px] font-bold text-primary-foreground tracking-wider uppercase backdrop-blur-md shadow-2xs">
-                        Folder {category.numberPrefix}
-                      </span>
                     </div>
 
                     {/* Center Aesthetic Topic Icon */}
@@ -539,7 +535,7 @@ export default function StudentResourcesPage() {
                         className="cursor-pointer"
                       >
                         <h3 className="font-heading text-lg sm:text-xl font-bold tracking-tight text-foreground line-clamp-1 group-hover:text-primary transition-colors">
-                          {category.numberPrefix}. {category.label}
+                          {category.label}
                         </h3>
                       </div>
 
@@ -547,9 +543,9 @@ export default function StudentResourcesPage() {
                         {category.description}
                       </p>
 
-                      <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground font-mono">
+                      <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
                         <FolderOpen className="size-3 text-primary/80" />
-                        <span className="truncate">{category.folderName}</span>
+                        <span className="truncate">Handwritten notes & diagrams</span>
                       </div>
                     </div>
 
