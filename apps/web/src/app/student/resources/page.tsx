@@ -88,28 +88,10 @@ export default function StudentResourcesPage() {
       <PageHeading
         title="Technical Notes & Resources"
         description="Comprehensive handwritten notes, core CS blueprints, and interview guides organized by topic folder."
-        action={
-          <a
-            href={ROOT_DRIVE_FOLDER_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex"
-          >
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 text-xs rounded-xl h-9 hover:border-primary/40 hover:text-primary transition-colors cursor-pointer"
-            >
-              <FolderTree className="size-4 text-primary" />
-              <span>Open Google Drive Folder</span>
-              <ExternalLink className="size-3 text-muted-foreground" />
-            </Button>
-          </a>
-        }
       />
 
       {/* 2. Search & Folder Filter Bar */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3.5">
         {/* Search input */}
         <div className="relative max-w-lg">
           <Search className="absolute left-3.5 top-3 size-4 text-muted-foreground" />
@@ -129,19 +111,29 @@ export default function StudentResourcesPage() {
           )}
         </div>
 
-        {/* Folder Navigation Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 no-scrollbar text-xs">
+        {/* Folder Navigation Tabs (Wrapping into multi-row so all are visible) */}
+        <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
           <button
             onClick={() => setSelectedFolderId("all")}
             className={cn(
-              "rounded-xl px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5",
+              "rounded-xl px-3 py-1.5 text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5",
               selectedFolderId === "all"
                 ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                 : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
             <FolderOpen className="size-3.5" />
-            <span>All Folders ({totalFilesCount})</span>
+            <span>All Folders</span>
+            <span
+              className={cn(
+                "text-[10px] px-1.5 py-0.2 rounded-full font-mono",
+                selectedFolderId === "all"
+                  ? "bg-primary-foreground/20 text-primary-foreground"
+                  : "bg-background text-muted-foreground",
+              )}
+            >
+              {totalFilesCount}
+            </span>
           </button>
 
           {RESOURCE_CATEGORIES.map((cat) => {
@@ -154,7 +146,7 @@ export default function StudentResourcesPage() {
                 key={cat.id}
                 onClick={() => setSelectedFolderId(cat.id)}
                 className={cn(
-                  "rounded-xl px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5",
+                  "rounded-xl px-3 py-1.5 text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5",
                   isSelected
                     ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                     : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -164,10 +156,10 @@ export default function StudentResourcesPage() {
                 <span>{cat.label}</span>
                 <span
                   className={cn(
-                    "text-[10px] px-1.5 py-0.2 rounded-full",
+                    "text-[10px] px-1.5 py-0.2 rounded-full font-mono",
                     isSelected
                       ? "bg-primary-foreground/20 text-primary-foreground"
-                      : "bg-background text-muted-foreground font-mono",
+                      : "bg-background text-muted-foreground",
                   )}
                 >
                   {count}
