@@ -27,4 +27,5 @@ export const adminNav: NavItem[] = [
   { label: "Cohorts", href: "/admin/cohorts", icon: Layers },
   { label: "Cohort Requests", href: "/admin/requests", icon: UserCheck },
   { label: "Mentorship", href: "/admin/mentorship", icon: Users },
+  { label: "Resources", href: "/admin/resources", icon: FolderOpen },
 ];
