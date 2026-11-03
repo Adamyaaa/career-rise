@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { LearnTrack, LearnModule, LearnLesson } from "../data/learn-curriculum";
 import { LearnCompletionBar } from "./learn-completion-bar";
-import { useResourcesStore } from "@/features/resources";
 
 function slugify(text: string): string {
   return text
@@ -31,7 +31,6 @@ export function LearnReader({
   isCompleted,
   onToggleComplete,
 }: LearnReaderProps) {
-  const { open: openResources } = useResourcesStore();
   const moduleIndex = track.modules.findIndex((m) => m.id === module.id);
   const lessonIndex = module.lessons.findIndex((l) => l.id === lesson.id);
   const totalInModule = module.lessons.length;
@@ -70,15 +69,16 @@ export function LearnReader({
             <span className="tabular-nums">{lesson.readTime} read</span>
           </div>
 
-          <Button
-            variant="outline"
-            size="xs"
-            onClick={() => openResources()}
-            className="gap-1.5 text-xs text-primary border-primary/25 hover:bg-primary/5 cursor-pointer rounded-lg h-7 font-medium shadow-2xs"
-          >
-            <FolderOpen className="size-3.5" />
-            <span>Handwritten Notes</span>
-          </Button>
+          <Link href="/student/resources">
+            <Button
+              variant="outline"
+              size="xs"
+              className="gap-1.5 text-xs text-primary border-primary/25 hover:bg-primary/5 cursor-pointer rounded-lg h-7 font-medium shadow-2xs"
+            >
+              <FolderOpen className="size-3.5" />
+              <span>Handwritten Notes</span>
+            </Button>
+          </Link>
         </div>
       </div>
 
