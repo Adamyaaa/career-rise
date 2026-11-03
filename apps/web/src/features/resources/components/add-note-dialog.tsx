@@ -32,11 +32,10 @@ export function AddNoteDialog({ onAddNote, defaultCategoryId }: AddNoteDialogPro
   const [categoryId, setCategoryId] = useState<ResourceCategoryId>(
     (defaultCategoryId && defaultCategoryId !== "all"
       ? defaultCategoryId
-      : "03-genai") as ResourceCategoryId,
+      : "genai") as ResourceCategoryId,
   );
   const [description, setDescription] = useState("");
   const [tagsInput, setTagsInput] = useState("");
-  const [pageCount, setPageCount] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,11 +56,10 @@ export function AddNoteDialog({ onAddNote, defaultCategoryId }: AddNoteDialogPro
       title: title.trim(),
       categoryId,
       driveFileId: driveInfo.id,
+      driveUrl: driveInfo.directUrl,
       description: description.trim() || "Handwritten notes document.",
       tags: tags.length > 0 ? tags : ["Notes", "Technical"],
       isHandwritten: true,
-      pageCount: pageCount.trim() ? `${pageCount.trim()} pages` : undefined,
-      relevance: "cohort_and_interviews",
     });
 
     toast.success("Note added successfully to Resources!");
@@ -72,7 +70,6 @@ export function AddNoteDialog({ onAddNote, defaultCategoryId }: AddNoteDialogPro
     setDriveUrl("");
     setDescription("");
     setTagsInput("");
-    setPageCount("");
   };
 
   return (
@@ -94,7 +91,7 @@ export function AddNoteDialog({ onAddNote, defaultCategoryId }: AddNoteDialogPro
             <span>Add Google Drive Note Link</span>
           </DialogTitle>
           <p className="text-xs text-muted-foreground">
-            Paste any Google Drive file or folder link. It will be embedded directly without cloud storage costs.
+            Paste any Google Drive file link.
           </p>
         </DialogHeader>
 
@@ -103,7 +100,7 @@ export function AddNoteDialog({ onAddNote, defaultCategoryId }: AddNoteDialogPro
             <Input
               id="noteTitle"
               required
-              placeholder="e.g. KV Cache & Multi-Query Attention Notes"
+              placeholder="e.g. LangChain & RAG Notes"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="text-xs"
@@ -133,33 +130,21 @@ export function AddNoteDialog({ onAddNote, defaultCategoryId }: AddNoteDialogPro
             >
               {RESOURCE_CATEGORIES.map((cat) => (
                 <option key={cat.id} value={cat.id} className="bg-popover text-popover-foreground">
-                  {cat.numberPrefix} · {cat.label} ({cat.folderName})
+                  {cat.label}
                 </option>
               ))}
             </select>
           </FormField>
 
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="Tags (comma-separated)" htmlFor="noteTags">
-              <Input
-                id="noteTags"
-                placeholder="LLM, Attention, Math"
-                value={tagsInput}
-                onChange={(e) => setTagsInput(e.target.value)}
-                className="text-xs"
-              />
-            </FormField>
-
-            <FormField label="Est. Pages" htmlFor="notePages">
-              <Input
-                id="notePages"
-                placeholder="e.g. 14"
-                value={pageCount}
-                onChange={(e) => setPageCount(e.target.value)}
-                className="text-xs"
-              />
-            </FormField>
-          </div>
+          <FormField label="Tags (comma-separated)" htmlFor="noteTags">
+            <Input
+              id="noteTags"
+              placeholder="LLM, Attention, Math"
+              value={tagsInput}
+              onChange={(e) => setTagsInput(e.target.value)}
+              className="text-xs"
+            />
+          </FormField>
 
           <FormField label="Description / Summary (Optional)" htmlFor="noteDesc">
             <Textarea

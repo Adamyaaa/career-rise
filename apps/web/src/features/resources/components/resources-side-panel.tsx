@@ -72,8 +72,8 @@ export function ResourcesSidePanel() {
   }, [activeCategoryId]);
 
   const currentFolderUrl = currentCategoryObj?.driveFolderUrl || ROOT_DRIVE_FOLDER_URL;
-  const currentFolderId = currentCategoryObj?.driveFolderId || ROOT_DRIVE_FOLDER_ID;
-  const currentFolderName = currentCategoryObj?.folderName || "Hand Written Technical Notes";
+  const currentFolderId = ROOT_DRIVE_FOLDER_ID;
+  const currentFolderName = currentCategoryObj?.label || "Hand Written Technical Notes";
 
   // Filter notes based on active category and search query
   const filteredNotes = useMemo(() => {
@@ -290,7 +290,6 @@ export function ResourcesSidePanel() {
                               : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground",
                           )}
                         >
-                          <span>{cat.numberPrefix}.</span>
                           <span>{cat.label}</span>
                           <span
                             className={cn(
@@ -345,7 +344,7 @@ export function ResourcesSidePanel() {
                                       cat.colorScheme.badge,
                                     )}
                                   >
-                                    {cat.numberPrefix} · {cat.label}
+                                    {cat.label}
                                   </Badge>
                                 )}
 

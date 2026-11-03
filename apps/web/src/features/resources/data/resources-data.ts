@@ -1,15 +1,15 @@
-import type { ResourceCategory, ResourceNote, ResourceCategoryId } from "../types/resource.types";
+import type { ResourceCategory, ResourceNote } from "../types/resource.types";
 
 export const ROOT_DRIVE_FOLDER_ID = "1TeP9ugXJ8Qc5YkFhevhnByGimLsmTFhP";
 export const ROOT_DRIVE_FOLDER_URL = `https://drive.google.com/drive/folders/${ROOT_DRIVE_FOLDER_ID}`;
 
 export const RESOURCE_CATEGORIES: ResourceCategory[] = [
   {
-    id: "01-programming",
-    numberPrefix: "01",
-    label: "Programming & Core CS",
-    folderName: "01-Programming-and-DSA",
-    description: "Data Structures, Algorithms, Python internals, OOP & CS Fundamentals for coding rounds.",
+    id: "programming-data",
+    label: "Programming & Data Science",
+    description: "Core programming, data structures, relational databases, git workflows & data science fundamentals.",
+    iconName: "Code2",
+    folderName: "Programming & Data Science",
     colorScheme: {
       bg: "bg-blue-500/10 text-blue-500",
       text: "text-blue-500",
@@ -18,11 +18,11 @@ export const RESOURCE_CATEGORIES: ResourceCategory[] = [
     },
   },
   {
-    id: "02-ai-ml",
-    numberPrefix: "02",
-    label: "AI & Machine Learning",
-    folderName: "02-AI-and-Machine-Learning",
-    description: "Core ML algorithms, loss functions, optimization, gradient descent & statistical foundations.",
+    id: "ai-ml",
+    label: "AI & Machine Learning Foundations",
+    description: "Artificial intelligence principles, deep neural networks, mathematical loss functions & NLP basics.",
+    iconName: "Cpu",
+    folderName: "AI & Machine Learning",
     colorScheme: {
       bg: "bg-emerald-500/10 text-emerald-500",
       text: "text-emerald-500",
@@ -31,11 +31,11 @@ export const RESOURCE_CATEGORIES: ResourceCategory[] = [
     },
   },
   {
-    id: "03-genai",
-    numberPrefix: "03",
-    label: "Generative AI",
-    folderName: "03-Generative-AI",
-    description: "Transformers, Self-Attention, Tokenization, LLMs, LoRA fine-tuning, embeddings & RAG architecture.",
+    id: "genai",
+    label: "Generative AI & LLMs",
+    description: "Large Language Models, LangChain orchestration, RAG pipelines, Vector Databases & MCP protocols.",
+    iconName: "Sparkles",
+    folderName: "Generative AI",
     colorScheme: {
       bg: "bg-purple-500/10 text-purple-500",
       text: "text-purple-500",
@@ -44,11 +44,11 @@ export const RESOURCE_CATEGORIES: ResourceCategory[] = [
     },
   },
   {
-    id: "04-agents",
-    numberPrefix: "04",
-    label: "AI Agents & Workflows",
-    folderName: "04-AI-Agents-and-Workflows",
-    description: "ReAct patterns, planning, tool usage, multi-agent orchestrations, memory systems & MCP protocols.",
+    id: "agents",
+    label: "AI Agents & Agentic Workflows",
+    description: "Autonomous agent architectures, ReAct reasoning patterns, tool execution & multi-agent systems.",
+    iconName: "Zap",
+    folderName: "AI Agents",
     colorScheme: {
       bg: "bg-amber-500/10 text-amber-500",
       text: "text-amber-500",
@@ -57,11 +57,11 @@ export const RESOURCE_CATEGORIES: ResourceCategory[] = [
     },
   },
   {
-    id: "05-system-design",
-    numberPrefix: "05",
-    label: "AI System Design",
-    folderName: "05-AI-System-Design",
-    description: "vLLM, KV caching, model serving, vector DB indexing, latency vs throughput trade-offs & scale.",
+    id: "system-design",
+    label: "System Design & Architecture",
+    description: "High-level distributed system design, caching layers, microservices, throughput & latency scaling.",
+    iconName: "Server",
+    folderName: "System Design",
     colorScheme: {
       bg: "bg-rose-500/10 text-rose-500",
       text: "text-rose-500",
@@ -70,11 +70,11 @@ export const RESOURCE_CATEGORIES: ResourceCategory[] = [
     },
   },
   {
-    id: "06-interview",
-    numberPrefix: "06",
-    label: "Interview Prep & Cheatsheets",
-    folderName: "06-Interview-Preparation",
-    description: "High-yield interview question frameworks, formula sheets, trade-off comparisons & interview blueprints.",
+    id: "interview",
+    label: "Interview Preparation & Practice",
+    description: "Agentic AI engineer interview questions, system design walkthroughs & technical hiring cheat sheets.",
+    iconName: "GraduationCap",
+    folderName: "Interview Preparation",
     colorScheme: {
       bg: "bg-indigo-500/10 text-indigo-500",
       text: "text-indigo-500",
@@ -84,103 +84,222 @@ export const RESOURCE_CATEGORIES: ResourceCategory[] = [
   },
 ];
 
-// Initial starter catalog of notes mapping to your Google Drive folders.
-// You can replace these with your actual Drive File IDs or add custom notes through the UI.
-export const DEFAULT_TECHNICAL_NOTES: ResourceNote[] = [
+export const TECHNICAL_NOTES: ResourceNote[] = [
+  // 1. Programming & Data Science
   {
-    id: "prog-core-dsa",
-    title: "Data Structures & Algorithmic Patterns Cheat Sheet",
-    categoryId: "01-programming",
-    driveFileId: "1TeP9ugXJ8Qc5YkFhevhnByGimLsmTFhP",
-    description: "Handwritten diagrams of sliding window, two pointers, graphs, dynamic programming tables, and complexity matrix.",
-    tags: ["DSA", "Pointers", "Complexity", "Algorithms"],
+    id: "python-basics",
+    title: "Python Programming Fundamentals",
+    categoryId: "programming-data",
+    driveFileId: "17prW-gXyoWNOYalSvzE1EmvWBFztRPMp",
+    driveUrl: "https://drive.google.com/file/d/17prW-gXyoWNOYalSvzE1EmvWBFztRPMp/view?usp=drive_link",
+    description: "Core syntax, data types, control flow, functions, OOP concepts, generators, and Pythonic best practices.",
+    tags: ["Python", "Syntax", "OOP", "Basics"],
     isHandwritten: true,
-    pageCount: "12 pages",
-    relevance: "core_fundamentals",
   },
   {
-    id: "prog-python-internals",
-    title: "Python Internals & Concurrency Essentials",
-    categoryId: "01-programming",
-    driveFileId: "1TeP9ugXJ8Qc5YkFhevhnByGimLsmTFhP",
-    description: "Deep dive into GIL, memory management, garbage collection, async/await event loop, and generators.",
-    tags: ["Python", "Concurrency", "GIL", "Memory"],
+    id: "dsa",
+    title: "Data Structures & Algorithms (DSA)",
+    categoryId: "programming-data",
+    driveFileId: "1PjI3ca_fj4ONiH80EpHMLjLc7QKvbsSu",
+    driveUrl: "https://drive.google.com/file/d/1PjI3ca_fj4ONiH80EpHMLjLc7QKvbsSu/view?usp=drive_link",
+    description: "Arrays, linked lists, trees, graphs, sorting, two pointers, sliding window, and dynamic programming.",
+    tags: ["DSA", "Algorithms", "Data Structures", "Coding"],
     isHandwritten: true,
-    pageCount: "8 pages",
-    relevance: "cohort_and_interviews",
   },
   {
-    id: "ai-math-optimization",
-    title: "Machine Learning Math & Optimization Blueprints",
-    categoryId: "02-ai-ml",
-    driveFileId: "1TeP9ugXJ8Qc5YkFhevhnByGimLsmTFhP",
-    description: "Handwritten step-by-step calculus, matrix derivatives, cross-entropy loss, Adam optimizer, and backpropagation derivations.",
-    tags: ["Backprop", "Calculus", "Loss Functions", "Optimizers"],
+    id: "data-science",
+    title: "Data Science & Analytics Foundations",
+    categoryId: "programming-data",
+    driveFileId: "1ulWAIFwz5LrRuoTrM9IbFOVJ_vNKBFmE",
+    driveUrl: "https://drive.google.com/file/d/1ulWAIFwz5LrRuoTrM9IbFOVJ_vNKBFmE/view?usp=drive_link",
+    description: "Exploratory data analysis, statistical methods, hypothesis testing, NumPy, and Pandas manipulation.",
+    tags: ["Data Science", "Pandas", "NumPy", "Statistics"],
     isHandwritten: true,
-    pageCount: "15 pages",
-    relevance: "cohort_and_interviews",
   },
   {
-    id: "genai-transformer-arch",
-    title: "Transformer Architecture & Attention Mechanisms",
-    categoryId: "03-genai",
-    driveFileId: "1TeP9ugXJ8Qc5YkFhevhnByGimLsmTFhP",
-    description: "Visual breakdown of Scaled Dot-Product Attention, Multi-Head Attention, RoPE positional encoding, and encoder-decoder stacks.",
-    tags: ["Transformers", "Attention", "LLMs", "RoPE"],
+    id: "mysql",
+    title: "MySQL & Relational Database Design",
+    categoryId: "programming-data",
+    driveFileId: "1yiQrK9_QsDhu7mEEu12DIm4sN2tR0sn9",
+    driveUrl: "https://drive.google.com/file/d/1yiQrK9_QsDhu7mEEu12DIm4sN2tR0sn9/view?usp=drive_link",
+    description: "SQL queries, relational schema design, primary/foreign keys, joins, indexing, and normalization rules.",
+    tags: ["SQL", "MySQL", "Databases", "Schema"],
     isHandwritten: true,
-    pageCount: "18 pages",
-    relevance: "cohort_and_interviews",
   },
   {
-    id: "genai-rag-blueprints",
-    title: "Production RAG Architecture & Vector Indexing",
-    categoryId: "03-genai",
-    driveFileId: "1TeP9ugXJ8Qc5YkFhevhnByGimLsmTFhP",
-    description: "Handwritten architecture diagrams: Chunking strategies, hybrid search (dense + sparse), reranking, and hallucination reduction.",
-    tags: ["RAG", "Vector Search", "Chunking", "Embeddings"],
+    id: "git",
+    title: "Git & Version Control Essentials",
+    categoryId: "programming-data",
+    driveFileId: "1US23299hWzm8zFrkiIctV_detLx6ZZVE",
+    driveUrl: "https://drive.google.com/file/d/1US23299hWzm8zFrkiIctV_detLx6ZZVE/view?usp=drive_link",
+    description: "Commit graphs, branching workflows, merging, rebasing, stash, conflict resolution, and remote collaboration.",
+    tags: ["Git", "GitHub", "Version Control", "CLI"],
     isHandwritten: true,
-    pageCount: "10 pages",
-    relevance: "cohort_and_interviews",
+  },
+
+  // 2. AI & Machine Learning Foundations
+  {
+    id: "artificial-intelligence",
+    title: "Artificial Intelligence (AI) Principles",
+    categoryId: "ai-ml",
+    driveFileId: "18ntVX9nM8Xo1YTYK_lqjPDVMSS2v8rJj",
+    driveUrl: "https://drive.google.com/file/d/18ntVX9nM8Xo1YTYK_lqjPDVMSS2v8rJj/view?usp=drive_link",
+    description: "Heuristic search, state spaces, constraint satisfaction, decision theory, and foundation AI paradigms.",
+    tags: ["AI", "Heuristics", "Search", "Foundations"],
+    isHandwritten: true,
   },
   {
-    id: "agent-react-framework",
-    title: "AI Agent Design Patterns & Memory Architectures",
-    categoryId: "04-agents",
-    driveFileId: "1TeP9ugXJ8Qc5YkFhevhnByGimLsmTFhP",
-    description: "Step-by-step illustrations of ReAct loop, tool-calling contracts, scratchpad memory, and multi-agent consensus protocols.",
-    tags: ["Agents", "ReAct", "Tool Use", "Workflows"],
+    id: "deep-learning",
+    title: "Deep Learning & Neural Networks",
+    categoryId: "ai-ml",
+    driveFileId: "1DvqoGaGLxz_kfrIJ4iPyWWYaSZnnCnEv",
+    driveUrl: "https://drive.google.com/file/d/1DvqoGaGLxz_kfrIJ4iPyWWYaSZnnCnEv/view?usp=drive_link",
+    description: "Perceptrons, multi-layer networks, backpropagation calculus, activation functions, loss curves, and optimization.",
+    tags: ["Deep Learning", "Neural Networks", "Backprop", "PyTorch"],
     isHandwritten: true,
-    pageCount: "14 pages",
-    relevance: "cohort_and_interviews",
   },
   {
-    id: "system-design-inference-serving",
-    title: "High-Throughput LLM Serving & KV Cache Optimization",
-    categoryId: "05-system-design",
-    driveFileId: "1TeP9ugXJ8Qc5YkFhevhnByGimLsmTFhP",
-    description: "Calculations and memory breakdowns for PagedAttention (vLLM), continuous batching, tensor parallelism, and TTFT vs ITL metrics.",
-    tags: ["System Design", "vLLM", "KV Cache", "Latency"],
+    id: "generative-ai-foundations",
+    title: "Foundations of Generative AI",
+    categoryId: "ai-ml",
+    driveFileId: "15jOyIdZTarKHJUQPXpB2g5U_0MXIuKOe",
+    driveUrl: "https://drive.google.com/file/d/15jOyIdZTarKHJUQPXpB2g5U_0MXIuKOe/view?usp=drive_link",
+    description: "Generative modeling principles, latent spaces, autoencoders, GANs, and generative representations.",
+    tags: ["GenAI", "Latent Space", "Generative Models"],
     isHandwritten: true,
-    pageCount: "16 pages",
-    relevance: "interviews_only",
   },
   {
-    id: "interview-genai-frameworks",
-    title: "GenAI & Applied ML Technical Interview Playbook",
-    categoryId: "06-interview",
-    driveFileId: "1TeP9ugXJ8Qc5YkFhevhnByGimLsmTFhP",
-    description: "High-yield interview cheat sheets: 50 most asked ML/GenAI questions, system design interview templates, and coding round checklists.",
-    tags: ["Interviews", "Cheatsheet", "Question Bank", "Placement"],
+    id: "nlp",
+    title: "Natural Language Processing (NLP)",
+    categoryId: "ai-ml",
+    driveFileId: "1yuYUnDH9fvt_9cctnR7rvfX98ltNNuJW",
+    driveUrl: "https://drive.google.com/file/d/1yuYUnDH9fvt_9cctnR7rvfX98ltNNuJW/view?usp=drive_link",
+    description: "Tokenization, text preprocessing, Bag-of-Words, TF-IDF, Word2Vec embeddings, and language modeling.",
+    tags: ["NLP", "Tokenization", "Embeddings", "Text"],
     isHandwritten: true,
-    pageCount: "22 pages",
-    relevance: "interviews_only",
+  },
+  {
+    id: "transformers",
+    title: "Transformer Architecture & Self-Attention",
+    categoryId: "ai-ml",
+    driveFileId: "12kRa064jYKx8tLSo_XH2zU_WaXNLgrDL",
+    driveUrl: "https://drive.google.com/file/d/12kRa064jYKx8tLSo_XH2zU_WaXNLgrDL/view?usp=drive_link",
+    description: "Scaled Dot-Product Attention, Multi-Head Attention, query-key-value vectors, positional encodings, and layers.",
+    tags: ["Transformers", "Attention", "Encoders", "Decoders"],
+    isHandwritten: true,
+  },
+
+  // 3. Generative AI & LLMs
+  {
+    id: "llms",
+    title: "Large Language Models (LLMs) Core Concepts",
+    categoryId: "genai",
+    driveFileId: "1yjRSWKotvy_BnIIYRU7AE0jPBvBm2OTo",
+    driveUrl: "https://drive.google.com/file/d/1yjRSWKotvy_BnIIYRU7AE0jPBvBm2OTo/view?usp=drive_link",
+    description: "Pre-training objectives, autoregressive generation, temperature/top-p decoding, fine-tuning, and alignment.",
+    tags: ["LLMs", "Pretraining", "Decoding", "Fine-Tuning"],
+    isHandwritten: true,
+  },
+  {
+    id: "langchain",
+    title: "LangChain Framework & Orchestration",
+    categoryId: "genai",
+    driveFileId: "1j4joKfLMBIyJ4PHde_AUKY-Eo_SevLOy",
+    driveUrl: "https://drive.google.com/file/d/1j4joKfLMBIyJ4PHde_AUKY-Eo_SevLOy/view?usp=drive_link",
+    description: "Prompt templates, LLM chains, output parsers, memory components, agents, and external tool bindings.",
+    tags: ["LangChain", "Chains", "Prompting", "Framework"],
+    isHandwritten: true,
+  },
+  {
+    id: "rag",
+    title: "Retrieval-Augmented Generation (RAG) Architecture",
+    categoryId: "genai",
+    driveFileId: "1-unuj3xPYcAdlDg4MYDJ350LDwV2NJGZ",
+    driveUrl: "https://drive.google.com/file/d/1-unuj3xPYcAdlDg4MYDJ350LDwV2NJGZ/view?usp=drive_link",
+    description: "Document ingestion, chunking strategies, semantic retrieval, context window management, and reranking.",
+    tags: ["RAG", "Chunking", "Retrieval", "Context"],
+    isHandwritten: true,
+  },
+  {
+    id: "rag-vector-db",
+    title: "RAG & Vector Database Engineering",
+    categoryId: "genai",
+    driveFileId: "1OGXetXga6i-PvdR0TIefrKFWbP4iVPfN",
+    driveUrl: "https://drive.google.com/file/d/1OGXetXga6i-PvdR0TIefrKFWbP4iVPfN/view?usp=drive_link",
+    description: "Vector embeddings, cosine similarity, HNSW indexing, inverted indexes, hybrid search, and vector stores.",
+    tags: ["Vector DB", "Embeddings", "HNSW", "Search"],
+    isHandwritten: true,
+  },
+  {
+    id: "mcp",
+    title: "Model Context Protocol (MCP)",
+    categoryId: "genai",
+    driveFileId: "1m1vAj6KwKP4-iE5al-gt_0hxr3Z06Noe",
+    driveUrl: "https://drive.google.com/file/d/1m1vAj6KwKP4-iE5al-gt_0hxr3Z06Noe/view?usp=drive_link",
+    description: "Anthropic Model Context Protocol specification: server-client tools, resource exposure, and dynamic context.",
+    tags: ["MCP", "Context Protocol", "Tools", "Integration"],
+    isHandwritten: true,
+  },
+  {
+    id: "ml-foundations-genai",
+    title: "Machine Learning Foundations for GenAI",
+    categoryId: "genai",
+    driveFileId: "1M8WDPsaaJc2nfEvUkEKYgGCmPMUXyN0i",
+    driveUrl: "https://drive.google.com/file/d/1M8WDPsaaJc2nfEvUkEKYgGCmPMUXyN0i/view?usp=drive_link",
+    description: "Core ML concepts underpinning generative models: probability distributions, loss formulations, and gradient updates.",
+    tags: ["ML", "Probability", "Distributions", "Foundations"],
+    isHandwritten: true,
+  },
+
+  // 4. AI Agents & Agentic Workflows
+  {
+    id: "ai-agents",
+    title: "Autonomous AI Agents & Agentic Workflows",
+    categoryId: "agents",
+    driveFileId: "1F__VmYpFohiCCNqRpgdjg7PmnWGn6Hyb",
+    driveUrl: "https://drive.google.com/file/d/1F__VmYpFohiCCNqRpgdjg7PmnWGn6Hyb/view?usp=drive_link",
+    description: "ReAct reasoning loops, autonomous planning, scratchpad memories, tool selection, reflection, and multi-agent coordination.",
+    tags: ["AI Agents", "ReAct", "Planning", "Tool Calling"],
+    isHandwritten: true,
+  },
+
+  // 5. System Design & Architecture
+  {
+    id: "system-design",
+    title: "High-Level System Design & Scalability",
+    categoryId: "system-design",
+    driveFileId: "1hnCJA1sbqzpKZmg2BGNAX6Pq3u_nOPgm",
+    driveUrl: "https://drive.google.com/file/d/1hnCJA1sbqzpKZmg2BGNAX6Pq3u_nOPgm/view?usp=drive_link",
+    description: "Distributed architectures, microservices, load balancers, caching (Redis), CDNs, database sharding, and fault tolerance.",
+    tags: ["System Design", "Scalability", "Microservices", "Caching"],
+    isHandwritten: true,
+  },
+
+  // 6. Interview Preparation & Practice
+  {
+    id: "agentic-ai-interview-p1",
+    title: "Agentic AI Engineer Interview Guide (Part 1)",
+    categoryId: "interview",
+    driveFileId: "1M1lUQibvrll_f2rA9XGgUDP0EvlRNxHn",
+    driveUrl: "https://drive.google.com/file/d/1M1lUQibvrll_f2rA9XGgUDP0EvlRNxHn/view?usp=drive_link",
+    description: "Core technical questions, agent loop implementation rounds, tool calling contracts, and prompt evaluation challenges.",
+    tags: ["Interview", "Agentic AI", "Coding Rounds", "Hiring"],
+    isHandwritten: true,
+  },
+  {
+    id: "agentic-ai-interview-p2",
+    title: "Agentic AI Engineer Interview Guide (Part 2)",
+    categoryId: "interview",
+    driveFileId: "1lNIcVsDmR4BHp1GnAqNX5faf3VKHhDeb",
+    driveUrl: "https://drive.google.com/file/d/1lNIcVsDmR4BHp1GnAqNX5faf3VKHhDeb/view?usp=drive_link",
+    description: "Architectural system design interviews, handling agent hallucination/loops, latency optimization, and case studies.",
+    tags: ["Interview", "System Design", "Evaluation", "Case Studies"],
+    isHandwritten: true,
   },
 ];
 
-/**
- * Extracts Google Drive ID and formats embed/preview URLs from any input format
- * (full share URL, /file/d/ link, folder link, or raw ID).
- */
+export const DEFAULT_TECHNICAL_NOTES = TECHNICAL_NOTES;
+
 export function extractDriveInfo(input: string): {
   id: string;
   isFolder: boolean;
@@ -189,8 +308,6 @@ export function extractDriveInfo(input: string): {
   directUrl: string;
 } {
   const trimmed = input.trim();
-
-  // Folder match: /folders/ID
   const folderMatch = trimmed.match(/\/folders\/([a-zA-Z0-9_-]+)/);
   if (folderMatch) {
     const id = folderMatch[1];
@@ -203,7 +320,6 @@ export function extractDriveInfo(input: string): {
     };
   }
 
-  // File match: /file/d/ID or ?id=ID or raw ID
   let id = trimmed;
   const fileMatch = trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
   if (fileMatch) {
@@ -215,9 +331,7 @@ export function extractDriveInfo(input: string): {
     }
   }
 
-  // Sanitize trailing slashes or parameters
   id = id.split("/")[0].split("?")[0];
-
   return {
     id,
     isFolder: false,

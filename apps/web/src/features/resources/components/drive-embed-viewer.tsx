@@ -65,7 +65,7 @@ export function DriveEmbedViewer({
               variant="outline"
               className={`hidden sm:inline-flex text-[11px] font-medium border ${category.colorScheme.border} ${category.colorScheme.bg}`}
             >
-              {category.numberPrefix} · {category.label}
+              {category.label}
             </Badge>
           )}
         </div>
