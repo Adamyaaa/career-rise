@@ -32,6 +32,8 @@ coverage/
 
 # misc
 .dist/
+scratch/
+
 
 # uploaded files (local disk storage backing SharedFile — see apps/api/src/shared-files)
 apps/api/uploads/
