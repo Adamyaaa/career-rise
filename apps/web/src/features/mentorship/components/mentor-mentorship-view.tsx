@@ -5,15 +5,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Loader2,
   Users,
-  Target,
-  ChevronRight,
   Eye,
-  CalendarDays,
   Clock,
   Video,
-  FileText,
-  Link as LinkIcon,
-  CheckCircle2,
+  ShieldCheck,
+  Plus,
+  X,
+  RotateCcw,
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -24,34 +22,50 @@ import { mentorshipService, type ProMentorshipTrack } from "@/services/mentorshi
 import { PersonalTrackView } from "./personal-track-view";
 import { toast } from "sonner";
 
+const DEFAULT_SLOTS = [
+  "10:00 AM",
+  "11:30 AM",
+  "02:00 PM",
+  "04:30 PM",
+  "06:00 PM",
+  "07:30 PM",
+];
+
 export function MentorMentorshipView() {
   const queryClient = useQueryClient();
   const [selectedTrack, setSelectedTrack] = useState<ProMentorshipTrack | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [calendlyUrl, setCalendlyUrl] = useState("");
-  const [hasLoadedUrl, setHasLoadedUrl] = useState(false);
 
-  const { data: calendlyData } = useQuery({
-    queryKey: ["mentor-calendly-url"],
-    queryFn: () => mentorshipService.getMentorCalendlyUrl(),
+  const [googleMeetUrl, setGoogleMeetUrl] = useState("");
+  const [slots, setSlots] = useState<string[]>(DEFAULT_SLOTS);
+  const [newSlotInput, setNewSlotInput] = useState("");
+  const [hasInitialized, setHasInitialized] = useState(false);
+
+  const { data: settingsData } = useQuery({
+    queryKey: ["mentor-settings"],
+    queryFn: () => mentorshipService.getMentorSettings(),
   });
 
   useEffect(() => {
-    if (calendlyData && !hasLoadedUrl) {
-      setCalendlyUrl(calendlyData.calendlyUrl || "");
-      setHasLoadedUrl(true);
+    if (settingsData && !hasInitialized) {
+      setGoogleMeetUrl(settingsData.googleMeetUrl || "");
+      if (Array.isArray(settingsData.availableSlots) && settingsData.availableSlots.length > 0) {
+        setSlots(settingsData.availableSlots);
+      }
+      setHasInitialized(true);
     }
-  }, [calendlyData, hasLoadedUrl]);
+  }, [settingsData, hasInitialized]);
 
-  const updateCalendlyMutation = useMutation({
-    mutationFn: (url: string) => mentorshipService.updateMentorCalendlyUrl(url),
+  const updateSettingsMutation = useMutation({
+    mutationFn: (payload: { googleMeetUrl: string; availableSlots: string[] }) =>
+      mentorshipService.updateMentorSettings(payload),
     onSuccess: () => {
-      toast.success("Calendly booking link updated successfully!");
-      queryClient.invalidateQueries({ queryKey: ["mentor-calendly-url"] });
+      toast.success("1:1 Google Meet room and availability slots saved!");
+      queryClient.invalidateQueries({ queryKey: ["mentor-settings"] });
       queryClient.invalidateQueries({ queryKey: ["mentor-pro-tracks"] });
     },
     onError: () => {
-      toast.error("Failed to update Calendly link");
+      toast.error("Failed to save settings");
     },
   });
 
@@ -65,36 +79,130 @@ export function MentorMentorshipView() {
     setDialogOpen(true);
   };
 
+  const handleAddSlot = () => {
+    const trimmed = newSlotInput.trim();
+    if (!trimmed) return;
+    if (slots.includes(trimmed)) {
+      toast.info("Slot already added");
+      return;
+    }
+    setSlots([...slots, trimmed]);
+    setNewSlotInput("");
+  };
+
   return (
     <div className="space-y-6">
-      {/* Mentor Calendly Configuration Card */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border bg-gradient-to-r from-card via-card to-primary/5 p-4 sm:p-5 ring-1 ring-foreground/5 shadow-2xs">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-primary">Calendly Integration</span>
-            <Badge variant="outline" className="text-[10px]">1:1 Scheduling</Badge>
+      {/* Mentor 1:1 Google Meet & Availability Card */}
+      <div className="rounded-2xl border border-border bg-card p-5 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-border/60 pb-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                Mentor 1:1 Setup
+              </span>
+              <Badge variant="outline" className="text-[10px] gap-1">
+                <ShieldCheck className="size-3 text-emerald-600" />
+                Private Link
+              </Badge>
+            </div>
+            <h3 className="text-base font-semibold text-foreground mt-0.5">
+              Standing Google Meet Room &amp; Availability Slots
+            </h3>
           </div>
-          <p className="text-sm font-semibold text-foreground">Your 1:1 Booking Link</p>
-          <p className="text-xs text-muted-foreground">
-            Mentees will use this link to book their upcoming 1:1 sessions directly into your calendar.
-          </p>
-        </div>
 
-        <div className="flex w-full sm:w-auto items-center gap-2 max-w-md">
-          <Input
-            placeholder="https://calendly.com/your-username/60min"
-            value={calendlyUrl}
-            onChange={(e) => setCalendlyUrl(e.target.value)}
-            className="text-xs h-9 sm:w-80"
-          />
           <Button
             size="sm"
-            onClick={() => updateCalendlyMutation.mutate(calendlyUrl.trim())}
-            disabled={updateCalendlyMutation.isPending}
+            onClick={() =>
+              updateSettingsMutation.mutate({
+                googleMeetUrl: googleMeetUrl.trim(),
+                availableSlots: slots,
+              })
+            }
+            disabled={updateSettingsMutation.isPending}
             className="text-xs font-semibold shrink-0 h-9 px-4"
           >
-            {updateCalendlyMutation.isPending ? "Saving..." : "Save Link"}
+            {updateSettingsMutation.isPending ? "Saving..." : "Save Settings"}
           </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Standing Google Meet Link */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+              <Video className="size-3.5 text-muted-foreground" />
+              Standing Google Meet Link
+            </label>
+            <Input
+              placeholder="https://meet.google.com/abc-defg-hij"
+              value={googleMeetUrl}
+              onChange={(e) => setGoogleMeetUrl(e.target.value)}
+              className="text-xs h-9"
+            />
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Kept private to you and admin. When you accept a student&apos;s session request, this Google Meet link is automatically attached to their session.
+            </p>
+          </div>
+
+          {/* Time Slots Configuration */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <Clock className="size-3.5 text-muted-foreground" />
+                Available Time Slots (IST)
+              </label>
+              <button
+                type="button"
+                onClick={() => setSlots(DEFAULT_SLOTS)}
+                className="text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1 underline underline-offset-2"
+              >
+                <RotateCcw className="size-3" />
+                Reset defaults
+              </button>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 min-h-[38px] p-2 rounded-lg border border-border/80 bg-muted/20">
+              {slots.map((slot, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center gap-1 rounded-md bg-muted px-2.5 py-1 text-xs font-medium text-foreground border border-border/60"
+                >
+                  {slot}
+                  <button
+                    type="button"
+                    onClick={() => setSlots(slots.filter((_, i) => i !== index))}
+                    className="text-muted-foreground hover:text-destructive ml-0.5"
+                    aria-label={`Remove slot ${slot}`}
+                  >
+                    <X className="size-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="e.g. 03:00 PM"
+                value={newSlotInput}
+                onChange={(e) => setNewSlotInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddSlot();
+                  }
+                }}
+                className="text-xs h-8"
+              />
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleAddSlot}
+                className="text-xs h-8 px-3 shrink-0"
+              >
+                <Plus className="size-3.5 mr-1" /> Add Slot
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -118,7 +226,7 @@ export function MentorMentorshipView() {
           <Table>
             <TableHeader className="bg-muted/40">
               <TableRow>
-                <TableHead>Mentee Name & Contact</TableHead>
+                <TableHead>Mentee Name &amp; Contact</TableHead>
                 <TableHead>Target Goal</TableHead>
                 <TableHead>Roadmap Progress</TableHead>
                 <TableHead>Next Session</TableHead>

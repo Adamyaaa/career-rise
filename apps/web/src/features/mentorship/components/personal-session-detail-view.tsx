@@ -34,8 +34,7 @@ import {
   type ProMentorshipTrack,
 } from "@/services/mentorship.service";
 import { toast } from "sonner";
-import { ScheduleCalendlyDialog } from "./schedule-calendly-dialog";
-import { RequestSessionDialog } from "./request-session-dialog";
+
 import { InlineBookingCard } from "./inline-booking-card";
 
 interface PersonalSessionDetailViewProps {
@@ -188,7 +187,7 @@ export function PersonalSessionDetailView({
         .trim()
     : "";
 
-  const mentorCalendlyUrl = session.track?.seniorMentor?.mentorProfile?.calendlyUrl;
+  const mentorSlots = session.track?.seniorMentor?.mentorProfile?.availableSlots;
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 pb-12">
@@ -314,13 +313,14 @@ export function PersonalSessionDetailView({
                 <Button
                   size="sm"
                   className="rounded-lg text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  disabled={updateMutation.isPending}
                   onClick={() => {
                     setStatus("scheduled");
-                    if (!meetingUrl) {
-                      toast.info("Please enter the Google Meet URL below and click Save.");
-                    } else {
-                      handleSaveMentorControls();
-                    }
+                    updateMutation.mutate({
+                      status: "scheduled",
+                      scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : session.scheduledAt,
+                      meetingUrl: meetingUrl.trim() || undefined,
+                    });
                   }}
                 >
                   <CheckCircle2 className="size-3.5" />
@@ -606,7 +606,7 @@ export function PersonalSessionDetailView({
           <InlineBookingCard
             session={session}
             mentorName={mentorFullName}
-            mentorCalendlyUrl={mentorCalendlyUrl}
+            availableSlots={mentorSlots}
             canManage={canManage}
           />
         </div>

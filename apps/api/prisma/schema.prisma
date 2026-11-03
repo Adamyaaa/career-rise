@@ -82,6 +82,8 @@ model MentorProfile {
   specializations String[]
   capacity        Int
   calendlyUrl     String?
+  googleMeetUrl   String?
+  availableSlots  Json?
 
   user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
   cohortAssignments CohortMentorAssignment[]

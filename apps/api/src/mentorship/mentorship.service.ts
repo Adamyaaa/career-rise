@@ -7,6 +7,15 @@ import { UpdateMentorshipSessionDto } from "./dto/update-session.dto";
 import { PRO_12_WEEK_CURRICULUM } from "./constants/pro-curriculum";
 import { AuthenticatedUser } from "../auth/strategies/jwt.strategy";
 
+const DEFAULT_MENTOR_SLOTS = [
+  "10:00 AM",
+  "11:30 AM",
+  "02:00 PM",
+  "04:30 PM",
+  "06:00 PM",
+  "07:30 PM",
+];
+
 @Injectable()
 export class MentorshipService {
   constructor(private prisma: PrismaService) {}
@@ -127,7 +136,7 @@ export class MentorshipService {
             lastName: true,
             email: true,
             phone: true,
-            mentorProfile: { select: { calendlyUrl: true } },
+            mentorProfile: { select: { availableSlots: true } },
           },
         },
       },
@@ -168,7 +177,7 @@ export class MentorshipService {
             lastName: true,
             email: true,
             phone: true,
-            mentorProfile: { select: { calendlyUrl: true } },
+            mentorProfile: { select: { availableSlots: true } },
           },
         },
       },
@@ -238,7 +247,7 @@ export class MentorshipService {
                 lastName: true,
                 email: true,
                 phone: true,
-                mentorProfile: { select: { calendlyUrl: true } },
+                mentorProfile: { select: { availableSlots: true } },
               },
             },
             sessions: {
@@ -307,6 +316,22 @@ export class MentorshipService {
           data.completedAt = null;
         }
       }
+
+      // If scheduling or accepting, auto-attach mentor's standing Google Meet link if not provided
+      if (
+        (dto.status === "scheduled" || session.status === "scheduled") &&
+        !dto.meetingUrl &&
+        !session.meetingUrl &&
+        session.track.seniorMentorId
+      ) {
+        const mentorProfile = await this.prisma.mentorProfile.findUnique({
+          where: { userId: session.track.seniorMentorId },
+          select: { googleMeetUrl: true },
+        });
+        if (mentorProfile?.googleMeetUrl) {
+          data.meetingUrl = mentorProfile.googleMeetUrl;
+        }
+      }
       if (dto.meetingUrl !== undefined) data.meetingUrl = dto.meetingUrl;
       if (dto.recordingUrl !== undefined) data.recordingUrl = dto.recordingUrl;
       if (dto.deliverables !== undefined) data.deliverables = dto.deliverables;
@@ -318,6 +343,64 @@ export class MentorshipService {
     return this.prisma.personalMentorshipSession.update({
       where: { id: sessionId },
       data,
+    });
+  }
+
+  async getMentorSettings(userId: string) {
+    const profile = await this.prisma.mentorProfile.findUnique({
+      where: { userId },
+      select: {
+        googleMeetUrl: true,
+        availableSlots: true,
+        calendlyUrl: true,
+      },
+    });
+
+    return {
+      googleMeetUrl: profile?.googleMeetUrl || null,
+      availableSlots:
+        Array.isArray(profile?.availableSlots) && profile.availableSlots.length > 0
+          ? profile.availableSlots
+          : DEFAULT_MENTOR_SLOTS,
+      calendlyUrl: profile?.calendlyUrl || null,
+    };
+  }
+
+  async updateMentorSettings(
+    userId: string,
+    data: { googleMeetUrl?: string; availableSlots?: any; calendlyUrl?: string },
+  ) {
+    const profile = await this.prisma.mentorProfile.findUnique({
+      where: { userId },
+    });
+
+    const updateData: any = {};
+    if (data.googleMeetUrl !== undefined) {
+      updateData.googleMeetUrl = data.googleMeetUrl?.trim() || null;
+    }
+    if (data.availableSlots !== undefined) {
+      updateData.availableSlots = Array.isArray(data.availableSlots) ? data.availableSlots : DEFAULT_MENTOR_SLOTS;
+    }
+    if (data.calendlyUrl !== undefined) {
+      updateData.calendlyUrl = data.calendlyUrl?.trim() || null;
+    }
+
+    if (profile) {
+      return this.prisma.mentorProfile.update({
+        where: { userId },
+        data: updateData,
+      });
+    }
+
+    return this.prisma.mentorProfile.create({
+      data: {
+        userId,
+        specializations: [],
+        capacity: 10,
+        googleMeetUrl: updateData.googleMeetUrl || null,
+        availableSlots: updateData.availableSlots || DEFAULT_MENTOR_SLOTS,
+        calendlyUrl: updateData.calendlyUrl || null,
+      },
     });
   }
 

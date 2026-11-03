@@ -12,6 +12,7 @@ import { CreateMentorshipApplicationDto } from "./dto/create-application.dto";
 import { ApproveMentorshipApplicationDto } from "./dto/approve-application.dto";
 import { UpdateMentorshipSessionDto } from "./dto/update-session.dto";
 import { UpdateMentorCalendlyDto } from "./dto/update-mentor-calendly.dto";
+import { UpdateMentorSettingsDto } from "./dto/update-mentor-settings.dto";
 import { Public } from "../common/decorators/public.decorator";
 import { Roles } from "../common/decorators/roles.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
@@ -101,6 +102,23 @@ export class MentorshipController {
     return this.mentorshipService.handleCalendlyWebhook(body, signature);
   }
 
+  // Mentor 1:1 Google Meet & Availability Settings
+  @Roles("MENTOR", "SUPER_ADMIN")
+  @Get("mentor/settings")
+  async getMentorSettings(@CurrentUser() user: AuthenticatedUser) {
+    return this.mentorshipService.getMentorSettings(user.id);
+  }
+
+  @Roles("MENTOR", "SUPER_ADMIN")
+  @Patch("mentor/settings")
+  async updateMentorSettings(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: UpdateMentorSettingsDto,
+  ) {
+    return this.mentorshipService.updateMentorSettings(user.id, body);
+  }
+
+  // Backwards compatible aliases
   @Roles("MENTOR", "SUPER_ADMIN")
   @Get("mentor/calendly-url")
   async getMentorCalendlyUrl(@CurrentUser() user: AuthenticatedUser) {

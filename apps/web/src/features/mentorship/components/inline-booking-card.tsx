@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Calendar as CalendarIcon,
@@ -8,11 +8,8 @@ import {
   ChevronRight,
   Clock,
   Video,
-  ExternalLink,
   CheckCircle2,
-  Sparkles,
   Loader2,
-  CalendarDays,
   RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,7 +26,7 @@ import { toast } from "sonner";
 interface InlineBookingCardProps {
   session: PersonalMentorshipSession;
   mentorName?: string;
-  mentorCalendlyUrl?: string | null;
+  availableSlots?: string[] | null;
   canManage?: boolean;
 }
 
@@ -45,13 +42,20 @@ const DEFAULT_TIME_SLOTS = [
 export function InlineBookingCard({
   session,
   mentorName,
-  mentorCalendlyUrl,
+  availableSlots,
   canManage = false,
 }: InlineBookingCardProps) {
   const queryClient = useQueryClient();
 
   // If already scheduled with a meeting link, allow toggling reschedule mode
   const [isRescheduling, setIsRescheduling] = useState(false);
+
+  const timeSlots = useMemo(() => {
+    if (Array.isArray(availableSlots) && availableSlots.length > 0) {
+      return availableSlots;
+    }
+    return DEFAULT_TIME_SLOTS;
+  }, [availableSlots]);
 
   // Parse existing scheduledAt date if present
   const initialDate = useMemo(() => {
@@ -69,8 +73,14 @@ export function InlineBookingCard({
     new Date(initialDate.getFullYear(), initialDate.getMonth(), 1),
   );
   const [selectedDate, setSelectedDate] = useState<Date>(initialDate);
-  const [selectedSlot, setSelectedSlot] = useState<string>("11:30 AM");
+  const [selectedSlot, setSelectedSlot] = useState<string>(() => timeSlots[0] || "11:30 AM");
   const [notes, setNotes] = useState<string>(session.studentNotes || "");
+
+  useEffect(() => {
+    if (timeSlots.length > 0 && !timeSlots.includes(selectedSlot)) {
+      setSelectedSlot(timeSlots[0]);
+    }
+  }, [timeSlots, selectedSlot]);
 
   const isScheduled = session.status === "scheduled";
   const isRequested = session.status === "requested";
@@ -84,7 +94,7 @@ export function InlineBookingCard({
         studentNotes: payload.studentNotes?.trim() || null,
       }),
     onSuccess: () => {
-      toast.success("1:1 session slot confirmed! Your mentor has been notified.");
+      toast.success("1:1 session slot requested! Your mentor has been notified.");
       setIsRescheduling(false);
       queryClient.invalidateQueries({ queryKey: ["mentorship-session", session.id] });
       queryClient.invalidateQueries({ queryKey: ["my-pro-track"] });
@@ -193,15 +203,6 @@ export function InlineBookingCard({
     setCurrentMonth(new Date(year, month + 1, 1));
   };
 
-  const isToday = (d: number, m: number, y: number) => {
-    const today = new Date();
-    return (
-      today.getDate() === d &&
-      today.getMonth() === m &&
-      today.getFullYear() === y
-    );
-  };
-
   const isSelected = (d: number, m: number, y: number) => {
     return (
       selectedDate.getDate() === d &&
@@ -221,9 +222,9 @@ export function InlineBookingCard({
   // Render Confirmed State if scheduled and not rescheduling
   if ((hasMeetingUrl || isScheduled) && !isRescheduling) {
     return (
-      <div className="flex flex-col gap-5 rounded-lg border border-emerald-500/30 bg-gradient-to-b from-card via-card to-emerald-500/5 p-6 shadow-xs ring-1 ring-emerald-500/20">
+      <div className="flex flex-col gap-5 rounded-lg border border-border bg-card p-6 shadow-xs ring-1 ring-foreground/5">
         <div className="flex items-center gap-3 border-b border-border/60 pb-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <Video className="size-4" />
           </div>
           <div>
@@ -261,50 +262,57 @@ export function InlineBookingCard({
 
           <div>
             <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Duration &amp; Platform
+              Google Meet Link
             </span>
-            <p className="font-medium text-foreground mt-0.5">
-              {session.durationMins || 75} minutes • Google Meet
-            </p>
+            {session.meetingUrl ? (
+              <p className="mt-0.5">
+                <a
+                  href={session.meetingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary hover:underline break-all"
+                >
+                  {session.meetingUrl}
+                </a>
+              </p>
+            ) : (
+              <p className="text-muted-foreground mt-0.5">Meeting link being configured</p>
+            )}
           </div>
         </div>
 
-        <div className="space-y-2 pt-1">
+        <div className="flex flex-col gap-2 pt-1">
           {session.meetingUrl && (
             <Button
               render={<a href={session.meetingUrl} target="_blank" rel="noopener noreferrer" />}
               className="w-full rounded-lg py-2.5 font-semibold gap-2 shadow-xs bg-[#1a73e8] hover:bg-[#1557b0] text-white"
             >
               <Video className="size-4" />
-              <span>Join Google Meet</span>
-              <ExternalLink className="size-3.5 opacity-70" />
+              <span>Join Google Meet Call</span>
             </Button>
           )}
 
-          {!canManage && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsRescheduling(true)}
-              className="w-full rounded-lg text-xs gap-1.5 text-muted-foreground hover:text-foreground"
-            >
-              <RotateCcw className="size-3" />
-              <span>Reschedule Session</span>
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            onClick={() => setIsRescheduling(true)}
+            className="w-full rounded-lg text-xs font-semibold gap-1.5"
+          >
+            <RotateCcw className="size-3.5" />
+            <span>Request to Reschedule Slot</span>
+          </Button>
         </div>
       </div>
     );
   }
 
-  // Render Booking / Rescheduling View (matching Image 2)
+  // Render Booking / Rescheduling View
   return (
-    <div className="flex flex-col gap-5 rounded-lg border border-border/70 bg-card p-6 shadow-xs ring-1 ring-foreground/5">
+    <div className="flex flex-col gap-5 rounded-lg border border-border bg-card p-6 shadow-xs ring-1 ring-foreground/5">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border/60 pb-3">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-            <CalendarIcon className="size-4 text-blue-600 dark:text-blue-400" />
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-foreground">
+            <CalendarIcon className="size-4" />
           </div>
           <div>
             <h3 className="font-heading text-base font-bold text-foreground">
@@ -383,7 +391,7 @@ export function InlineBookingCard({
                     isCurr && !selected && "text-foreground hover:bg-muted/70",
                     !available && "opacity-35 cursor-not-allowed hover:bg-transparent",
                     selected &&
-                      "bg-blue-600 text-white font-bold shadow-xs hover:bg-blue-700",
+                      "bg-foreground text-background font-bold shadow-xs hover:bg-foreground/90",
                   )}
                 >
                   {item.day}
@@ -391,7 +399,7 @@ export function InlineBookingCard({
                 {/* Dot indicator */}
                 <div className="h-1 mt-0.5 flex items-center justify-center">
                   {available && isCurr && !selected && (
-                    <span className="size-1 rounded-full bg-blue-500/70" />
+                    <span className="size-1 rounded-full bg-foreground/50" />
                   )}
                 </div>
               </div>
@@ -402,7 +410,7 @@ export function InlineBookingCard({
         {/* Legend */}
         <div className="flex items-center gap-4 pt-1 px-1 text-[11px] text-muted-foreground">
           <div className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-blue-600" />
+            <span className="size-2 rounded-full bg-foreground" />
             <span>Available slots</span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -425,7 +433,7 @@ export function InlineBookingCard({
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          {DEFAULT_TIME_SLOTS.map((slot) => {
+          {timeSlots.map((slot) => {
             const active = selectedSlot === slot;
             return (
               <button
@@ -435,7 +443,7 @@ export function InlineBookingCard({
                 className={cn(
                   "rounded-lg border py-2 text-xs font-medium transition-all text-center",
                   active
-                    ? "border-blue-600 bg-blue-600 text-white shadow-xs font-semibold"
+                    ? "border-foreground bg-foreground text-background shadow-xs font-semibold"
                     : "border-border/80 bg-background text-foreground hover:bg-muted/50",
                 )}
               >
@@ -474,25 +482,11 @@ export function InlineBookingCard({
         </div>
       )}
 
-      {mentorCalendlyUrl && (
-        <div className="text-center pt-1">
-          <a
-            href={mentorCalendlyUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2 inline-flex items-center gap-1"
-          >
-            <span>Or book directly via mentor's Calendly</span>
-            <ExternalLink className="size-3" />
-          </a>
-        </div>
-      )}
-
       {/* Confirm Button */}
       <Button
         onClick={handleConfirm}
         disabled={confirmMutation.isPending || !selectedDate || !selectedSlot}
-        className="w-full rounded-lg py-2.5 font-semibold shadow-xs bg-blue-600 hover:bg-blue-700 text-white"
+        className="w-full rounded-lg py-2.5 font-semibold shadow-xs"
       >
         {confirmMutation.isPending ? (
           <>

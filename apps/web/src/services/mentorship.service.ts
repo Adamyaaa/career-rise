@@ -62,6 +62,7 @@ export interface ProMentorshipTrack {
     email: string;
     phone?: string | null;
     mentorProfile?: {
+      availableSlots?: string[] | null;
       calendlyUrl?: string | null;
     } | null;
   };
@@ -121,6 +122,26 @@ export const mentorshipService = {
       `/mentorship/pro/sessions/${sessionId}`,
       payload,
     );
+  },
+
+  getMentorSettings: async () => {
+    return apiClient.get<{
+      googleMeetUrl: string | null;
+      availableSlots: string[];
+      calendlyUrl: string | null;
+    }>("/mentorship/mentor/settings");
+  },
+
+  updateMentorSettings: async (payload: {
+    googleMeetUrl?: string;
+    availableSlots?: string[];
+    calendlyUrl?: string;
+  }) => {
+    return apiClient.patch<{
+      googleMeetUrl: string | null;
+      availableSlots: string[];
+      calendlyUrl: string | null;
+    }>("/mentorship/mentor/settings", payload);
   },
 
   getMentorCalendlyUrl: async () => {
