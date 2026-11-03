@@ -84,35 +84,33 @@ export default function StudentResourcesPage() {
 
   return (
     <div className="w-full flex flex-col gap-6 pb-12">
-      {/* 1. Page Heading */}
+      {/* 1. Page Heading with Search Bar on the Right */}
       <PageHeading
         title="Technical Notes & Resources"
         description="Comprehensive handwritten notes, core CS blueprints, and interview guides organized by topic folder."
+        action={
+          <div className="relative w-full sm:w-72 md:w-80 shrink-0">
+            <Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
+            <Input
+              placeholder="Search notes by keyword..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-8 h-9 text-xs rounded-xl bg-card border-border/70 shadow-2xs"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                <X className="size-4" />
+              </button>
+            )}
+          </div>
+        }
       />
 
-      {/* 2. Search & Folder Filter Bar */}
-      <div className="flex flex-col gap-3.5">
-        {/* Search input */}
-        <div className="relative max-w-lg">
-          <Search className="absolute left-3.5 top-3 size-4 text-muted-foreground" />
-          <Input
-            placeholder="Search notes by keyword (e.g. LangChain, Transformers, DSA, System Design)..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-9 h-10 text-xs rounded-xl bg-card border-border/70"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-3 text-muted-foreground hover:text-foreground cursor-pointer"
-            >
-              <X className="size-4" />
-            </button>
-          )}
-        </div>
-
-        {/* Folder Navigation Tabs (Wrapping into multi-row so all are visible) */}
-        <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+      {/* 2. Folder Navigation Tabs (Wrapping so all are visible) */}
+      <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
           <button
             onClick={() => setSelectedFolderId("all")}
             className={cn(
@@ -168,7 +166,6 @@ export default function StudentResourcesPage() {
             );
           })}
         </div>
-      </div>
 
       {/* 3. Folder & File Directory Architecture */}
       <div className="flex flex-col gap-8 mt-2">
