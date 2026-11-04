@@ -19,6 +19,7 @@ export const mentorNav: NavItem[] = [
   { label: "Student Doubts", href: "/mentor/doubts", icon: MessagesSquare },
   { label: "Cohort Requests", href: "/mentor/requests", icon: UserCheck },
   { label: "Mentorship", href: "/mentor/mentorship", icon: Users },
+  { label: "Resources", href: "/mentor/resources", icon: FolderOpen },
 ];
 
 export const adminNav: NavItem[] = [

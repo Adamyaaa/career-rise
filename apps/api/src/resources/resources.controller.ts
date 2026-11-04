@@ -24,27 +24,27 @@ export class ResourcesController {
     return this.resourcesService.getAllFoldersWithFiles();
   }
 
-  // Admin Folder Management
-  @Roles("SUPER_ADMIN")
+  // Folder Management (Admins & Mentors)
+  @Roles("SUPER_ADMIN", "MENTOR")
   @Post("folders")
   async createFolder(@Body() body: CreateFolderDto) {
     return this.resourcesService.createFolder(body);
   }
 
-  @Roles("SUPER_ADMIN")
+  @Roles("SUPER_ADMIN", "MENTOR")
   @Patch("folders/:id")
   async updateFolder(@Param("id") id: string, @Body() body: UpdateFolderDto) {
     return this.resourcesService.updateFolder(id, body);
   }
 
-  @Roles("SUPER_ADMIN")
+  @Roles("SUPER_ADMIN", "MENTOR")
   @Delete("folders/:id")
   async deleteFolder(@Param("id") id: string) {
     return this.resourcesService.deleteFolder(id);
   }
 
-  // Admin File Management
-  @Roles("SUPER_ADMIN")
+  // File Management (Admins & Mentors)
+  @Roles("SUPER_ADMIN", "MENTOR")
   @Post("folders/:folderId/files")
   async createFile(
     @Param("folderId") folderId: string,
@@ -53,13 +53,13 @@ export class ResourcesController {
     return this.resourcesService.createFile(folderId, body);
   }
 
-  @Roles("SUPER_ADMIN")
+  @Roles("SUPER_ADMIN", "MENTOR")
   @Patch("files/:id")
   async updateFile(@Param("id") id: string, @Body() body: UpdateFileDto) {
     return this.resourcesService.updateFile(id, body);
   }
 
-  @Roles("SUPER_ADMIN")
+  @Roles("SUPER_ADMIN", "MENTOR")
   @Delete("files/:id")
   async deleteFile(@Param("id") id: string) {
     return this.resourcesService.deleteFile(id);
