@@ -75,6 +75,82 @@ export interface MyTrackResponse {
   application?: MentorshipApplication | null;
 }
 
+export interface MatchStudentPayload {
+  studentId: string;
+  seniorMentorId: string;
+  targetRole?: string;
+  targetCompany?: string;
+  status?: string;
+}
+
+export interface UpdateTrackPayload {
+  seniorMentorId?: string | null;
+  targetRole?: string;
+  targetCompany?: string;
+  status?: string;
+}
+
+export interface StudentUpdateItem {
+  id: string;
+  type: "session_request" | "deliverable" | "note" | "action_item" | "doubt";
+  timestamp: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  trackId: string;
+  weekNumber?: number;
+  sessionTitle?: string;
+  title: string;
+  description?: string;
+  link?: string;
+  status?: string;
+  meta?: any;
+}
+
+export interface MentorDashboardSummary {
+  totalMentees: number;
+  pendingRequestsCount: number;
+  upcomingSessionsCount: number;
+  completedSessionsCount: number;
+  totalDeliverablesCount: number;
+  actionItemsTotal: number;
+  actionItemsCompleted: number;
+  openDoubtsCount: number;
+}
+
+export interface MentorDashboardData {
+  summary: MentorDashboardSummary;
+  tracks: ProMentorshipTrack[];
+  recentUpdates: StudentUpdateItem[];
+  upcomingSessions: Array<
+    PersonalMentorshipSession & {
+      student?: {
+        id: string;
+        firstName: string | null;
+        lastName: string | null;
+        email: string;
+        phone?: string | null;
+      };
+      trackId: string;
+      targetRole?: string | null;
+    }
+  >;
+  doubtThreads: Array<{
+    id: string;
+    title: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    student: { id: string; firstName: string | null; lastName: string | null; email: string };
+    messages: Array<{
+      id: string;
+      content: string;
+      createdAt: string;
+      sender: { id: string; firstName: string | null; lastName: string | null; role: string };
+    }>;
+  }>;
+}
+
 export const mentorshipService = {
   createApplication: async (payload: CreateMentorshipApplicationPayload) => {
     return apiClient.post<{ id: string }>("/mentorship/applications", payload);
@@ -152,5 +228,21 @@ export const mentorshipService = {
     return apiClient.patch<{ calendlyUrl: string | null }>("/mentorship/mentor/calendly-url", {
       calendlyUrl,
     });
+  },
+
+  matchStudent: async (payload: MatchStudentPayload) => {
+    return apiClient.post<ProMentorshipTrack>("/mentorship/admin/match", payload);
+  },
+
+  updateTrack: async (trackId: string, payload: UpdateTrackPayload) => {
+    return apiClient.patch<ProMentorshipTrack>(`/mentorship/pro/tracks/${trackId}`, payload);
+  },
+
+  deleteTrack: async (trackId: string) => {
+    return apiClient.delete(`/mentorship/pro/tracks/${trackId}`);
+  },
+
+  getMentorDashboard: async () => {
+    return apiClient.get<MentorDashboardData>("/mentorship/mentor/dashboard");
   },
 };

@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Patch,
+  Delete,
   Body,
   Param,
   Headers,
@@ -13,6 +14,7 @@ import { ApproveMentorshipApplicationDto } from "./dto/approve-application.dto";
 import { UpdateMentorshipSessionDto } from "./dto/update-session.dto";
 import { UpdateMentorCalendlyDto } from "./dto/update-mentor-calendly.dto";
 import { UpdateMentorSettingsDto } from "./dto/update-mentor-settings.dto";
+import { MatchStudentDto, ReassignMentorDto } from "./dto/match-student.dto";
 import { Public } from "../common/decorators/public.decorator";
 import { Roles } from "../common/decorators/roles.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
@@ -67,6 +69,33 @@ export class MentorshipController {
   @Get("pro/all-tracks")
   async listAllTracks() {
     return this.mentorshipService.listAllTracks();
+  }
+
+  @Roles("SUPER_ADMIN")
+  @Post("admin/match")
+  async matchStudent(@Body() body: MatchStudentDto) {
+    return this.mentorshipService.matchStudent(body);
+  }
+
+  @Roles("SUPER_ADMIN")
+  @Patch("pro/tracks/:id")
+  async updateTrack(
+    @Param("id") id: string,
+    @Body() body: ReassignMentorDto,
+  ) {
+    return this.mentorshipService.updateTrack(id, body);
+  }
+
+  @Roles("SUPER_ADMIN")
+  @Delete("pro/tracks/:id")
+  async deleteTrack(@Param("id") id: string) {
+    return this.mentorshipService.deleteTrack(id);
+  }
+
+  @Roles("MENTOR", "SUPER_ADMIN")
+  @Get("mentor/dashboard")
+  async getMentorDashboard(@CurrentUser() user: AuthenticatedUser) {
+    return this.mentorshipService.getMentorDashboard(user.id);
   }
 
   @Roles("MENTOR", "SUPER_ADMIN")

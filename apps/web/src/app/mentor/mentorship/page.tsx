@@ -5,8 +5,8 @@ export default function MentorMentorshipPage() {
   return (
     <div className="space-y-6">
       <PageHeading
-        title="1:1 Pro Mentees"
-        description="Manage your assigned mentees' 12-week roadmaps, schedule calls, and record session feedback"
+        title="1:1 Mentorship Hub & Student Updates"
+        description="Track your mentees in one place — review session requests, submissions, notes, and 12-week roadmaps"
       />
       <MentorMentorshipView />
     </div>
