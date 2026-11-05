@@ -466,7 +466,7 @@ export function AdminMentorshipView() {
                         </TableCell>
                         <TableCell>
                           {isPending ? (
-                            <Badge variant="secondary" className="bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30 text-xs">
+                            <Badge variant="secondary" className="text-xs font-medium">
                               Pending Review
                             </Badge>
                           ) : isApproved ? (

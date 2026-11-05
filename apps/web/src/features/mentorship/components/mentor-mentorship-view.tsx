@@ -239,34 +239,19 @@ export function MentorMentorshipView() {
         </div>
 
         {/* Pending Session Requests */}
-        <div
-          className={`p-4 rounded-2xl border shadow-xs flex items-center gap-3 ${
-            summary.pendingRequestsCount > 0
-              ? "bg-amber-500/5 border-amber-500/30"
-              : "bg-card"
-          }`}
-        >
-          <div
-            className={`size-11 rounded-xl flex items-center justify-center shrink-0 ${
-              summary.pendingRequestsCount > 0
-                ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
-                : "bg-muted text-muted-foreground"
-            }`}
-          >
+        <div className="p-4 rounded-2xl border bg-card shadow-xs flex items-center gap-3">
+          <div className="size-11 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
             <CalendarClock className="size-5" />
           </div>
           <div>
-            <div className="flex items-center gap-1.5">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Session Requests
-              </p>
-              {summary.pendingRequestsCount > 0 && (
-                <span className="flex size-2 rounded-full bg-amber-500 animate-pulse" />
-              )}
-            </div>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Session Requests
+            </p>
             <p className="text-xl font-bold text-foreground mt-0.5">
               {summary.pendingRequestsCount}{" "}
-              <span className="text-xs font-normal text-muted-foreground">pending review</span>
+              {summary.pendingRequestsCount > 0 && (
+                <span className="text-xs font-normal text-muted-foreground">pending review</span>
+              )}
             </p>
           </div>
         </div>
@@ -552,14 +537,14 @@ export function MentorMentorshipView() {
                       <div
                         className={`size-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
                           isSessionRequest
-                            ? "bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                            ? "bg-sky-500/10 text-sky-600 dark:text-sky-400"
                             : isDeliverable
-                            ? "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300"
+                            ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
                             : isActionItem
-                            ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                             : isDoubt
-                            ? "bg-sky-500/15 text-sky-700 dark:text-sky-300"
-                            : "bg-purple-500/15 text-purple-700 dark:text-purple-300"
+                            ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                            : "bg-purple-500/10 text-purple-600 dark:text-purple-400"
                         }`}
                       >
                         {isSessionRequest ? (
@@ -782,7 +767,7 @@ export function MentorMentorshipView() {
                           variant="outline"
                           className={`text-[10px] ${
                             nextSession.status === "requested"
-                              ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                              ? "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20"
                               : nextSession.status === "scheduled"
                               ? "bg-primary/10 text-primary border-primary/30"
                               : ""
@@ -889,12 +874,12 @@ export function MentorMentorshipView() {
                           {isRequested ? (
                             <Badge
                               variant="secondary"
-                              className="bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30 text-xs gap-1"
+                              className="text-xs gap-1 font-medium bg-muted text-foreground border border-border"
                             >
-                              <AlertCircle className="size-3" /> Requested by Mentee
+                              <Clock className="size-3 text-muted-foreground" /> Requested by Mentee
                             </Badge>
                           ) : isScheduled ? (
-                            <Badge className="bg-primary text-primary-foreground text-xs gap-1">
+                            <Badge className="bg-primary text-primary-foreground text-xs gap-1 font-medium">
                               <CheckCircle2 className="size-3" /> Scheduled
                             </Badge>
                           ) : (

@@ -12,13 +12,13 @@ export function PendingApplicationView({
   return (
     <div className="mx-auto max-w-3xl space-y-6 py-6">
       <div className="rounded-2xl border bg-card p-6 sm:p-8 text-center space-y-4 shadow-xs">
-        <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+        <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
           <Clock className="size-8" />
         </div>
 
         <div className="space-y-2">
           <div className="inline-flex items-center gap-1.5">
-            <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 font-medium">
+            <Badge variant="secondary" className="font-medium text-xs">
               Application Under Review
             </Badge>
           </div>
