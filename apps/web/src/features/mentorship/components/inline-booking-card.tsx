@@ -39,6 +39,53 @@ const DEFAULT_TIME_SLOTS = [
   "07:30 PM",
 ];
 
+function parseSlotToDate(date: Date, slotStr: string): Date {
+  const trimmed = slotStr.trim();
+  const parts = trimmed.split(/\s+/);
+  const timePart = parts[0] || "10:00";
+  const modifier = parts[1]?.toUpperCase();
+
+  const [hoursStr, minutesStr] = timePart.split(":");
+  let hours = parseInt(hoursStr, 10) || 0;
+  const minutes = parseInt(minutesStr, 10) || 0;
+
+  if (modifier === "PM" && hours < 12) {
+    hours += 12;
+  } else if (modifier === "AM" && hours === 12) {
+    hours = 0;
+  }
+
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    hours,
+    minutes,
+    0,
+    0,
+  );
+}
+
+function isSlotInPast(slotStr: string, date: Date): boolean {
+  if (!slotStr || !date) return false;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const targetDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  // Past day
+  if (targetDay.getTime() < today.getTime()) {
+    return true;
+  }
+  // Future day
+  if (targetDay.getTime() > today.getTime()) {
+    return false;
+  }
+
+  // Same day: slot is past if its time <= current time
+  const slotDate = parseSlotToDate(date, slotStr);
+  return slotDate.getTime() <= now.getTime();
+}
+
 export function InlineBookingCard({
   session,
   mentorName,
@@ -57,30 +104,47 @@ export function InlineBookingCard({
     return DEFAULT_TIME_SLOTS;
   }, [availableSlots]);
 
-  // Parse existing scheduledAt date if present
+  // Parse existing scheduledAt date if present and in the future; otherwise default to today (if slots remain) or tomorrow
   const initialDate = useMemo(() => {
     if (session.scheduledAt) {
       const d = new Date(session.scheduledAt);
-      if (!isNaN(d.getTime())) return d;
+      if (!isNaN(d.getTime()) && d.getTime() > Date.now()) return d;
     }
-    // Default to tomorrow or today
+
     const now = new Date();
-    now.setDate(now.getDate() + 1);
-    return now;
-  }, [session.scheduledAt]);
+    const hasRemainingToday = timeSlots.some((s) => !isSlotInPast(s, now));
+    if (hasRemainingToday) {
+      return now;
+    }
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow;
+  }, [session.scheduledAt, timeSlots]);
 
   const [currentMonth, setCurrentMonth] = useState<Date>(
     new Date(initialDate.getFullYear(), initialDate.getMonth(), 1),
   );
   const [selectedDate, setSelectedDate] = useState<Date>(initialDate);
-  const [selectedSlot, setSelectedSlot] = useState<string>(() => timeSlots[0] || "11:30 AM");
+  const [selectedSlot, setSelectedSlot] = useState<string>("");
   const [notes, setNotes] = useState<string>(session.studentNotes || "");
 
+  // Available slots for selected date, checking against current time
+  const availableSlotsForSelectedDate = useMemo(() => {
+    return timeSlots.map((slot) => ({
+      slot,
+      isPast: isSlotInPast(slot, selectedDate),
+    }));
+  }, [timeSlots, selectedDate]);
+
+  // Auto-select the first non-past slot whenever selected date or slot list changes
   useEffect(() => {
-    if (timeSlots.length > 0 && !timeSlots.includes(selectedSlot)) {
-      setSelectedSlot(timeSlots[0]);
+    const isCurrentSlotPast = isSlotInPast(selectedSlot, selectedDate);
+    if (!selectedSlot || isCurrentSlotPast || !timeSlots.includes(selectedSlot)) {
+      const firstValid = availableSlotsForSelectedDate.find((s) => !s.isPast);
+      setSelectedSlot(firstValid ? firstValid.slot : "");
     }
-  }, [timeSlots, selectedSlot]);
+  }, [selectedDate, availableSlotsForSelectedDate, selectedSlot, timeSlots]);
 
   const isScheduled = session.status === "scheduled";
   const isRequested = session.status === "requested";
@@ -100,6 +164,7 @@ export function InlineBookingCard({
       queryClient.invalidateQueries({ queryKey: ["my-pro-track"] });
       queryClient.invalidateQueries({ queryKey: ["all-pro-tracks"] });
       queryClient.invalidateQueries({ queryKey: ["mentor-pro-tracks"] });
+      queryClient.invalidateQueries({ queryKey: ["mentor-mentorship-dashboard"] });
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || "Failed to confirm session slot");
@@ -112,20 +177,16 @@ export function InlineBookingCard({
       return;
     }
 
-    // Combine selectedDate + selectedSlot into an ISO string
-    const [timeStr, modifier] = selectedSlot.split(" ");
-    let [hours, minutes] = timeStr.split(":").map(Number);
-    if (modifier === "PM" && hours < 12) hours += 12;
-    if (modifier === "AM" && hours === 12) hours = 0;
+    if (isSlotInPast(selectedSlot, selectedDate)) {
+      toast.error("This time slot has already passed. Please select an upcoming slot.");
+      return;
+    }
 
-    const finalDateTime = new Date(
-      selectedDate.getFullYear(),
-      selectedDate.getMonth(),
-      selectedDate.getDate(),
-      hours,
-      minutes,
-      0,
-    );
+    const finalDateTime = parseSlotToDate(selectedDate, selectedSlot);
+    if (finalDateTime.getTime() <= Date.now()) {
+      toast.error("This time slot has already passed. Please choose a future time.");
+      return;
+    }
 
     confirmMutation.mutate({
       scheduledAt: finalDateTime.toISOString(),
@@ -139,7 +200,6 @@ export function InlineBookingCard({
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayIndex = new Date(year, month, 1).getDay(); // 0 is Sun
-
   const prevMonthDays = new Date(year, month, 0).getDate();
 
   const days = useMemo(() => {
@@ -211,12 +271,21 @@ export function InlineBookingCard({
     );
   };
 
-  // Determine if day has available slots (future days or active days)
+  // Determine if day has available slots (future days or active days with remaining future slots)
   const isAvailableDay = (d: number, m: number, y: number) => {
-    const target = new Date(y, m, d, 23, 59, 59);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return target >= today;
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const targetDay = new Date(y, m, d);
+
+    if (targetDay.getTime() < today.getTime()) {
+      return false;
+    }
+
+    if (targetDay.getTime() === today.getTime()) {
+      return timeSlots.some((slot) => !isSlotInPast(slot, targetDay));
+    }
+
+    return true;
   };
 
   // Render Confirmed State if scheduled and not rescheduling
@@ -388,8 +457,8 @@ export function InlineBookingCard({
                   className={cn(
                     "relative flex size-8 items-center justify-center rounded-full text-xs transition-all",
                     !isCurr && "text-muted-foreground/40",
-                    isCurr && !selected && "text-foreground hover:bg-muted/70",
-                    !available && "opacity-35 cursor-not-allowed hover:bg-transparent",
+                    isCurr && !selected && "text-foreground hover:bg-muted/70 cursor-pointer",
+                    !available && "opacity-35 cursor-not-allowed hover:bg-transparent text-muted-foreground/50",
                     selected &&
                       "bg-foreground text-background font-bold shadow-xs hover:bg-foreground/90",
                   )}
@@ -433,25 +502,48 @@ export function InlineBookingCard({
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          {timeSlots.map((slot) => {
-            const active = selectedSlot === slot;
+          {availableSlotsForSelectedDate.map(({ slot, isPast }) => {
+            const active = selectedSlot === slot && !isPast;
             return (
               <button
                 key={slot}
                 type="button"
+                disabled={isPast}
                 onClick={() => setSelectedSlot(slot)}
                 className={cn(
-                  "rounded-lg border py-2 text-xs font-medium transition-all text-center",
-                  active
-                    ? "border-foreground bg-foreground text-background shadow-xs font-semibold"
-                    : "border-border/80 bg-background text-foreground hover:bg-muted/50",
+                  "rounded-lg border py-2.5 px-3 text-xs font-medium transition-all text-center flex items-center justify-between",
+                  isPast &&
+                    "opacity-40 cursor-not-allowed bg-muted/20 text-muted-foreground border-border/50",
+                  !isPast &&
+                    active &&
+                    "border-foreground bg-foreground text-background shadow-xs font-semibold",
+                  !isPast &&
+                    !active &&
+                    "border-border/80 bg-background text-foreground hover:bg-muted/50 cursor-pointer",
                 )}
               >
-                {slot}
+                <span className={cn(isPast && "line-through")}>{slot}</span>
+                {isPast ? (
+                  <span className="text-[10px] font-normal text-muted-foreground">Passed</span>
+                ) : active ? (
+                  <CheckCircle2 className="size-3.5 text-background" />
+                ) : null}
               </button>
             );
           })}
         </div>
+
+        {availableSlotsForSelectedDate.every((s) => s.isPast) && (
+          <div className="rounded-lg bg-muted/40 border border-border/70 p-3 text-xs space-y-1">
+            <p className="font-semibold text-foreground flex items-center gap-1.5">
+              <Clock className="size-3.5 text-muted-foreground" />
+              All slots for this day have passed
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              Please choose tomorrow or another upcoming date on the calendar above.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Call notes / agenda */}
@@ -485,7 +577,12 @@ export function InlineBookingCard({
       {/* Confirm Button */}
       <Button
         onClick={handleConfirm}
-        disabled={confirmMutation.isPending || !selectedDate || !selectedSlot}
+        disabled={
+          confirmMutation.isPending ||
+          !selectedDate ||
+          !selectedSlot ||
+          isSlotInPast(selectedSlot, selectedDate)
+        }
         className="w-full rounded-lg py-2.5 font-semibold shadow-xs"
       >
         {confirmMutation.isPending ? (

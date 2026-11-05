@@ -684,6 +684,12 @@ export class MentorshipService {
       if (dto.status === "requested" || dto.status === "not_scheduled") {
         data.status = dto.status;
         if (dto.scheduledAt !== undefined) {
+          if (dto.scheduledAt && dto.status === "requested") {
+            const requestedTime = new Date(dto.scheduledAt);
+            if (requestedTime.getTime() < Date.now() - 2 * 60 * 1000) {
+              throw new BadRequestException("Selected slot has already passed. Please choose an upcoming time.");
+            }
+          }
           data.scheduledAt = dto.scheduledAt ? new Date(dto.scheduledAt) : null;
         }
       }
