@@ -760,7 +760,7 @@ export function AdminMentorshipView() {
 
       {/* Track Inspection Modal */}
       <Dialog open={inspectDialogOpen} onOpenChange={setInspectDialogOpen}>
-        <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
+        <DialogContent className="w-[96vw] max-w-6xl sm:max-w-6xl md:max-w-6xl lg:max-w-6xl max-h-[92vh] overflow-y-auto p-4 sm:p-6 rounded-2xl">
           {inspectTrack && (
             <div className="py-2">
               <PersonalTrackView

@@ -1000,7 +1000,7 @@ export function MentorMentorshipView() {
 
       {/* 12-Week Tracker Modal for Mentor */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
+        <DialogContent className="w-[96vw] max-w-6xl sm:max-w-6xl md:max-w-6xl lg:max-w-6xl max-h-[92vh] overflow-y-auto p-4 sm:p-6 rounded-2xl">
           {selectedTrack && (
             <div className="py-2">
               <PersonalTrackView

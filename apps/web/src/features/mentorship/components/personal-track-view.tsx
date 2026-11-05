@@ -83,7 +83,21 @@ export function PersonalTrackView({
   );
   const completedActionCount = allActionItems.filter((i) => i.completed).length;
 
+  const isMenteeView = canManage && Boolean(track.student);
+  const studentFullName =
+    [track.student?.firstName, track.student?.lastName].filter(Boolean).join(" ") ||
+    track.student?.email ||
+    "Student";
+
   const meta = [
+    ...(isMenteeView
+      ? [
+          {
+            icon: ShieldCheck,
+            label: `Mentee: ${studentFullName} (${track.student?.email || ""})`,
+          },
+        ]
+      : []),
     {
       icon: ShieldCheck,
       label: track.seniorMentor
@@ -92,7 +106,7 @@ export function PersonalTrackView({
     },
     {
       icon: BookOpen,
-      label: `${completedCount}/${totalCount} 1:1 sessions completed`,
+      label: `${completedCount}/${totalCount} 1:1 sessions completed (${percentComplete}%)`,
     },
     {
       icon: Target,
@@ -114,7 +128,7 @@ export function PersonalTrackView({
           <div className="flex min-w-0 flex-1 flex-col gap-2.5">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center rounded-full bg-primary/90 px-2.5 py-0.5 text-[11px] font-bold text-primary-foreground tracking-wider uppercase shadow-2xs">
-                Pro 1:1 Track
+                {isMenteeView ? "Mentee Dossier" : "Pro 1:1 Track"}
               </span>
               <Badge variant="outline" className="text-[11px] font-medium border-border/80">
                 {percentComplete === 100 ? "Completed" : "In progress"}
@@ -122,11 +136,12 @@ export function PersonalTrackView({
             </div>
 
             <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              12-Week Personal Mentorship
+              {isMenteeView ? `${studentFullName}'s 12-Week Roadmap` : "12-Week Personal Mentorship"}
             </h1>
             <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              Your personalized 1-on-1 study plan, specialist interview drills, portfolio reviews,
-              and executive negotiation coaching.
+              {isMenteeView
+                ? `Personalized 1-on-1 study plan, weekly milestone tracking, deliverables, and interview coaching for ${studentFullName}.`
+                : "Your personalized 1-on-1 study plan, specialist interview drills, portfolio reviews, and executive negotiation coaching."}
             </p>
 
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-medium text-muted-foreground">
