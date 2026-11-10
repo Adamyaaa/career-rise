@@ -64,8 +64,8 @@ export function FeaturesSection() {
 
         <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature, i) => (
-            <Reveal key={feature.title} delay={0.05 * (i % 3)}>
-              <Card className="h-full">
+            <Reveal key={feature.title} delay={0.06 * (i % 3)}>
+              <Card className="h-full transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:border-primary/40">
                 <CardHeader>
                   <span className="mb-2 flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <feature.icon className="size-4.5" />
