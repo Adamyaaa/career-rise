@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu } from "lucide-react";
+import { Bell, Menu, Search } from "lucide-react";
 import { Logo } from "@/components/common/logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +20,7 @@ import type { NavItem } from "../nav-config";
 export function Topbar({ navItems }: { navItems: NavItem[] }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b border-border/60 bg-background px-4 sm:px-6">
@@ -54,7 +55,11 @@ export function Topbar({ navItems }: { navItems: NavItem[] }) {
                   </div>
                   {navItems.map((item) => {
                     const active =
-                      pathname === item.href || pathname.startsWith(`${item.href}/`);
+                      item.href === "/student/learning"
+                        ? pathname === "/student/learning"
+                        : item.href === "/student/cohorts"
+                          ? pathname === "/student/cohorts" || pathname.startsWith("/student/learning/")
+                          : pathname === item.href || pathname.startsWith(`${item.href}/`);
                     return (
                       <Link
                         key={item.href}
@@ -88,7 +93,31 @@ export function Topbar({ navItems }: { navItems: NavItem[] }) {
         <Logo />
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* Global Search Bar (Responsive: hidden on very narrow screens) */}
+      <div className="hidden sm:flex flex-1 max-w-md mx-2 sm:mx-6">
+        <div className="relative w-full">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search courses, lessons, resources..."
+            className="w-full h-9 pl-9 pr-4 rounded-full border border-border/70 bg-muted/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:bg-background transition-all"
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Notification Bell */}
+        <button
+          type="button"
+          aria-label="Notifications"
+          className="relative p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+        >
+          <Bell className="size-4.5" />
+          <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary ring-2 ring-background" />
+        </button>
+
         <ProfileDropdown />
       </div>
     </header>

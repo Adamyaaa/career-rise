@@ -40,7 +40,7 @@ export class CoursesService {
           name: true,
           startDate: true,
           endDate: true,
-          course: { select: { id: true, title: true, requiresApproval: true } },
+          course: { select: { id: true, title: true, description: true, requiresApproval: true } },
           modules: {
             select: {
               lessons: {
@@ -67,7 +67,7 @@ export class CoursesService {
         name: true,
         startDate: true,
         endDate: true,
-        course: { select: { id: true, title: true, requiresApproval: true } },
+        course: { select: { id: true, title: true, description: true, requiresApproval: true } },
         modules: { select: { lessons: { select: { id: true, scheduledAt: true, cancelled: true } } } },
         mentorAssignments: {
           select: { mentorProfile: { select: { user: { select: { firstName: true, lastName: true } } } } }

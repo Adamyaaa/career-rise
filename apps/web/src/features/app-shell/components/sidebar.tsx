@@ -35,7 +35,12 @@ export function Sidebar({ navItems }: { navItems: NavItem[] }) {
     >
       <div className="flex flex-1 flex-col gap-1 w-full">
         {navItems.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const active =
+            item.href === "/student/learning"
+              ? pathname === "/student/learning"
+              : item.href === "/student/cohorts"
+                ? pathname === "/student/cohorts" || pathname.startsWith("/student/learning/")
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link
               key={item.href}
@@ -45,7 +50,7 @@ export function Sidebar({ navItems }: { navItems: NavItem[] }) {
                 "flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
                 collapsed ? "justify-center px-0 w-10 h-10 mx-auto" : "",
                 active
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-primary/10 text-primary font-semibold"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >

@@ -1,5 +1,14 @@
 import type { LucideIcon } from "lucide-react";
-import { User, GraduationCap, Users, BookOpen, Layers, UserCheck, MessagesSquare, FolderOpen } from "lucide-react";
+import {
+  BookOpen,
+  FolderOpen,
+  GraduationCap,
+  Layers,
+  LayoutDashboard,
+  MessagesSquare,
+  UserCheck,
+  Users,
+} from "lucide-react";
 
 export interface NavItem {
   label: string;
@@ -8,8 +17,9 @@ export interface NavItem {
 }
 
 export const studentNav: NavItem[] = [
+  { label: "Dashboard", href: "/student/learning", icon: LayoutDashboard },
   { label: "Learn", href: "/student/learn", icon: BookOpen },
-  { label: "My Cohorts", href: "/student/learning", icon: Layers },
+  { label: "My Cohorts", href: "/student/cohorts", icon: Layers },
   { label: "1:1 Mentorship", href: "/student/mentorship", icon: Users },
   { label: "Resources", href: "/student/resources", icon: FolderOpen },
 ];

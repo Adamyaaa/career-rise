@@ -13,7 +13,7 @@ export interface MyCohortSummary {
   endDate: string;
   // Earliest dated module — the real first class; falls back to startDate when null.
   firstClassDate: string | null;
-  course: { id: string; title: string; requiresApproval?: boolean };
+  course: { id: string; title: string; description?: string | null; requiresApproval?: boolean };
   moduleCount?: number;
   mentors?: { name: string }[];
   // Present for STUDENT (their own completion); absent for MENTOR, who has none.

@@ -1,53 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { GraduationCap } from "lucide-react";
-import { PageHeading } from "@/components/common/page-heading";
-import { EmptyState } from "@/components/common/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
-import { CohortCard } from "@/features/student/components/cohort-card";
-import { learningService } from "@/services/learning.service";
-import { useAuthStore } from "@/stores/auth-store";
-import { displayName } from "@/lib/format";
+import { StudentDashboardOverview } from "@/features/student/components/student-dashboard-overview";
 
-export default function MyLearningPage() {
-  const user = useAuthStore((s) => s.user);
-
-  const { data: cohorts, isLoading } = useQuery({
-    queryKey: ["my-cohorts"],
-    queryFn: learningService.listMyCohorts,
-  });
-
-  const hasCohorts = cohorts && cohorts.length > 0;
-
-  return (
-    <>
-      <PageHeading
-        title={`Hi, ${user ? displayName(user) : "there"}`}
-        description="Your cohorts — study plan, resources, and progress."
-      />
-
-      {isLoading && (
-        <div className="flex flex-col gap-4">
-          <Skeleton className="h-32 rounded-xl" />
-        </div>
-      )}
-
-      {!isLoading && !hasCohorts && (
-        <EmptyState
-          icon={GraduationCap}
-          title="No active cohort yet"
-          description="Once you're enrolled in a cohort, it'll show up here."
-        />
-      )}
-
-      {hasCohorts && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7 mt-2">
-          {cohorts.map((cohort) => (
-            <CohortCard key={cohort.id} cohort={cohort} hrefBase="/student/learning" />
-          ))}
-        </div>
-      )}
-    </>
-  );
+export default function StudentLearningDashboardPage() {
+  return <StudentDashboardOverview />;
 }
